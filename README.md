@@ -63,7 +63,3 @@ git push
 * No manual Git commands needed after setup — your site updates itself.
 
 ---
-
-If you like, I can now **write this `config.yaml` for you pre-filled with the cybersecurity, AI, cloud, and APAC regulatory feeds and keywords** we discussed earlier, so you can just edit it later instead of building it from scratch.
-
-Do you want me to create that ready-to-use config for you?
