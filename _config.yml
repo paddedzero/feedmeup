@@ -49,3 +49,5 @@ author:
 
 exclude:
   - _errors
+  - _errors/*
+  - "*.py"
