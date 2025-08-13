@@ -2,7 +2,7 @@ import feedparser
 import yaml
 import re
 import socket
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 CONFIG_FILE = "config.yaml"
@@ -19,14 +19,14 @@ def compile_keywords_pattern(keywords):
 
 def save_error_post(feed_url, error_message, output_dir=POSTS_DIR):
     output_dir.mkdir(exist_ok=True)
-    date_str = datetime.utcnow().strftime('%Y-%m-%d')
+    date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     slug = re.sub(r'[^a-z0-9]+', '-', f"feed-error-{date_str}").strip('-')
     filename = output_dir / f"{date_str}-{slug}.md"
     
     front_matter = f"""---
 layout: post
 title: "Feed Fetch Error - {date_str}"
-date: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S +0000')}
+date: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S +0000')}
 categories: error
 ---
 
