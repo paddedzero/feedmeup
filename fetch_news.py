@@ -42,13 +42,28 @@ categories: error
 
 def fetch_feed_entries(url):
     try:
-        feed = feedparser.parse(url)
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        content_type = resp.headers.get("Content-Type", "").lower()
+        if not ("xml" in content_type or "rss" in content_type):
+            print(f"Warning: Skipping {url} due to invalid content type: {content_type}")
+            return []
+
+        # feedparser can handle bytes, but encoding issues sometimes happen.
+        # decode bytes with detected encoding if available
+        encoding = resp.encoding if resp.encoding else 'utf-8'
+        content = resp.content.decode(encoding, errors='replace')
+
+        feed = feedparser.parse(content)
         if feed.bozo:
             print(f"Warning: Failed to parse feed {url} - {feed.bozo_exception}")
             return []
         return feed.entries
-    except (ConnectionResetError, socket.error, Exception) as e:
-        print(f"Warning: Exception while fetching {url}: {e}")
+    except requests.exceptions.RequestException as e:
+        print(f"Warning: Network error fetching {url}: {e}")
+        return []
+    except Exception as e:
+        print(f"Warning: Unexpected error fetching {url}: {e}")
         return []
     
 def entry_matches(entry, pattern):
