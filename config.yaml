@@ -1,0 +1,175 @@
+sources:
+  - name: OpenAI Blog
+    url: https://openai.com/blog/rss
+    category: LLM
+  - name: Anthropic Blog
+    url: https://www.anthropic.com/news/rss
+    category: LLM
+  - name: AWS News
+    url: https://aws.amazon.com/about-aws/whats-new/recent/feed/
+    category: Cloud
+  - name: Azure Updates
+    url: https://azurecomcdn.azureedge.net/en-us/updates/feed/
+    category: Cloud
+  - name: Google Cloud Blog
+    url: https://cloud.google.com/feeds/blog.xml
+    category: Cloud
+  - name: TechRadar Pro Security
+    url: https://www.techradar.com/feeds/tag/security
+    category: Security
+  - name: Dark Reading
+    url: https://www.darkreading.com/rss_simple.asp
+    category: Security
+  # APAC Specific Feeds
+  - name: Singapore MAS
+    url: https://www.mas.gov.sg/rss/news
+    category: Regulation
+  - name: Singapore CSA
+    url: https://www.csa.gov.sg/rss/news
+    category: Security
+  - name: Australia ACSC
+    url: https://www.cyber.gov.au/acsc/view-all-content/alerts?format=rss
+    category: Security
+  - name: Japan NISC
+    url: https://www.nisc.go.jp/rss/eng-news.xml
+    category: Security
+  - name: India CERT-In
+    url: https://www.cert-in.org.in/rss
+    category: Security
+  - name: Hong Kong PCPD
+    url: https://www.pcpd.org.hk/rss/press.xml
+    category: Regulation
+  - name: Philippines NPC
+    url: https://www.privacy.gov.ph/rss/feed.xml
+    category: Regulation
+  - name: Korea KISA
+    url: https://www.kisa.or.kr/rss/eng.xml
+    category: Security
+  - name: Malaysia MyCERT
+    url: https://www.mycert.org.my/rss
+    category: Security
+  - name: Vietnam AIS
+    url: https://ais.gov.vn/rss/news.xml
+    category: Security
+
+filters:
+  keywords:
+    # AI & LLM
+    - LLM
+    - GPT
+    - "large language model"
+    - "generative AI"
+    - "multimodal AI"
+    - "AI model release"
+    - "AI safety"
+    - "AI governance"
+    - "AI regulation"
+    - "AI policy"
+    - "autonomous agent"
+    - "AI red teaming"
+    - "AI ethics"
+    - "AI security"
+    - "AI misuse"
+    - "prompt injection"
+    - "model inversion"
+    - "AI hallucination"
+    - "machine learning security"
+    - "adversarial attack"
+    - "model poisoning"
+    - "data poisoning"
+
+    # Cybersecurity Threats
+    - "zero-day"
+    - "critical vulnerability"
+    - CVE-
+    - "supply chain attack"
+    - ransomware
+    - "malware campaign"
+    - "APT"
+    - "nation-state actor"
+    - "cyber espionage"
+    - "data breach"
+    - "phishing"
+    - "credential theft"
+    - "initial access broker"
+    - "threat actor"
+    - "incident response"
+    - "forensic analysis"
+    - "reverse engineering"
+    - "exploit kit"
+    - "botnet"
+    - "command and control"
+
+    # Cloud Security
+    - "cloud security"
+    - "cloud misconfiguration"
+    - "cloud breach"
+    - "S3 bucket"
+    - "IAM misconfiguration"
+    - "cloud pentest"
+    - "container escape"
+    - "kubernetes security"
+    - "multi-cloud"
+    - "zero trust"
+    - "cloud workload protection"
+    - "cloud compliance"
+
+    # Cybercrime & Investigations
+    - "cybercrime"
+    - "digital forensics"
+    - "threat intel"
+    - "dark web"
+    - "cyber fraud"
+    - "business email compromise"
+    - "crypto theft"
+    - "SIM swapping"
+    - "money mule"
+    - "underground forum"
+    - "cyber extortion"
+
+    # Regulations (Global)
+    - DORA
+    - NIS2
+    - "SEC cyber rule"
+    - GDPR
+    - "EU AI Act"
+    - "data sovereignty"
+    - "privacy law"
+    - FISMA
+    - "PCI DSS"
+    - "ISO 27001"
+    - "critical infrastructure"
+    - "national security directive"
+    - "OFAC sanctions"
+
+    # Asia-Pacific Specific Regulations
+    - "Cybersecurity Law of China"
+    - "China Data Security Law"
+    - "China Personal Information Protection Law"
+    - PIPL
+    - "MLPS 2.0"
+    - "APAC privacy law"
+    - "Singapore PDPA"
+    - "Singapore Cybersecurity Act"
+    - "MAS TRM"
+    - "Australia Privacy Act"
+    - "Australian Cyber Security Strategy"
+    - "Australian Critical Infrastructure Act"
+    - "New Zealand Privacy Act"
+    - "Japan APPI"
+    - "Japan Cybersecurity Basic Act"
+    - "Korea PIPA"
+    - "Korea Network Act"
+    - "India Digital Personal Data Protection Act"
+    - "India CERT-In directives"
+    - "Hong Kong PDPO"
+    - "Philippines Data Privacy Act"
+    - "Vietnam Cybersecurity Law"
+    - "Vietnam Data Localization Law"
+    - "Thailand PDPA"
+    - "Malaysia PDPA"
+    - "Indonesia PDP Law"
+    - "Taiwan Personal Data Protection Act"
+    - "Myanmar E-Commerce Law"
+    - "Cambodia PDPA"
+    
