@@ -1,6 +1,7 @@
 import feedparser
 import yaml
 import re
+import socket
 from datetime import datetime
 from pathlib import Path
 
@@ -17,10 +18,14 @@ def compile_keywords_pattern(keywords):
     return re.compile(pattern)
 
 def fetch_feed_entries(url):
-    feed = feedparser.parse(url)
-    if feed.bozo:
-        print(f"Warning: Failed to parse feed {url}")
-    return feed.entries
+    try:
+        feed = feedparser.parse(url)
+        if feed.bozo:
+            print(f"Warning: Failed to parse feed {url}")
+        return feed.entries
+    except (ConnectionResetError, socket.error, Exception) as e:
+        print(f"Warning: Exception while fetching {url}: {e}")
+        return []
 
 def entry_matches(entry, pattern):
     text_to_check = (entry.get("title", "") + " " + entry.get("summary", "")).lower()
