@@ -14,7 +14,7 @@ GREY = "\033[90m"
 
 CONFIG_FILE = "config.yaml"
 POSTS_DIR = Path("_posts")
-ERRORS_DIR = Path("_errors")  # <-- New dedicated error folder
+ERRORS_DIR = Path("_errors")
 
 def load_config():
     with open(CONFIG_FILE, "r", encoding="utf-8") as f:
@@ -27,12 +27,13 @@ def compile_keywords_pattern(keywords):
 
 def save_error_post(feed_url, error_message):
     """Save feed fetch error into _errors folder instead of _posts."""
-    ERRORS_DIR.mkdir(exist_ok=True)
-    date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    slug = re.sub(r'[^a-z0-9]+', '-', f"feed-error-{date_str}").strip('-')
-    filename = ERRORS_DIR / f"{date_str}-{slug}.md"
-    
-    front_matter = f"""---
+    try:
+        ERRORS_DIR.mkdir(exist_ok=True)
+        date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        slug = re.sub(r'[^a-z0-9]+', '-', f"feed-error-{date_str}").strip('-')
+        filename = ERRORS_DIR / f"{date_str}-{slug}.md"
+        
+        front_matter = f"""---
 layout: post
 title: "Feed Fetch Error - {date_str}"
 date: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S +0000')}
@@ -40,39 +41,45 @@ categories: error
 ---
 
 """
-    content = f"**Failed to fetch feed:** {feed_url}\n\n**Error:** {error_message}\n"
-    with open(filename, "w", encoding="utf-8") as f:
-        f.write(front_matter + content)
-
-    print(f"{RED}[ERROR POST]{RESET} Saved to {filename}")
+        content = f"**Failed to fetch feed:** {feed_url}\n\n**Error:** {error_message}\n"
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(front_matter + content)
+        print(f"{RED}[ERROR POST]{RESET} Saved to {filename}")
+    except:
+        pass  # Don't let error saving crash the main process
 
 def fetch_feed_entries(url, feed_name):
     try:
-        resp = requests.get(url, timeout=10)
+        # Add headers to avoid blocks and increase timeout
+        headers = {'User-Agent': 'Mozilla/5.0 (compatible; RSS-Bot/1.0)'}
+        resp = requests.get(url, timeout=15, headers=headers)
+        
+        # Handle common HTTP errors
+        if resp.status_code in [403, 404]:
+            msg = f"HTTP {resp.status_code} error"
+            save_error_post(url, msg)
+            return [], msg
+            
         resp.raise_for_status()
+        
+        # Check content type
         content_type = resp.headers.get("Content-Type", "").lower()
-        if not ("xml" in content_type or "rss" in content_type):
+        if not any(x in content_type for x in ["xml", "rss", "atom"]):
             msg = f"Invalid content type: {content_type}"
             save_error_post(url, msg)
             return [], msg
 
-        encoding = resp.encoding if resp.encoding else 'utf-8'
-        content = resp.content.decode(encoding, errors='replace')
-
-        feed = feedparser.parse(content)
-        if feed.bozo:
+        # Parse feed
+        feed = feedparser.parse(resp.content)
+        if feed.bozo and not feed.entries:
             msg = f"Parse error: {feed.bozo_exception}"
             save_error_post(url, msg)
             return [], msg
 
         return feed.entries, "OK"
 
-    except requests.exceptions.RequestException as e:
-        msg = f"Network error: {e}"
-        save_error_post(url, msg)
-        return [], msg
     except Exception as e:
-        msg = f"Unexpected error: {e}"
+        msg = str(e)
         save_error_post(url, msg)
         return [], msg
 
@@ -115,6 +122,7 @@ def main():
 
     all_matched_entries = []
     summary = []
+    errors = 0
 
     for source in sources:
         feed_name = source.get("name", source["url"])
@@ -125,6 +133,7 @@ def main():
 
         if status != "OK":
             summary.append((feed_name, status, 0))
+            errors += 1
             continue
 
         matched_entries = [e for e in entries if entry_matches(e, pattern)]
@@ -142,21 +151,18 @@ def main():
                 date = datetime.utcnow()
             save_post(title, date, content)
 
-    # --- FEED-BY-FEED SUMMARY ---
+    # Print summary
     print("\n=== FEED SUMMARY ===")
     for name, status, count in summary:
-        if status == "OK":
-            status_color = GREEN + status + RESET
-        else:
-            status_color = RED + status + RESET
-
-        if count > 0:
-            count_color = YELLOW + str(count) + RESET
-        else:
-            count_color = GREY + str(count) + RESET
-
+        status_color = GREEN + status + RESET if status == "OK" else RED + status + RESET
+        count_color = YELLOW + str(count) + RESET if count > 0 else GREY + str(count) + RESET
         print(f"{name:40} | Status: {status_color:25} | Matches: {count_color}")
-    print("====================\n")
+    
+    print(f"\nErrors: {errors}/{len(sources)}")
+    
+    # Only exit with error if ALL feeds failed
+    if errors == len(sources) and len(sources) > 0:
+        exit(1)
 
 if __name__ == "__main__":
     main()
