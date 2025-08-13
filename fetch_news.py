@@ -1,7 +1,6 @@
 import feedparser
 import yaml
 import re
-import socket
 import requests
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,6 +14,7 @@ GREY = "\033[90m"
 
 CONFIG_FILE = "config.yaml"
 POSTS_DIR = Path("_posts")
+ERRORS_DIR = Path("_errors")  # <-- New dedicated error folder
 
 def load_config():
     with open(CONFIG_FILE, "r", encoding="utf-8") as f:
@@ -25,11 +25,12 @@ def compile_keywords_pattern(keywords):
     pattern = r"(?i)\b(" + "|".join(escaped) + r")\b"
     return re.compile(pattern)
 
-def save_error_post(feed_url, error_message, output_dir=POSTS_DIR):
-    output_dir.mkdir(exist_ok=True)
+def save_error_post(feed_url, error_message):
+    """Save feed fetch error into _errors folder instead of _posts."""
+    ERRORS_DIR.mkdir(exist_ok=True)
     date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     slug = re.sub(r'[^a-z0-9]+', '-', f"feed-error-{date_str}").strip('-')
-    filename = output_dir / f"{date_str}-{slug}.md"
+    filename = ERRORS_DIR / f"{date_str}-{slug}.md"
     
     front_matter = f"""---
 layout: post
@@ -40,12 +41,10 @@ categories: error
 
 """
     content = f"**Failed to fetch feed:** {feed_url}\n\n**Error:** {error_message}\n"
-    full_content = front_matter + content
-
     with open(filename, "w", encoding="utf-8") as f:
-        f.write(full_content)
+        f.write(front_matter + content)
 
-    print(f"[ERROR POST] Saved: {filename}")
+    print(f"{RED}[ERROR POST]{RESET} Saved to {filename}")
 
 def fetch_feed_entries(url, feed_name):
     try:
@@ -81,12 +80,12 @@ def entry_matches(entry, pattern):
     text_to_check = (entry.get("title", "") + " " + entry.get("summary", "")).lower()
     return bool(pattern.search(text_to_check))
 
-def save_post(title, date, content, output_dir=POSTS_DIR):
-    output_dir.mkdir(exist_ok=True)
+def save_post(title, date, content):
+    POSTS_DIR.mkdir(exist_ok=True)
     slug = re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')
     date_str = date.strftime('%Y-%m-%d')
     datetime_str = date.strftime('%Y-%m-%d %H:%M:%S %z') or date.strftime('%Y-%m-%d %H:%M:%S +0000')
-    filename = output_dir / f"{date_str}-{slug}.md"
+    filename = POSTS_DIR / f"{date_str}-{slug}.md"
 
     front_matter = f"""---
 layout: post
@@ -96,12 +95,10 @@ categories: news brief
 ---
 
 """
-    full_content = front_matter + content
-
     with open(filename, "w", encoding="utf-8") as f:
-        f.write(full_content)
+        f.write(front_matter + content)
 
-    print(f"[POST] Created: {filename}")
+    print(f"{GREEN}[POST]{RESET} Created: {filename}")
 
 def format_entry(entry):
     title = entry.get("title", "No Title")
