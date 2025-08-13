@@ -1,10 +1,48 @@
-title: Cybersecurity & AI Weekly Briefs
-description: Weekly briefs on AI, Cloud, Cybersecurity, and Regulations
-baseurl: ""
-url: "https://paddedzero.github.io"
+# Site settings
+title: FeedMeUp News Brief
+description: Curated weekly news on AI, Cybersecurity, Cloud, and APAC Regulatory topics.
+baseurl: "/feedmeup"  # Change this if your repo name is different or if served from root use ""
 
-theme: minima
+url: "https://paddedzero.github.io"  # Replace <your-username> with your GitHub username
+
+# Build settings
+markdown: kramdown
+theme: minima  # Simple built-in theme, you can change if you want
+
+# Permalinks format for posts: /year/month/day/title/
+permalink: /:year/:month/:day/:title/
+
+# Collections (if you want to add more later)
+collections: []
+
+# Defaults for posts
+defaults:
+  -
+    scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"
+
+# Plugins (if you need them)
 plugins:
-  - jekyll-feed
-  - jekyll-seo-tag
-  - jekyll-sitemap
+  - jekyll-feed  # RSS feed support
+
+# Exclude from build
+exclude:
+  - README.md
+  - fetch_news.py
+  - requirements.txt
+  - .github/
+
+# Include other files/folders as needed
+include: []
+
+# Pagination (optional)
+paginate: 5
+paginate_path: "/page:num/"
+
+# Author info (optional)
+author:
+  name: Your Name
+  email: your-email@example.com

@@ -17,6 +17,29 @@ def compile_keywords_pattern(keywords):
     pattern = r"(?i)\b(" + "|".join(escaped) + r")\b"
     return re.compile(pattern)
 
+def save_error_post(feed_url, error_message, output_dir=POSTS_DIR):
+    output_dir.mkdir(exist_ok=True)
+    date_str = datetime.utcnow().strftime('%Y-%m-%d')
+    slug = re.sub(r'[^a-z0-9]+', '-', f"feed-error-{date_str}").strip('-')
+    filename = output_dir / f"{date_str}-{slug}.md"
+    
+    front_matter = f"""---
+layout: post
+title: "Feed Fetch Error - {date_str}"
+date: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S +0000')}
+categories: error
+---
+
+"""
+
+    content = f"**Failed to fetch feed:** {feed_url}\n\n**Error:** {error_message}\n"
+    full_content = front_matter + content
+
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(full_content)
+
+    print(f"Created error post: {filename}")
+
 def fetch_feed_entries(url):
     try:
         feed = feedparser.parse(url)
@@ -25,43 +48,42 @@ def fetch_feed_entries(url):
         return feed.entries
     except (ConnectionResetError, socket.error, Exception) as e:
         print(f"Warning: Exception while fetching {url}: {e}")
+        save_error_post(url, str(e))
         return []
-
+    
 def entry_matches(entry, pattern):
     text_to_check = (entry.get("title", "") + " " + entry.get("summary", "")).lower()
     return bool(pattern.search(text_to_check))
 
-def format_entries_for_category(entries):
-    formatted = []
-    for entry in entries:
-        title = entry.get("title", "No Title")
-        link = entry.get("link", "")
-        summary = entry.get("summary", "No summary available").strip().replace('\n', ' ')
-        formatted.append(f"- **{title}** — {summary}\n  [Read more]({link})")
-    return "\n\n".join(formatted)
-
-def create_post_file(date_str, content_by_category):
-    POSTS_DIR.mkdir(exist_ok=True)
-    filename = POSTS_DIR / f"{date_str}-news-brief.md"
+def save_post(title, date, content, output_dir=POSTS_DIR):
+    output_dir.mkdir(exist_ok=True)
+    slug = re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')
+    date_str = date.strftime('%Y-%m-%d')
+    datetime_str = date.strftime('%Y-%m-%d %H:%M:%S %z') or date.strftime('%Y-%m-%d %H:%M:%S +0000')
+    filename = output_dir / f"{date_str}-{slug}.md"
 
     front_matter = f"""---
 layout: post
-title: "Weekly AI & Security Brief — {date_str}"
-date: {date_str}
+title: "{title}"
+date: {datetime_str}
 categories: news brief
 ---
 
 """
 
-    body = f"# Weekly AI & Security Brief — {date_str}\n\n"
-    for category in sorted(content_by_category.keys()):
-        body += f"## {category}\n\n"
-        body += content_by_category[category] + "\n\n"
+    full_content = front_matter + content
 
     with open(filename, "w", encoding="utf-8") as f:
-        f.write(front_matter)
-        f.write(body)
+        f.write(full_content)
+
     print(f"Created Jekyll post: {filename}")
+
+def format_entry(entry):
+    title = entry.get("title", "No Title")
+    link = entry.get("link", "")
+    summary = entry.get("summary", "No summary available").strip().replace('\n', ' ')
+    content = f"{summary}\n\n[Read more]({link})"
+    return title, content
 
 def main():
     config = load_config()
@@ -69,27 +91,27 @@ def main():
     sources = config.get("sources", [])
     pattern = compile_keywords_pattern(keywords)
 
-    reports = {}
+    all_matched_entries = []
+
     for source in sources:
         entries = fetch_feed_entries(source["url"])
         matched_entries = [e for e in entries if entry_matches(e, pattern)]
-        if matched_entries:
-            cat = source.get("category", "General")
-            if cat not in reports:
-                reports[cat] = []
-            reports[cat].extend(matched_entries)
+        all_matched_entries.extend(matched_entries)
 
-    if not reports:
+    if not all_matched_entries:
         print("No matching news found this run.")
         return
 
-    today = datetime.utcnow().strftime("%Y-%m-%d")
-    content_by_category = {}
-    for cat, entries in reports.items():
-        content_by_category[cat] = format_entries_for_category(entries)
-
-    create_post_file(today, content_by_category)
+    for entry in all_matched_entries:
+        title, content = format_entry(entry)
+        # Use published_parsed or fallback to current time
+        if "published_parsed" in entry and entry.published_parsed:
+            date = datetime(*entry.published_parsed[:6])
+        else:
+            date = datetime.utcnow()
+        save_post(title, date, content)
 
 if __name__ == "__main__":
     main()
 # fetch_news.py
+# This script fetches news from configured sources, filters them by keywords,
