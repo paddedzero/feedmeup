@@ -1,10 +1,13 @@
 sources:
+  # === LLM & AI Blogs ===
   - name: OpenAI Blog
     url: https://openai.com/blog/rss
     category: LLM
   - name: Anthropic Blog
     url: https://www.anthropic.com/news/rss
     category: LLM
+
+  # === Cloud Provider Updates ===
   - name: AWS News
     url: https://aws.amazon.com/about-aws/whats-new/recent/feed/
     category: Cloud
@@ -14,13 +17,75 @@ sources:
   - name: Google Cloud Blog
     url: https://cloud.google.com/feeds/blog.xml
     category: Cloud
+
+  # === Security News Websites ===
   - name: TechRadar Pro Security
     url: https://www.techradar.com/feeds/tag/security
     category: Security
   - name: Dark Reading
     url: https://www.darkreading.com/rss_simple.asp
     category: Security
-  # APAC Specific Feeds
+  - name: Krebs on Security
+    url: https://krebsonsecurity.com/feed/
+    category: Security
+  - name: The Hacker News
+    url: https://feeds.feedburner.com/TheHackersNews
+    category: Security
+  - name: Threatpost
+    url: https://threatpost.com/feed/
+    category: Security
+  - name: BleepingComputer
+    url: https://www.bleepingcomputer.com/feed/
+    category: Security
+  - name: SC Magazine
+    url: https://www.scmagazine.com/home/feed/
+    category: Security
+  - name: SecurityWeek
+    url: https://feeds.feedburner.com/securityweek
+    category: Security
+  - name: Help Net Security
+    url: https://www.helpnetsecurity.com/feed/
+    category: Security
+  - name: Bruce Schneier Blog
+    url: https://www.schneier.com/blog/atom.xml
+    category: Security
+
+  # === Threat Intelligence & Research ===
+  - name: Recorded Future Threat Intelligence
+    url: https://www.recordedfuture.com/feed/
+    category: ThreatIntel
+  - name: FireEye Threat Research
+    url: https://www.fireeye.com/blog/threat-research/_jcr_content.feed.rss
+    category: ThreatIntel
+  - name: CrowdStrike Blog
+    url: https://www.crowdstrike.com/feed/
+    category: ThreatIntel
+  - name: Cisco Talos Intelligence
+    url: https://blog.talosintelligence.com/feeds/posts/default
+    category: ThreatIntel
+  - name: Malwarebytes Labs
+    url: https://blog.malwarebytes.com/feed/
+    category: ThreatIntel
+  - name: Palo Alto Networks Unit 42
+    url: https://unit42.paloaltonetworks.com/feed/
+    category: ThreatIntel
+  - name: SANS Internet Storm Center
+    url: https://isc.sans.edu/rssfeed.xml
+    category: ThreatIntel
+  - name: Microsoft Security Response Center (MSRC)
+    url: https://msrc-blog.microsoft.com/feed/
+    category: ThreatIntel
+  - name: US-CERT National Cyber Awareness System
+    url: https://us-cert.cisa.gov/ncas/alerts.xml
+    category: ThreatIntel
+  - name: AlienVault Labs
+    url: https://www.alienvault.com/blogs/labs/feed
+    category: ThreatIntel
+  - name: Fortinet Blog
+    url: https://blog.fortinet.com/rss.xml
+    category: ThreatIntel
+
+  # === Asia-Pacific Regulatory & Security Feeds ===
   - name: Singapore MAS
     url: https://www.mas.gov.sg/rss/news
     category: Regulation
@@ -172,4 +237,3 @@ filters:
     - "Taiwan Personal Data Protection Act"
     - "Myanmar E-Commerce Law"
     - "Cambodia PDPA"
-    
