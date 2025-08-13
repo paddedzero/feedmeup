@@ -16,18 +16,18 @@ jobs:
       - name: Checkout main branch
         uses: actions/checkout@v3
         with:
-          persist-credentials: false  # We'll set up our own credentials for pushing
+          persist-credentials: false
 
       - name: Set up Ruby for Jekyll
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.1  # or whatever version your Jekyll site requires
-          bundler-cache: true
+          ruby-version: 3.1
+          bundler-cache: true  # Caches installed gems for faster builds
 
-      - name: Install dependencies
+      - name: Install Bundler & Jekyll dependencies
         run: |
-          gem install jekyll bundler
-          bundle install || true  # in case you have a Gemfile
+          gem install bundler
+          bundle install --jobs 4 --retry 3
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -41,7 +41,7 @@ jobs:
         run: python fetch_news.py
 
       - name: Build the Jekyll site
-        run: bundle exec jekyll build
+        run: bundle exec jekyll build --verbose
 
       - name: Deploy to gh-pages branch
         env:
