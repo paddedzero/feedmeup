@@ -2,6 +2,7 @@ import feedparser
 import yaml
 import re
 import socket
+import requests
 from datetime import datetime, timezone
 from pathlib import Path
 
