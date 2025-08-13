@@ -6,32 +6,29 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: write  # Required to push to gh-pages
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # --- Checkout the repository ---
       - name: Checkout main branch
         uses: actions/checkout@v3
         with:
-          persist-credentials: false
+          persist-credentials: false  # We'll use GITHUB_TOKEN for pushing
 
-      # --- Setup Ruby and Jekyll ---
       - name: Set up Ruby for Jekyll
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.1
           bundler-cache: true
 
-      - name: Install Jekyll and dependencies
+      - name: Install Ruby dependencies
         run: |
-          gem install jekyll bundler minima
+          gem install jekyll bundler
           bundle install || true
 
-      # --- Setup Python ---
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -40,15 +37,12 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt || true
 
-      # --- Generate markdown posts ---
-      - name: Run fetch_news.py
+      - name: Run fetch_news.py to generate markdown posts
         run: python fetch_news.py
 
-      # --- Build Jekyll site ---
       - name: Build the Jekyll site
         run: bundle exec jekyll build
 
-      # --- Deploy to gh-pages ---
       - name: Deploy to gh-pages branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -56,20 +50,23 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Switch to gh-pages or create if missing
+          # Switch to gh-pages or create it if missing
           if git show-ref --quiet refs/heads/gh-pages; then
             git checkout gh-pages
           else
             git checkout --orphan gh-pages
           fi
 
+          # Clear old files and copy the new site
           git rm -rf . || true
           cp -r _site/* .
+
           git add .
 
           if git diff-index --quiet HEAD --; then
             echo "No changes to commit"
           else
             git commit -m "Deploy site $(date -u +'%Y-%m-%d %H:%M:%S')"
-            git push origin gh-pages --force
+            # Use GITHUB_TOKEN for HTTPS authentication
+            git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} gh-pages --force
           fi
