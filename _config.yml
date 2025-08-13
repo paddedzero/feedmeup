@@ -1,7 +1,7 @@
 title: Cybersecurity & AI Weekly Briefs
 description: Weekly briefs on AI, Cloud, Cybersecurity, and Regulations
 baseurl: ""
-url: "https://<your-github-username>.github.io"
+url: "https://paddedzero.github.io"
 
 theme: minima
 plugins:
