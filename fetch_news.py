@@ -44,11 +44,11 @@ def fetch_feed_entries(url):
     try:
         feed = feedparser.parse(url)
         if feed.bozo:
-            print(f"Warning: Failed to parse feed {url}")
+            print(f"Warning: Failed to parse feed {url} - {feed.bozo_exception}")
+            return []
         return feed.entries
     except (ConnectionResetError, socket.error, Exception) as e:
         print(f"Warning: Exception while fetching {url}: {e}")
-        save_error_post(url, str(e))
         return []
     
 def entry_matches(entry, pattern):
