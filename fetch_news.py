@@ -6,6 +6,13 @@ import requests
 from datetime import datetime, timezone
 from pathlib import Path
 
+# --- ANSI color codes ---
+RESET = "\033[0m"
+RED = "\033[31m"
+GREEN = "\033[32m"
+YELLOW = "\033[33m"
+GREY = "\033[90m"
+
 CONFIG_FILE = "config.yaml"
 POSTS_DIR = Path("_posts")
 
@@ -32,41 +39,44 @@ categories: error
 ---
 
 """
-
     content = f"**Failed to fetch feed:** {feed_url}\n\n**Error:** {error_message}\n"
     full_content = front_matter + content
 
     with open(filename, "w", encoding="utf-8") as f:
         f.write(full_content)
 
-    print(f"Created error post: {filename}")
+    print(f"[ERROR POST] Saved: {filename}")
 
-def fetch_feed_entries(url):
+def fetch_feed_entries(url, feed_name):
     try:
         resp = requests.get(url, timeout=10)
         resp.raise_for_status()
         content_type = resp.headers.get("Content-Type", "").lower()
         if not ("xml" in content_type or "rss" in content_type):
-            print(f"Warning: Skipping {url} due to invalid content type: {content_type}")
-            return []
+            msg = f"Invalid content type: {content_type}"
+            save_error_post(url, msg)
+            return [], msg
 
-        # feedparser can handle bytes, but encoding issues sometimes happen.
-        # decode bytes with detected encoding if available
         encoding = resp.encoding if resp.encoding else 'utf-8'
         content = resp.content.decode(encoding, errors='replace')
 
         feed = feedparser.parse(content)
         if feed.bozo:
-            print(f"Warning: Failed to parse feed {url} - {feed.bozo_exception}")
-            return []
-        return feed.entries
+            msg = f"Parse error: {feed.bozo_exception}"
+            save_error_post(url, msg)
+            return [], msg
+
+        return feed.entries, "OK"
+
     except requests.exceptions.RequestException as e:
-        print(f"Warning: Network error fetching {url}: {e}")
-        return []
+        msg = f"Network error: {e}"
+        save_error_post(url, msg)
+        return [], msg
     except Exception as e:
-        print(f"Warning: Unexpected error fetching {url}: {e}")
-        return []
-    
+        msg = f"Unexpected error: {e}"
+        save_error_post(url, msg)
+        return [], msg
+
 def entry_matches(entry, pattern):
     text_to_check = (entry.get("title", "") + " " + entry.get("summary", "")).lower()
     return bool(pattern.search(text_to_check))
@@ -86,13 +96,12 @@ categories: news brief
 ---
 
 """
-
     full_content = front_matter + content
 
     with open(filename, "w", encoding="utf-8") as f:
         f.write(full_content)
 
-    print(f"Created Jekyll post: {filename}")
+    print(f"[POST] Created: {filename}")
 
 def format_entry(entry):
     title = entry.get("title", "No Title")
@@ -108,26 +117,49 @@ def main():
     pattern = compile_keywords_pattern(keywords)
 
     all_matched_entries = []
+    summary = []
 
     for source in sources:
-        entries = fetch_feed_entries(source["url"])
+        feed_name = source.get("name", source["url"])
+        url = source["url"]
+
+        print(f"\n[FETCH] {feed_name}")
+        entries, status = fetch_feed_entries(url, feed_name)
+
+        if status != "OK":
+            summary.append((feed_name, status, 0))
+            continue
+
         matched_entries = [e for e in entries if entry_matches(e, pattern)]
         all_matched_entries.extend(matched_entries)
+        summary.append((feed_name, "OK", len(matched_entries)))
 
     if not all_matched_entries:
-        print("No matching news found this run.")
-        return
+        print("\n[INFO] No matching news found this run.")
+    else:
+        for entry in all_matched_entries:
+            title, content = format_entry(entry)
+            if "published_parsed" in entry and entry.published_parsed:
+                date = datetime(*entry.published_parsed[:6])
+            else:
+                date = datetime.utcnow()
+            save_post(title, date, content)
 
-    for entry in all_matched_entries:
-        title, content = format_entry(entry)
-        # Use published_parsed or fallback to current time
-        if "published_parsed" in entry and entry.published_parsed:
-            date = datetime(*entry.published_parsed[:6])
+    # --- FEED-BY-FEED SUMMARY ---
+    print("\n=== FEED SUMMARY ===")
+    for name, status, count in summary:
+        if status == "OK":
+            status_color = GREEN + status + RESET
         else:
-            date = datetime.utcnow()
-        save_post(title, date, content)
+            status_color = RED + status + RESET
+
+        if count > 0:
+            count_color = YELLOW + str(count) + RESET
+        else:
+            count_color = GREY + str(count) + RESET
+
+        print(f"{name:40} | Status: {status_color:25} | Matches: {count_color}")
+    print("====================\n")
 
 if __name__ == "__main__":
     main()
-# fetch_news.py
-# This script fetches news from configured sources, filters them by keywords,
