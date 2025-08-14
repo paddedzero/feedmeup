@@ -13,7 +13,9 @@ theme: minima  # Simple built-in theme, you can change if you want
 permalink: /:year/:month/:day/:title/
 
 # Collections (if you want to add more later)
-collections: []
+collections:
+  posts:
+    output: true
 
 # Defaults for posts
 defaults:
