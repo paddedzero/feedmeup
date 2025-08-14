@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ page.title }}</title>
+  <link rel="stylesheet" href="{{ "/assets/style.css" | relative_url }}">
+  <style>
+    body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 2rem; }
+    header h1 { text-align: center; }
+    h2 { border-bottom: 1px solid #ccc; padding-bottom: 0.2rem; }
+    ul { list-style-type: disc; margin-left: 2rem; }
+    .highlight { background-color: #fffae6; padding: 0.2rem 0.5rem; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><a href="{{ "/" | relative_url }}">Weekly News Brief</a></h1>
+  </header>
+
+  <main>
+    {{ content }}
+  </main>
+
+  <footer>
+    <p>&copy; {{ site.time | date: "%Y" }}</p>
+  </footer>
+</body>
+</html>
