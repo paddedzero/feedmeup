@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Home</title>
+  <link rel="stylesheet" href="/feedmeup/assets/style.css">
+  <style>
+    body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 2rem; }
+    header h1 { text-align: center; }
+    h2 { border-bottom: 1px solid #ccc; padding-bottom: 0.2rem; }
+    ul { list-style-type: disc; margin-left: 2rem; }
+    .highlight { background-color: #fffae6; padding: 0.2rem 0.5rem; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><a href="/feedmeup/">Weekly News Brief</a></h1>
+  </header>
+
+  <main>
+    <p>Welcome to the Weekly News Brief!</p>
+
+<p>Here I attempt to distill news on Cybersecurity, Cloud, AI and Regulatory News.</p>
+
+<p>No news brief available yet.</p>
+
+
+  </main>
+
+  <footer>
+    <p>&copy; 2025</p>
+  </footer>
+</body>
+</html>
