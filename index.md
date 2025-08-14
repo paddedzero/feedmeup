@@ -8,7 +8,7 @@ Welcome to the Weekly News Brief!
 Here I attempt to distill news on Cybersecurity, Cloud, AI and Regulatory News.
 
 
-{% assign latest_brief = site.posts | where_exp:"post","post.categories contains 'news brief'" | sort: "date" | last %}
+{% assign latest_brief = site.posts | where_exp:"post","post.categories contains 'newsbrief'" | sort: "date" | last %}
 {% if latest_brief %}
   <h1>{{ latest_brief.title }}</h1>
 
