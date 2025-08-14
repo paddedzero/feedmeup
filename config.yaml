@@ -1,11 +1,15 @@
 sources:
   # === LLM & AI Blogs ===
-  - name: OpenAI Blog
-    url: https://openai.com/blog/rss
+  - name: OpenAI News
+    url: https://openai.com/news/rss.xml
     category: LLM
-  - name: Anthropic Blog
-    url: https://www.anthropic.com/news/rss
+  - name: Google AI Blog
+    url: https://blog.google/technology/ai/rss/
     category: LLM
+  - name: Microsoft AI Blog
+    url: https://blogs.microsoft.com/ai/feed/
+    category: LLM
+  # Note: Anthropic doesn't have an official RSS feed - removed for now
 
   # === Cloud Provider Updates ===
   - name: AWS News
@@ -31,9 +35,6 @@ sources:
   - name: The Hacker News
     url: https://feeds.feedburner.com/TheHackersNews
     category: Security
-  - name: Threatpost
-    url: https://threatpost.com/feed/
-    category: Security
   - name: BleepingComputer
     url: https://www.bleepingcomputer.com/feed/
     category: Security
@@ -50,15 +51,35 @@ sources:
     url: https://www.schneier.com/blog/atom.xml
     category: Security
 
+  # === Vulnerability & CVE Feeds ===
+  - name: CVE Feed (High/Critical)
+    url: https://cvefeed.io/rssfeed/
+    category: Vulnerability
+  - name: CVE Details Recent
+    url: https://www.cvedetails.com/vulnerability-feeds-form.php?type=rss&orderby=3&cvssscoremin=7
+    category: Vulnerability
+  - name: Rapid7 Vulnerability Research
+    url: https://blog.rapid7.com/tag/vulnerability-research/rss/
+    category: Vulnerability
+  - name: Tenable Research
+    url: https://www.tenable.com/blog/rss.xml
+    category: Vulnerability
+  - name: VulnDB
+    url: https://vuldb.com/rss.xml
+    category: Vulnerability
+  - name: ExploitDB
+    url: https://www.exploit-db.com/rss.xml
+    category: Vulnerability
+  - name: Qualys VMDR Blog
+    url: https://blog.qualys.com/feed
+    category: Vulnerability
+
   # === Threat Intelligence & Research ===
   - name: Recorded Future Threat Intelligence
     url: https://www.recordedfuture.com/feed/
     category: ThreatIntel
-  - name: FireEye Threat Research
-    url: https://www.fireeye.com/blog/threat-research/_jcr_content.feed.rss
-    category: ThreatIntel
   - name: CrowdStrike Blog
-    url: https://www.crowdstrike.com/feed/
+    url: https://www.crowdstrike.com/blog/feed/
     category: ThreatIntel
   - name: Cisco Talos Intelligence
     url: https://blog.talosintelligence.com/feeds/posts/default
@@ -72,14 +93,11 @@ sources:
   - name: SANS Internet Storm Center
     url: https://isc.sans.edu/rssfeed.xml
     category: ThreatIntel
-  - name: Microsoft Security Response Center (MSRC)
-    url: https://msrc-blog.microsoft.com/feed/
-    category: ThreatIntel
+  - name: Microsoft Security Blog
+    url: https://www.microsoft.com/en-us/security/blog/feed/
+    category: Security
   - name: US-CERT National Cyber Awareness System
     url: https://us-cert.cisa.gov/ncas/alerts.xml
-    category: ThreatIntel
-  - name: AlienVault Labs
-    url: https://www.alienvault.com/blogs/labs/feed
     category: ThreatIntel
   - name: Fortinet Blog
     url: https://blog.fortinet.com/rss.xml
@@ -91,9 +109,6 @@ sources:
     category: Regulation
   - name: Singapore CSA
     url: https://www.csa.gov.sg/rss/news
-    category: Security
-  - name: Australia ACSC
-    url: https://www.cyber.gov.au/acsc/view-all-content/alerts?format=rss
     category: Security
   - name: Japan NISC
     url: https://www.nisc.go.jp/rss/eng-news.xml
@@ -112,9 +127,6 @@ sources:
     category: Security
   - name: Malaysia MyCERT
     url: https://www.mycert.org.my/rss
-    category: Security
-  - name: Vietnam AIS
-    url: https://ais.gov.vn/rss/news.xml
     category: Security
 
 filters:
@@ -143,8 +155,28 @@ filters:
     - "model poisoning"
     - "data poisoning"
 
+    # Vulnerability & CVE Specific
+    - "CVE-"
+    - "critical vulnerability"
+    - "high severity"
+    - "remote code execution"
+    - "privilege escalation"
+    - "buffer overflow"
+    - "SQL injection"
+    - "cross-site scripting"
+    - "authentication bypass"
+    - "information disclosure"
+    - "denial of service"
+    - "memory corruption"
+    - "use after free"
+    - "path traversal"
+    - "CVSS"
+    - "exploit available"
+    - "proof of concept"
+    - "vulnerability disclosure"
+    - "security advisory"
+    - "patch available"
     # Cybersecurity Threats
-    - "zero-day"
     - "critical vulnerability"
     - CVE-
     - "supply chain attack"
