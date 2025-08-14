@@ -118,7 +118,7 @@ def create_news_brief(date_str, content_by_category, highlights):
 layout: post
 title: "Weekly News Brief — {date_str}"
 date: {date_str} 12:00:00 +0000
-categories: [ news, brief ]
+categories: [ newsbrief ]
 ---
 
 """
