@@ -7,13 +7,47 @@ categories: [newsbrief]
 
 # Weekly News Brief — 2025-08-14
 
-## Top 5 Highlights
+## Top 10 Highlights
 
-1. Introducing GPT-5 (2 mentions)
-2. [webapps] Grav CMS 1.7.48 - Remote Code Execution (RCE) (2 mentions)
-3. OpenAI’s letter to Governor Newsom on harmonized regulation (1 mentions)
-4. Scaling accounting capacity with OpenAI (1 mentions)
-5. GPT-5 and the new era of work (1 mentions)
+1. **Introducing GPT-5** (2 mentions)
+   > We are introducing GPT‑5, our best AI system yet. GPT‑5 is a significant leap in intelligence over all our previous models, featuring state-of-the-art performance across coding, math, writing, health, visual perception, and more.
+   > [Read more](https://openai.com/index/introducing-gpt-5)
+
+2. **[webapps] Grav CMS 1.7.48 - Remote Code Execution (RCE)** (2 mentions)
+   > Grav CMS 1.7.48 - Remote Code Execution (RCE)
+   > [Read more](https://www.exploit-db.com/exploits/52402)
+
+3. **OpenAI’s letter to Governor Newsom on harmonized regulation** (1 mentions)
+   > We’ve just sent a letter to Gov. Gavin Newsom calling for California to lead the way in harmonizing state-based AI regulation with national—and, by virtue of US leadership, emerging global—standards.
+   > [Read more](https://openai.com/global-affairs/letter-to-governor-newsom-on-harmonized-regulation)
+
+4. **Scaling accounting capacity with OpenAI** (1 mentions)
+   > Built with OpenAI o3, o3-Pro, GPT-4.1, and GPT-5, Basis’ AI agents help accounting firms save up to 30% of their time and expand capacity for advisory and growth.
+   > [Read more](https://openai.com/index/basis)
+
+5. **GPT-5 and the new era of work** (1 mentions)
+   > GPT-5 is OpenAI’s most advanced model—transforming enterprise AI, automation, and workforce productivity in the new era of intelligent work.
+   > [Read more](https://openai.com/index/gpt-5-new-era-of-work)
+
+6. **Introducing GPT-5 for developers** (1 mentions)
+   > Introducing GPT-5 in our API platform—offering high reasoning performance, new controls for devs, and best-in-class results on real coding tasks.
+   > [Read more](https://openai.com/index/introducing-gpt-5-for-developers)
+
+7. **Coding and design with GPT-5** (1 mentions)
+   > Learn how GPT-5 unlocks new possibilities in coding and design.
+   > [Read more](https://openai.com/index/gpt-5-coding-design)
+
+8. **Creative writing with GPT-5** (1 mentions)
+   > Learn how GPT-5 assists with creative writing.
+   > [Read more](https://openai.com/index/gpt-5-creative-writing)
+
+9. **Medical research with GPT-5** (1 mentions)
+   > Learn how GPT-5 is used for medical research.
+   > [Read more](https://openai.com/index/gpt-5-medical-research)
+
+10. **How Amgen uses GPT-5** (1 mentions)
+   > Learn how Amgen uses GPT-5.
+   > [Read more](https://openai.com/index/gpt-5-amgen)
 
 ## Summary
 
@@ -21,11 +55,11 @@ categories: [newsbrief]
 |---|---|
 | Cloud | 14 |
 | LLM | 18 |
-| Security | 57 |
+| Security | 58 |
 | ThreatIntel | 13 |
 | Vulnerability | 22 |
 
-**Total Articles: 124**
+**Total Articles: 125**
 
 ## Cloud
 
@@ -129,6 +163,15 @@ categories: [newsbrief]
 
 ## Security
 
+- **Taiwan Web Servers Breached by UAT-7237 Using Customized Open-Source Hacking Tools** — A Chinese-speaking advanced persistent threat (APT) actor has been observed targeting web infrastructure entities in Taiwan using customized versions of open-sourced tools with an aim to establish ...
+  [Read more](https://thehackernews.com/2025/08/taiwan-web-servers-breached-by-uat-7237.html)
+
+- **Colt Telecom attack claimed by WarLock ransomware, data up for sale** — UK-based telecommunications company Colt Technology Services is dealing with a cyberattack that has caused a multi-day outage of some of the company's operations, including hosting and porting serv...
+  [Read more](https://www.bleepingcomputer.com/news/security/colt-telecom-attack-claimed-by-warlock-ransomware-data-up-for-sale/)
+
+- **Cisco warns of max severity flaw in Firewall Management Center** — Cisco is warning about a critical remote code execution (RCE) vulnerability in the RADIUS subsystem of its Secure Firewall Management Center (FMC) software. [...]
+  [Read more](https://www.bleepingcomputer.com/news/security/cisco-warns-of-max-severity-flaw-in-firewall-management-center/)
+
 - **U.S. Sanctions Garantex and Grinex Over $100M in Ransomware-Linked Illicit Crypto Transactions** — The U.S. Department of the Treasury's Office of Foreign Assets Control (OFAC) on Thursday renewed sanctions against Russian cryptocurrency exchange platform Garantex for facilitating ransomware act...
   [Read more](https://thehackernews.com/2025/08/us-sanctions-garantex-and-grinex-over.html)
 
@@ -182,9 +225,6 @@ categories: [newsbrief]
 
 - **UK immigration system targeted by hackers - dangerous new phishing campaign hits Sponsorship Management System** — Phishing emails are being used to steal account credentials to generate fake jobs and visa schemes.
   [Read more](https://www.techradar.com/pro/security/uk-immigration-system-targeted-by-hackers-dangerous-new-phishing-campaign-hits-sponsorship-management-system)
-
-- **Leak: OpenAI's browser will use ChatGPT Agent to control the browser** — OpenAI is building an agentic future with its upcoming Chromium-based browser and a new leak confirms GPT Agent integration. [...]
-  [Read more](https://www.bleepingcomputer.com/news/artificial-intelligence/leak-openais-browser-will-use-chatgpt-agent-to-control-the-browser/)
 
 - **Vulnerabilities in MSP-friendly RMM solution exploited in the wild (CVE-2025-8875, CVE-2025-8876)** — <p>Two vulnerabilities (CVE-2025-8875, CVE-2025-8876) in N-central, a remote monitoring and management (RMM) solution by N-able that&#8217;s popular with managed service providers, are being exploi...
   [Read more](https://www.helpnetsecurity.com/2025/08/14/vulnerabilities-in-msp-friendly-rmm-solution-exploited-in-the-wild-cve-2025-8875-cve-2025-8876/)
@@ -290,9 +330,6 @@ categories: [newsbrief]
 
 - **Microsoft Launches Project Ire to Autonomously Classify Malware Using AI Tools** — Microsoft on Tuesday announced an autonomous artificial intelligence (AI) agent that can analyze and classify software without assistance in an effort to advance malware detection efforts. The larg...
   [Read more](https://thehackernews.com/2025/08/microsoft-launches-project-ire-to.html)
-
-- **Trend Micro Confirms Active Exploitation of Critical Apex One Flaws in On-Premise Systems** — Trend Micro has released mitigations to address critical security flaws in on-premise versions of Apex One Management Console that it said have been exploited in the wild. The vulnerabilities (CVE-...
-  [Read more](https://thehackernews.com/2025/08/trend-micro-confirms-active.html)
 
 - **Phishers Target Aviation Execs to Scam Customers** — KrebsOnSecurity recently heard from a reader whose boss's email account got phished and was used to trick one of the company's customers into sending a large payment to scammers. An investigation i...
   [Read more](https://krebsonsecurity.com/2025/07/phishers-target-aviation-execs-to-scam-customers/)
