@@ -31,11 +31,24 @@ plugins:
   - jekyll-feed  # RSS feed support
 
 # Exclude from build
+# Exclude from build
 exclude:
-  - README.md
-  - fetch_news.py
-  - requirements.txt
-  - .github/
+  # --- Your Original Files (Consolidated) ---
+  - .github/         # This was in your first list
+  - _errors/         # This covers both '_errors' and '_errors/*'
+  - README.md        # This was in your first list
+  - fetch_news.py    # This was in your first list
+  - requirements.txt # This was in your first list
+
+  # --- Fixes for the Build Error ---
+  - vendor/bundle/   # These 'vendor' lines are the most important
+  - vendor/cache/    # part of the fix. They stop Jekyll from
+  - vendor/gems/     # looking inside the Ruby installation folder,
+  - vendor/ruby/     # which was the source of the build failure.
+
+  # --- Standard Jekyll Exclusions ---
+  - Gemfile          # These are Ruby development files that
+  - Gemfile.lock     # don't need to be in the final website.
 
 # Include other files/folders as needed
 include: []
@@ -48,8 +61,3 @@ paginate_path: "/page:num/"
 author:
   name: Alwyn Y.
   email: longemail@yahoo.com
-
-exclude:
-  - _errors
-  - _errors/*
-  - "*.py"
