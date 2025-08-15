@@ -109,8 +109,49 @@ def format_entries_for_category(entries):
         formatted.append(f"- **{title}** — {summary}\n  [Read more]({link})")
     return "\n\n".join(formatted)
 
+# def create_news_brief(date_str, content_by_category, highlights):
+#     """Create a single news brief post instead of individual posts"""
+#     POSTS_DIR.mkdir(exist_ok=True)
+#     filename = POSTS_DIR / f"{date_str}-news-brief.md"
+
+#     front_matter = f"""---
+# layout: post
+# title: "Weekly News Brief — {date_str}"
+# date: {date_str} 12:00:00 +0000
+# categories: [newsbrief]
+# ---
+
+# """
+
+#     # Top 5 highlights section
+#     highlights_section = "## Top 5 Highlights\n\n"
+#     for i, (title, count) in enumerate(highlights, start=1):
+#         highlights_section += f"{i}. {title} ({count} mentions)\n"
+#     highlights_section += "\n"
+
+#     # Generate summary table
+#     table = "| Category | Articles |\n|---|---|\n"
+#     total_articles = 0
+#     for category, entries in sorted(content_by_category.items()):
+#         article_count = len([line for line in entries.split('\n') if line.strip().startswith('- **')])
+#         table += f"| {category} | {article_count} |\n"
+#         total_articles += article_count
+
+#     body = f"# Weekly News Brief — {date_str}\n\n"
+#     body += highlights_section
+#     body += "## Summary\n\n"
+#     body += table + f"\n**Total Articles: {total_articles}**\n\n"
+
+#     for category in sorted(content_by_category.keys()):
+#         body += f"## {category}\n\n"
+#         body += content_by_category[category] + "\n\n"
+
+#     with open(filename, "w", encoding="utf-8") as f:
+#         f.write(front_matter + body)
+#     print(f"{GREEN}[NEWS BRIEF]{RESET} Created: {filename}")
+
 def create_news_brief(date_str, content_by_category, highlights):
-    """Create a single news brief post instead of individual posts"""
+    """Create a single news brief post with Top 10 highlights."""
     POSTS_DIR.mkdir(exist_ok=True)
     filename = POSTS_DIR / f"{date_str}-news-brief.md"
 
@@ -123,17 +164,26 @@ categories: [newsbrief]
 
 """
 
-    # Top 5 highlights section
-    highlights_section = "## Top 5 Highlights\n\n"
-    for i, (title, count) in enumerate(highlights, start=1):
-        highlights_section += f"{i}. {title} ({count} mentions)\n"
-    highlights_section += "\n"
+    # --- NEW: Top 10 highlights section ---
+    highlights_section = "## Top 10 Highlights\n\n"
+    for i, (entry, count) in enumerate(highlights, start=1):
+        title = entry.get("title", "No Title")
+        link = entry.get("link", "#")
+        # Clean up and shorten the summary
+        summary = entry.get("summary", "No summary available.").strip().replace('\n', ' ')
+        if len(summary) > 250:
+            summary = summary[:247] + "..."
+        
+        highlights_section += f"{i}. **{title}** ({count} mentions)\n"
+        highlights_section += f"   > {summary}\n"
+        highlights_section += f"   > [Read more]({link})\n\n"
+    # --- END NEW SECTION ---
 
     # Generate summary table
     table = "| Category | Articles |\n|---|---|\n"
     total_articles = 0
-    for category, entries in sorted(content_by_category.items()):
-        article_count = len([line for line in entries.split('\n') if line.strip().startswith('- **')])
+    for category, entries_text in sorted(content_by_category.items()):
+        article_count = len([line for line in entries_text.split('\n') if line.strip().startswith('- **')])
         table += f"| {category} | {article_count} |\n"
         total_articles += article_count
 
@@ -150,25 +200,56 @@ categories: [newsbrief]
         f.write(front_matter + body)
     print(f"{GREEN}[NEWS BRIEF]{RESET} Created: {filename}")
 
-def group_similar_titles(titles, threshold=FUZZ_THRESHOLD):
-    """Group titles that are similar using fuzzy matching."""
-    grouped = []
-    used = set()
+# def group_similar_titles(titles, threshold=FUZZ_THRESHOLD):
+#     """Group titles that are similar using fuzzy matching."""
+#     grouped = []
+#     used = set()
 
-    for i, t1 in enumerate(titles):
-        if i in used:
+#     for i, t1 in enumerate(titles):
+#         if i in used:
+#             continue
+#         group_count = 1
+#         for j, t2 in enumerate(titles[i+1:], start=i+1):
+#             if j in used:
+#                 continue
+#             if SequenceMatcher(None, t1.lower(), t2.lower()).ratio() >= threshold:
+#                 group_count += 1
+#                 used.add(j)
+#         grouped.append((t1, group_count))
+#     # Sort descending by count
+#     grouped.sort(key=lambda x: x[1], reverse=True)
+#     return grouped[:5]
+
+def group_similar_entries(entries, threshold=FUZZ_THRESHOLD):
+    """Group entries that are similar using fuzzy title matching."""
+    grouped = []
+    used_indices = set()
+
+    for i, entry1 in enumerate(entries):
+        if i in used_indices:
             continue
+        
         group_count = 1
-        for j, t2 in enumerate(titles[i+1:], start=i+1):
-            if j in used:
+        # Find similar entries
+        for j, entry2 in enumerate(entries[i+1:], start=i+1):
+            if j in used_indices:
                 continue
-            if SequenceMatcher(None, t1.lower(), t2.lower()).ratio() >= threshold:
+            
+            title1 = entry1.get("title", "").lower()
+            title2 = entry2.get("title", "").lower()
+            
+            if SequenceMatcher(None, title1, title2).ratio() >= threshold:
                 group_count += 1
-                used.add(j)
-        grouped.append((t1, group_count))
+                used_indices.add(j)
+        
+        # Store the original entry and its mention count
+        grouped.append((entry1, group_count))
+        used_indices.add(i)
+
     # Sort descending by count
     grouped.sort(key=lambda x: x[1], reverse=True)
-    return grouped[:5]
+    # Return the top 10
+    return grouped[:10]
 
 def main():
     print(f"{YELLOW}Starting news aggregation...{RESET}\n")
@@ -183,7 +264,8 @@ def main():
     print(f"{GREY}  - Keywords: {keywords}{RESET}")
     
     reports = {}
-    all_titles = []
+    # all_titles = []
+    all_matched_entries = []
     errors = 0
     total_entries = 0
     recent_entries = 0
@@ -224,7 +306,8 @@ def main():
                     if category not in reports:
                         reports[category] = []
                     reports[category].append(entry)
-                    all_titles.append(entry.get("title", "No Title"))
+                    # all_titles.append(entry.get("title", "No Title"))
+                    all_matched_entries.append(entry) # <-- Store the whole entry
         
         print(f"{GREY}    Recent: {recent_count}, Matched: {matched_count}{RESET}")
 
@@ -251,7 +334,9 @@ def main():
         return
 
     # Create news brief
-    top_highlights = group_similar_titles(all_titles)
+    # top_highlights = group_similar_titles(all_titles)
+    top_highlights = group_similar_entries(all_matched_entries)
+    
     #today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     # Use yesterday's date to avoid all future-dating issues with UTC.
     yesterday = datetime.now(timezone.utc) - timedelta(days=1)
