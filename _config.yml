@@ -53,3 +53,5 @@ exclude:
   - _errors
   - _errors/*
   - "*.py"
+
+# Force rebuild on 2025-08-15
