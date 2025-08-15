@@ -2,32 +2,81 @@
 layout: post
 title: "Weekly News Brief — 2025-08-14"
 date: 2025-08-14 12:00:00 +0000
-categories: news brief
+categories: [newsbrief]
 ---
 
 # Weekly News Brief — 2025-08-14
 
-## Top 5 Highlights
+## Top 10 Highlights
 
-1. [webapps] Grav CMS 1.7.48 - Remote Code Execution (RCE) (3 mentions)
-2. Introducing GPT-5 (2 mentions)
-3. Fortinet Warns About FortiSIEM Vulnerability (CVE-2025-25256) With In-the-Wild Exploit Code (2 mentions)
-4. OpenAI’s letter to Governor Newsom on harmonized regulation (1 mentions)
-5. Scaling accounting capacity with OpenAI (1 mentions)
+1. **Introducing GPT-5** (2 mentions)
+   > We are introducing GPT‑5, our best AI system yet. GPT‑5 is a significant leap in intelligence over all our previous models, featuring state-of-the-art performance across coding, math, writing, health, visual perception, and more.
+   > [Read more](https://openai.com/index/introducing-gpt-5)
+
+2. **[webapps] Grav CMS 1.7.48 - Remote Code Execution (RCE)** (2 mentions)
+   > Grav CMS 1.7.48 - Remote Code Execution (RCE)
+   > [Read more](https://www.exploit-db.com/exploits/52402)
+
+3. **OpenAI’s letter to Governor Newsom on harmonized regulation** (1 mentions)
+   > We’ve just sent a letter to Gov. Gavin Newsom calling for California to lead the way in harmonizing state-based AI regulation with national—and, by virtue of US leadership, emerging global—standards.
+   > [Read more](https://openai.com/global-affairs/letter-to-governor-newsom-on-harmonized-regulation)
+
+4. **Scaling accounting capacity with OpenAI** (1 mentions)
+   > Built with OpenAI o3, o3-Pro, GPT-4.1, and GPT-5, Basis’ AI agents help accounting firms save up to 30% of their time and expand capacity for advisory and growth.
+   > [Read more](https://openai.com/index/basis)
+
+5. **GPT-5 and the new era of work** (1 mentions)
+   > GPT-5 is OpenAI’s most advanced model—transforming enterprise AI, automation, and workforce productivity in the new era of intelligent work.
+   > [Read more](https://openai.com/index/gpt-5-new-era-of-work)
+
+6. **Introducing GPT-5 for developers** (1 mentions)
+   > Introducing GPT-5 in our API platform—offering high reasoning performance, new controls for devs, and best-in-class results on real coding tasks.
+   > [Read more](https://openai.com/index/introducing-gpt-5-for-developers)
+
+7. **Coding and design with GPT-5** (1 mentions)
+   > Learn how GPT-5 unlocks new possibilities in coding and design.
+   > [Read more](https://openai.com/index/gpt-5-coding-design)
+
+8. **Creative writing with GPT-5** (1 mentions)
+   > Learn how GPT-5 assists with creative writing.
+   > [Read more](https://openai.com/index/gpt-5-creative-writing)
+
+9. **Medical research with GPT-5** (1 mentions)
+   > Learn how GPT-5 is used for medical research.
+   > [Read more](https://openai.com/index/gpt-5-medical-research)
+
+10. **How Amgen uses GPT-5** (1 mentions)
+   > Learn how Amgen uses GPT-5.
+   > [Read more](https://openai.com/index/gpt-5-amgen)
 
 ## Summary
 
 | Category | Articles |
 |---|---|
-| Cloud | 10 |
+| Cloud | 14 |
 | LLM | 18 |
-| Security | 57 |
+| Security | 59 |
 | ThreatIntel | 13 |
-| Vulnerability | 26 |
+| Vulnerability | 22 |
 
-**Total Articles: 124**
+**Total Articles: 126**
 
 ## Cloud
+
+- **Amazon Neptune now integrates with Cognee for graph-native memory in GenAI Applications** — <p>Today, we’re announcing the integration of Amazon Neptune Analytics with Cognee, a leading agentic memory framework designed to help AI agents structure, retrieve, and reason over information. W...
+  [Read more](https://aws.amazon.com/about-aws/whats-new/2025/08/amazon-neptune-cognee-genai-applications)
+
+- **SageMaker HyperPod now supports fine-grained quota allocation of compute resources** — <p>SageMaker HyperPod task governance now supports fine-grained compute quota allocation of GPU, Trainium accelerator, vCPU, and vCPU memory within an instance. Administrators can allocate fine-gra...
+  [Read more](https://aws.amazon.com/about-aws/whats-new/2025/08/sagemaker-hyperpod-fined-grained-quota-allocation-compute-resources/)
+
+- **SageMaker HyperPod now supports Topology Aware Scheduling of LLM tasks** — <p>SageMaker HyperPod task governance now supports Topology Aware Scheduling (TAS), enabling data scientists to schedule their large language model (LLM) tasks on an optimal network topology that m...
+  [Read more](https://aws.amazon.com/about-aws/whats-new/2025/08/sagemaker-hyperpod-topology-aware-scheduling-llm-tasks)
+
+- **Amazon Q Business launches Agentic RAG to enhance accuracy and explainability** — <p>Amazon Q Business, the generative AI-powered assistant for finding information, gaining insight, and taking action at work, today introduced Agentic Retrieval-Augmented Generation (RAG) for Q Bu...
+  [Read more](https://aws.amazon.com/about-aws/whats-new/2025/08/qbusiness-launches-agentic-rag/)
+
+- **AWS Security Incident Response now supports membership coverage for individual AWS organizational units** — <p>AWS Security Incident Response now allows you to choose membership coverage for specific AWS organizational units (OUs) within an AWS Organization. While memberships previously covered all accou...
+  [Read more](https://aws.amazon.com/about-aws/whats-new/2025/08/aws-security-incident-response-ou-membership-coverage)
 
 - **Amazon Q Business launches Response Events for enhanced chat transparency** — <p>Amazon Q Business, the generative AI-powered assistant for finding information, gaining insight, and taking action at work, today introduced Response Events, a new feature that provides real-tim...
   [Read more](https://aws.amazon.com/about-aws/whats-new/2025/08/amazon-q-business-launches-response-events-chat/)
@@ -56,9 +105,6 @@ categories: news brief
 - **Amazon S3 Access Points now support tags for Attribute-Based Access Control** — <p>Amazon S3 Access Points now support tags for Attribute-Based Access Control (ABAC). S3 Access Points simplify managing data access to your shared datasets in S3 general purpose and directory buc...
   [Read more](https://aws.amazon.com/about-aws/whats-new/2025/08/amazon-s3-access-points-tags-attribute-based-access-control)
 
-- **Amazon CloudWatch launches natural language query generation for OpenSearch PPL and SQL** — <p>Amazon CloudWatch launches natural language query generation powered by generative AI for OpenSearch PPL and SQL query languages in CloudWatch Logs Insights, accelerating logs analysis.<br /> <b...
-  [Read more](https://aws.amazon.com/about-aws/whats-new/2025/08/amazon-cloudwatch-natural-language-query-generation-opensearch-ppl-sql)
-
 ## LLM
 
 - **OpenAI’s letter to Governor Newsom on harmonized regulation** — We’ve just sent a letter to Gov. Gavin Newsom calling for California to lead the way in harmonizing state-based AI regulation with national—and, by virtue of US leadership, emerging global—standards.
@@ -67,11 +113,11 @@ categories: news brief
 - **Scaling accounting capacity with OpenAI** — Built with OpenAI o3, o3-Pro, GPT-4.1, and GPT-5, Basis’ AI agents help accounting firms save up to 30% of their time and expand capacity for advisory and growth.
   [Read more](https://openai.com/index/basis)
 
-- **Introducing GPT-5 for developers** — Introducing GPT-5 in our API platform—offering high reasoning performance, new controls for devs, and best-in-class results on real coding tasks.
-  [Read more](https://openai.com/index/introducing-gpt-5-for-developers)
-
 - **GPT-5 and the new era of work** — GPT-5 is OpenAI’s most advanced model—transforming enterprise AI, automation, and workforce productivity in the new era of intelligent work.
   [Read more](https://openai.com/index/gpt-5-new-era-of-work)
+
+- **Introducing GPT-5 for developers** — Introducing GPT-5 in our API platform—offering high reasoning performance, new controls for devs, and best-in-class results on real coding tasks.
+  [Read more](https://openai.com/index/introducing-gpt-5-for-developers)
 
 - **Coding and design with GPT-5** — Learn how GPT-5 unlocks new possibilities in coding and design.
   [Read more](https://openai.com/index/gpt-5-coding-design)
@@ -82,32 +128,32 @@ categories: news brief
 - **Medical research with GPT-5** — Learn how GPT-5 is used for medical research.
   [Read more](https://openai.com/index/gpt-5-medical-research)
 
+- **How Amgen uses GPT-5** — Learn how Amgen uses GPT-5.
+  [Read more](https://openai.com/index/gpt-5-amgen)
+
 - **First look at GPT-5** — See how a group of leading developers use GPT-5 for the first time.
   [Read more](https://openai.com/index/gpt-5-first-look)
-
-- **From hard refusals to safe-completions: toward output-centric safety training** — Discover how OpenAI's new safe-completions approach in GPT-5 improves both safety and helpfulness in AI responses—moving beyond hard refusals to nuanced, output-centric safety training for handling...
-  [Read more](https://openai.com/index/gpt-5-safe-completions)
 
 - **How Cursor uses GPT-5** — Learn how Cursor uses GPT-5.
   [Read more](https://openai.com/index/gpt-5-cursor)
 
-- **Introducing GPT-5** — We are introducing GPT‑5, our best AI system yet. GPT‑5 is a significant leap in intelligence over all our previous models, featuring state-of-the-art performance across coding, math, writing, heal...
-  [Read more](https://openai.com/index/introducing-gpt-5)
-
 - **GPT-5 System Card** — This GPT-5 system card explains how a unified model routing system powers fast and smart responses using gpt-5-main, gpt-5-thinking, and lightweight versions like gpt-5-thinking-nano, optimized for...
   [Read more](https://openai.com/index/gpt-5-system-card)
 
-- **How Amgen uses GPT-5** — Learn how Amgen uses GPT-5.
-  [Read more](https://openai.com/index/gpt-5-amgen)
+- **Introducing GPT-5** — We are introducing GPT‑5, our best AI system yet. GPT‑5 is a significant leap in intelligence over all our previous models, featuring state-of-the-art performance across coding, math, writing, heal...
+  [Read more](https://openai.com/index/introducing-gpt-5)
+
+- **From hard refusals to safe-completions: toward output-centric safety training** — Discover how OpenAI's new safe-completions approach in GPT-5 improves both safety and helpfulness in AI responses—moving beyond hard refusals to nuanced, output-centric safety training for handling...
+  [Read more](https://openai.com/index/gpt-5-safe-completions)
 
 - **Introducing gpt-oss** — We’re releasing gpt-oss-120b and gpt-oss-20b—two state-of-the-art open-weight language models that deliver strong real-world performance at low cost. Available under the flexible Apache 2.0 license...
   [Read more](https://openai.com/index/introducing-gpt-oss)
 
-- **Estimating worst case frontier risks of open weight LLMs** — In this paper, we study the worst-case frontier risks of releasing gpt-oss. We introduce malicious fine-tuning (MFT), where we attempt to elicit maximum capabilities by fine-tuning gpt-oss to be as...
-  [Read more](https://openai.com/index/estimating-worst-case-frontier-risks-of-open-weight-llms)
-
 - **gpt-oss-120b & gpt-oss-20b Model Card** — We introduce gpt-oss-120b and gpt-oss-20b, two open-weight reasoning models available under the Apache 2.0 license and our gpt-oss usage policy.
   [Read more](https://openai.com/index/gpt-oss-model-card)
+
+- **Estimating worst case frontier risks of open weight LLMs** — In this paper, we study the worst-case frontier risks of releasing gpt-oss. We introduce malicious fine-tuning (MFT), where we attempt to elicit maximum capabilities by fine-tuning gpt-oss to be as...
+  [Read more](https://openai.com/index/estimating-worst-case-frontier-risks-of-open-weight-llms)
 
 - **Resolving digital threats 100x faster with OpenAI** — Discover how Outtake uses GPT-4.1 and OpenAI o3 to power AI agents that detect and resolve digital threats 100x faster than before.
   [Read more](https://openai.com/index/outtake)
@@ -117,17 +163,80 @@ categories: news brief
 
 ## Security
 
-- **OpenAI relaxes GPT-5 rate limit, promises to improve the personality** — OpenAI is slowly addressing all concerns around GPT-5, including rate limits and now its personality, which has been criticized for being less affirmative. [...]
-  [Read more](https://www.bleepingcomputer.com/news/artificial-intelligence/openai-relaxes-gpt-5-rate-limit-promises-to-improve-the-personality/)
+- **Mobile Phishers Target Brokerage Accounts in ‘Ramp and Dump’ Cashout Scheme** — Cybercriminal groups peddling sophisticated phishing kits that convert stolen card data into mobile wallets have recently shifted their focus to targeting customers of brokerage services, new resea...
+  [Read more](https://krebsonsecurity.com/2025/08/mobile-phishers-target-brokerage-accounts-in-ramp-and-dump-cashout-scheme/)
 
-- **New downgrade attack can bypass FIDO auth in Microsoft Entra ID** — Security researchers have created a new FIDO downgrade attack against Microsoft Entra ID that tricks users into authenticating with weaker login methods, making them susceptible to phishing and ses...
-  [Read more](https://www.bleepingcomputer.com/news/security/new-downgrade-attack-can-bypass-fido-auth-in-microsoft-entra-id/)
+- **Taiwan Web Servers Breached by UAT-7237 Using Customized Open-Source Hacking Tools** — A Chinese-speaking advanced persistent threat (APT) actor has been observed targeting web infrastructure entities in Taiwan using customized versions of open-sourced tools with an aim to establish ...
+  [Read more](https://thehackernews.com/2025/08/taiwan-web-servers-breached-by-uat-7237.html)
+
+- **Colt Telecom attack claimed by WarLock ransomware, data up for sale** — UK-based telecommunications company Colt Technology Services is dealing with a cyberattack that has caused a multi-day outage of some of the company's operations, including hosting and porting serv...
+  [Read more](https://www.bleepingcomputer.com/news/security/colt-telecom-attack-claimed-by-warlock-ransomware-data-up-for-sale/)
+
+- **Cisco warns of max severity flaw in Firewall Management Center** — Cisco is warning about a critical remote code execution (RCE) vulnerability in the RADIUS subsystem of its Secure Firewall Management Center (FMC) software. [...]
+  [Read more](https://www.bleepingcomputer.com/news/security/cisco-warns-of-max-severity-flaw-in-firewall-management-center/)
+
+- **U.S. Sanctions Garantex and Grinex Over $100M in Ransomware-Linked Illicit Crypto Transactions** — The U.S. Department of the Treasury's Office of Foreign Assets Control (OFAC) on Thursday renewed sanctions against Russian cryptocurrency exchange platform Garantex for facilitating ransomware act...
+  [Read more](https://thehackernews.com/2025/08/us-sanctions-garantex-and-grinex-over.html)
+
+- **Zero Trust + AI: Privacy in the Age of Agentic AI** — We used to think of privacy as a perimeter problem: about walls and locks, permissions, and policies. But in a world where artificial agents are becoming autonomous actors — interacting with data, ...
+  [Read more](https://thehackernews.com/2025/08/zero-trust-ai-privacy-in-age-of-agentic.html)
+
+- **US sanctions Grinex crypto-exchange, successor to Garantex** — The U.S. Department of the Treasury has announced sanctions against Grinex, the successor to Russian cryptocurrency exchange Garantex, which was previously sanctioned for helping ransomware gangs l...
+  [Read more](https://www.bleepingcomputer.com/news/security/us-sanctions-grinex-crypto-exchange-garantexs-successor/)
+
+- **Cisco Patches Critical Vulnerability in Firewall Management Platform** — <p>Cisco has released over 20 advisories as part of its August 2025 bundled publication for ASA, FMC and FTD products.</p> <p>The post <a href="https://www.securityweek.com/cisco-patches-critical-v...
+  [Read more](https://www.securityweek.com/cisco-patches-critical-vulnerability-in-firewall-management-platform/)
+
+- **Cisco Warns of CVSS 10.0 FMC RADIUS Flaw Allowing Remote Code Execution** — Cisco has released security updates to address a maximum-severity security flaw in Secure Firewall Management Center (FMC) Software that could allow an attacker to execute arbitrary code on affecte...
+  [Read more](https://thehackernews.com/2025/08/cisco-warns-of-cvss-100-fmc-radius-flaw.html)
+
+- **Fighting fraud with AI: The new identity security playbook** — <p>In this Help Net Security video, Hal Lonas, CTO at Trulioo, talks about the rise of synthetic identity fraud and how it&#8217;s quickly becoming one of the biggest threats in financial crime. He...
+  [Read more](https://www.helpnetsecurity.com/2025/08/15/synthetic-identity-fraud-video/)
+
+- **Employees race to build custom AI apps despite security risks** — <p>The latest Netskope findings show a 50% increase in GenAI platform usage among enterprise end-users, driven by growing employee demand for tools to develop custom AI applications and agents. Top...
+  [Read more](https://www.helpnetsecurity.com/2025/08/15/shadow-ai-genai-apps/)
+
+- **Over $300 million in cybercrime crypto seized in anti-fraud effort** — More than $300 million worth of cryptocurrency linked to cybercrime and fraud schemes has been frozen due to two separate initiatives involving law enforcement and private companies. [...]
+  [Read more](https://www.bleepingcomputer.com/news/security/over-300-million-in-cybercrime-crypto-seized-in-anti-fraud-effort/)
+
+- **Crypto24 ransomware hits large orgs with custom EDR evasion tool** — The Crypto24 ransomware group has been using custom utilities to evade security solutions on breached networks, exfiltrate data, and encrypt files. [...]
+  [Read more](https://www.bleepingcomputer.com/news/security/crypto24-ransomware-hits-large-orgs-with-custom-edr-evasion-tool/)
+
+- **AI-powered phishing attacks are on the rise and getting smarter - here's how to stay safe** — As AI use grows, most of the old red flags no longer apply, security experts warn.
+  [Read more](https://www.techradar.com/pro/security/ai-powered-phishing-attacks-are-on-the-rise-and-getting-smarter-heres-how-to-stay-safe)
+
+- **Booking.com phishing campaign uses sneaky 'ん' character to trick you** — Threat actors are leveraging a Unicode character to make phishing links appear like legitimate Booking.com links in a new campaign distributing malware. The attack makes use of the Japanese hiragan...
+  [Read more](https://www.bleepingcomputer.com/news/security/bookingcom-phishing-campaign-uses-sneaky-character-to-trick-you/)
+
+- **When Theft Replaces Encryption: Blue Report 2025 on Ransomware & Infostealers** — Ransomware and infostealers are winning on stealth, not encryption. Picus Blue Report 2025 reveals just 3% of data exfiltration attempts are stopped. Find and fix your biggest exposure gaps before ...
+  [Read more](https://www.bleepingcomputer.com/news/security/when-theft-replaces-encryption-blue-report-2025-on-ransomware-and-infostealers/)
+
+- **Vulnerabilities in Xerox Print Orchestration Product Allow Remote Code Execution** — <p>Path traversal and XXE injection flaws allowing unauthenticated remote code execution have been patched in Xerox FreeFlow Core. </p> <p>The post <a href="https://www.securityweek.com/vulnerabili...
+  [Read more](https://www.securityweek.com/vulnerabilities-in-xerox-print-orchestration-product-allow-remote-code-execution/)
+
+- **Canada’s House of Commons investigating data breach after cyberattack** — The House of Commons of Canada is currently investigating a data breach after a threat actor reportedly stole employee information in a cyberattack on Friday. [...]
+  [Read more](https://www.bleepingcomputer.com/news/security/canadas-house-of-commons-investigating-data-breach-after-cyberattack/)
+
+- **CISA Warns of Attacks Exploiting N-able Vulnerabilities** — <p>CISA reported becoming aware of attacks exploiting CVE-2025-8875 and CVE-2025-8876 in N-able N-central on the day they were patched.</p> <p>The post <a href="https://www.securityweek.com/cisa-wa...
+  [Read more](https://www.securityweek.com/cisa-warns-of-attacks-exploiting-n-able-vulnerabilities/)
+
+- **For $40, you can buy stolen police and government email accounts** — <p>Active police and government email accounts are being sold on the dark web for as little as $40, giving cybercriminals a direct line into systems and services that rely on institutional trust. A...
+  [Read more](https://www.helpnetsecurity.com/2025/08/14/stolen-government-email-accounts/)
+
+- **LLM Coding Integrity Breach** — <p><a href="https://sketch.dev/blog/our-first-outage-from-llm-written-code">Here&#8217;s</a> an interesting story about a failure being introduced by LLM-written code. Specifically, the LLM was doi...
+  [Read more](https://www.schneier.com/blog/archives/2025/08/llm-coding-integrity-breach.html)
+
+- **UK immigration system targeted by hackers - dangerous new phishing campaign hits Sponsorship Management System** — Phishing emails are being used to steal account credentials to generate fake jobs and visa schemes.
+  [Read more](https://www.techradar.com/pro/security/uk-immigration-system-targeted-by-hackers-dangerous-new-phishing-campaign-hits-sponsorship-management-system)
+
+- **Vulnerabilities in MSP-friendly RMM solution exploited in the wild (CVE-2025-8875, CVE-2025-8876)** — <p>Two vulnerabilities (CVE-2025-8875, CVE-2025-8876) in N-central, a remote monitoring and management (RMM) solution by N-able that&#8217;s popular with managed service providers, are being exploi...
+  [Read more](https://www.helpnetsecurity.com/2025/08/14/vulnerabilities-in-msp-friendly-rmm-solution-exploited-in-the-wild-cve-2025-8875-cve-2025-8876/)
+
+- **Fragmented security: the hidden threat undermining your cyber defenses** — Many companies overlook a critical vulnerability: fragmented security born from the proliferation of connected assets.
+  [Read more](https://www.techradar.com/pro/fragmented-security-the-hidden-threat-undermining-your-cyber-defenses)
 
 - **New PS1Bot Malware Campaign Uses Malvertising to Deploy Multi-Stage In-Memory Attacks** — Cybersecurity researchers have discovered a new malvertising campaign that's designed to infect victims with a multi-stage malware framework called PS1Bot. "PS1Bot features a modular design, with s...
   [Read more](https://thehackernews.com/2025/08/new-ps1bot-malware-campaign-uses.html)
-
-- **Croatian research institute confirms ransomware attack via ToolShell vulnerabilities** — <p>The Ruđer Bošković Institute (RBI), the largest Croatian science and technology research institute, has confirmed that it was the one of &#8220;at least 9,000 institutions worldwide&#8221; that ...
-  [Read more](https://www.helpnetsecurity.com/2025/08/13/croatian-research-institute-confirms-ransomware-attack-via-toolshell-vulnerabilities/)
 
 - **What is DMARC and why it could prevent your organization from being hacked by cybercriminals** — Most organizations leave email vulnerable to cyberattacks. DMARC is the key to stopping sophisticated phishing attacks.
   [Read more](https://www.techradar.com/pro/what-is-dmarc-and-why-it-could-prevent-your-organization-from-being-hacked-by-cybercriminals)
@@ -138,38 +247,17 @@ categories: news brief
 - **Zoom and Xerox Release Critical Security Updates Fixing Privilege Escalation and RCE Flaws** — Zoom and Xerox have addressed critical security flaws in Zoom Clients for Windows and FreeFlow Core that could allow privilege escalation and remote code execution.&nbsp; The vulnerability impactin...
   [Read more](https://thehackernews.com/2025/08/zoom-and-xerox-release-critical.html)
 
-- **Microsoft fixes “BadSuccessor” Kerberos vulnerability (CVE-2025-53779)** — <p>For August 2025 Patch Tuesday, Microsoft has released security updates resolving 100+ security vulnerabilities in its various solutions, including a relative path traversal flaw in Windows Kerbe...
-  [Read more](https://www.helpnetsecurity.com/2025/08/13/microsoft-fixes-badsuccessor-kerberos-vulnerability-cve-2025-53779/)
-
 - **Fortinet Warns About FortiSIEM Vulnerability (CVE-2025-25256) With In-the-Wild Exploit Code** — Fortinet is alerting customers of a critical security flaw in FortiSIEM for which it said there exists an exploit in the wild. The vulnerability, tracked as CVE-2025-25256, carries a CVSS score of ...
   [Read more](https://thehackernews.com/2025/08/fortinet-warns-about-fortisiem.html)
-
-- **OpenAI adds new GPT-5 models, restores o3, o4-mini and it's a mess all over again** — One of the few things many disliked about ChatGPT was the confusing number of models. OpenAI claimed GPT-5 would fix this, but it seems to have made it worse. [...]
-  [Read more](https://www.bleepingcomputer.com/news/artificial-intelligence/openai-adds-new-gpt-5-models-restores-o3-o4-mini-and-its-a-mess-all-over-again/)
-
-- **Manpower Says Data Breach Stemming From Ransomware Attack Impacts 140,000** — <p>The RansomHub ransomware group stole sensitive information from staffing and recruiting firm Manpower in January.</p> <p>The post <a href="https://www.securityweek.com/manpower-says-data-breach-...
-  [Read more](https://www.securityweek.com/manpower-says-data-breach-stemming-from-ransomware-attack-impacts-140000/)
-
-- **Fortinet warns about FortiSIEM vulnerability with in-the-wild exploit code (CVE-2025-25256)** — <p>Fortinet has released patches for a critical OS command injection vulnerability (CVE-2025-25256) in FortiSIEM, after practical exploit code surfaced in the wild. About CVE-2025-25256 FortiSIEM i...
-  [Read more](https://www.helpnetsecurity.com/2025/08/13/fortinet-warns-about-fortisiem-vulnerability-with-in-the-wild-exploit-code-cve-2025-25256/)
 
 - **Charon Ransomware Hits Middle East Sectors Using APT-Level Evasion Tactics** — Cybersecurity researchers have discovered a new campaign that employs a previously undocumented ransomware family called Charon to target the Middle East's public sector and aviation industry. The ...
   [Read more](https://thehackernews.com/2025/08/charon-ransomware-hits-middle-east.html)
 
-- **How to build and grow a scalable vCISO practice as an MSP** — <p>The cybersecurity needs of small and midsize businesses have reached a critical point. Compliance mandates, increasing ransomware attacks, and cyber insurance requirements are driving demand for...
-  [Read more](https://www.helpnetsecurity.com/2025/08/13/cynomi-vciso-services-ultimate-guide/)
-
 - **Cybercrime Groups ShinyHunters, Scattered Spider Join Forces in Extortion Attacks on Businesses** — An ongoing data extortion campaign targeting Salesforce customers may soon turn its attention to financial services and technology service providers, as ShinyHunters and Scattered Spider appear to ...
   [Read more](https://thehackernews.com/2025/08/cybercrime-groups-shinyhunters.html)
 
-- **Inside the Dark Web’s Access Economy: How Hackers Sell the Keys to Enterprise Networks** — <p>Rapid7’s analysis of dark web forums reveals a thriving market where elite hackers sell corporate network access to buyers, turning cybercrime into a streamlined business.</p> <p>The post <a hre...
-  [Read more](https://www.securityweek.com/inside-the-dark-webs-access-economy-how-hackers-sell-the-keys-to-enterprise-networks/)
-
 - **US government seizes $1 million from major Russian ransomware gang in a rare win for the good guys** — Retrieving crypto from ransomware gangs is extremely difficult, but the US government managed to get some of it back.
   [Read more](https://www.techradar.com/pro/security/us-government-seizes-usd1-million-from-major-russian-ransomware-gang-in-a-rare-win-for-the-good-guys)
-
-- **Netscaler vulnerability was exploited as zero-day for nearly two months (CVE-2025-6543)** — <p>FortiGuard Labs has reported a dramatic spike in exploitation attempts targeting CitrixBleed 2, a critical buffer over‑read flaw (CVE‑2025‑5777) affecting Citrix NetScaler ADC (Application Deliv...
-  [Read more](https://www.helpnetsecurity.com/2025/08/12/citrix-netscaler-exploitation-zero-day-cve-2025-6543/)
 
 - **Major data breach at US credit union sees 172,000 customers at risk - here's how to stay safe** — Names, debit card data, and SSNs stolen from Connex Credit Union, which is being investigated.
   [Read more](https://www.techradar.com/pro/security/major-data-breach-at-us-credit-union-sees-172-000-customers-at-risk-heres-how-to-stay-safe)
@@ -228,15 +316,6 @@ categories: news brief
 - **Air France and KLM customers may have had personal details exposed following data breach** — Airline giants notify customers of a cyber incident which saw sensitive information stolen.
   [Read more](https://www.techradar.com/pro/security/air-france-and-klm-customers-may-have-had-personal-details-exposed-following-data-breach)
 
-- **This devious ransomware is able to hijack your system to turn off Microsoft Defender** — Researchers shine a new light on how Akira deploys its malware.
-  [Read more](https://www.techradar.com/pro/security/this-devious-ransomware-is-able-to-hijack-your-system-to-turn-off-microsoft-defender)
-
-- **What the UK’s new cyber budget means for industrial organizations in Critical National Infrastructure (CNI)** — New UK cyber funding strengthens defenses for critical infrastructure amid rising digital threats.
-  [Read more](https://www.techradar.com/pro/what-the-uks-new-cyber-budget-means-for-industrial-organizations-in-critical-national-infrastructure-cni)
-
-- **Venice Film Festival hacked, attendee data leaked online** — The Venice Film Festival becomes the latest entertainment event to be affected by a data breach.
-  [Read more](https://www.techradar.com/pro/security/venice-film-festival-hacked-attendee-data-leaked-online)
-
 - **Microsoft Discloses Exchange Server Flaw Enabling Silent Cloud Access in Hybrid Setups** — Microsoft has released an advisory for a high-severity security flaw affecting on-premise versions of Exchange Server that could allow an attacker to gain elevated privileges under certain conditio...
   [Read more](https://thehackernews.com/2025/08/microsoft-discloses-exchange-server.html)
 
@@ -249,38 +328,11 @@ categories: news brief
 - **Researchers Uncover ECScape Flaw in Amazon ECS Enabling Cross-Task Credential Theft** — Cybersecurity researchers have demonstrated an "end-to-end privilege escalation chain" in Amazon Elastic Container Service (ECS) that could be exploited by an attacker to conduct lateral movement, ...
   [Read more](https://thehackernews.com/2025/08/researchers-uncover-ecscape-flaw-in.html)
 
-- **Huge healthcare breach sees nearly a million patients hit following DaVita ransomware attack - make sure you're safe** — Healthcare giant DaVita hit by Interlock attack, and warns patients to remain vigilant.
-  [Read more](https://www.techradar.com/pro/security/huge-healthcare-breach-sees-nearly-a-million-patients-hit-following-davita-ransomware-attack-make-sure-youre-safe)
-
 - **Who Got Arrested in the Raid on the XSS Crime Forum?** — On July 22, 2025, the European police agency Europol said a long-running investigation led by the French Police resulted in the arrest of a 38-year-old administrator of XSS, a Russian-language cybe...
   [Read more](https://krebsonsecurity.com/2025/08/who-got-arrested-in-the-raid-on-the-xss-crime-forum/)
 
 - **Microsoft Launches Project Ire to Autonomously Classify Malware Using AI Tools** — Microsoft on Tuesday announced an autonomous artificial intelligence (AI) agent that can analyze and classify software without assistance in an effort to advance malware detection efforts. The larg...
   [Read more](https://thehackernews.com/2025/08/microsoft-launches-project-ire-to.html)
-
-- **Trend Micro Confirms Active Exploitation of Critical Apex One Flaws in On-Premise Systems** — Trend Micro has released mitigations to address critical security flaws in on-premise versions of Apex One Management Console that it said have been exploited in the wild. The vulnerabilities (CVE-...
-  [Read more](https://thehackernews.com/2025/08/trend-micro-confirms-active.html)
-
-- **CERT-UA Warns of HTA-Delivered C# Malware Attacks Using Court Summons Lures** — The Computer Emergency Response Team of Ukraine (CERT-UA) has warned of cyber attacks carried out by a threat actor called UAC-0099 targeting government agencies, the defense forces, and enterprise...
-  [Read more](https://thehackernews.com/2025/08/cert-ua-warns-of-hta-delivered-c.html)
-
-- **CISA Adds 3 D-Link Vulnerabilities to KEV Catalog Amid Active Exploitation Evidence** — The U.S. Cybersecurity and Infrastructure Security Agency (CISA) on Tuesday added three old security flaws impacting D-Link Wi-Fi cameras and video recorders to its Known Exploited Vulnerabilities ...
-  [Read more](https://thehackernews.com/2025/08/cisa-adds-3-d-link-router-flaws-to-kev.html)
-
-- **ClickFix Malware Campaign Exploits CAPTCHAs to Spread Cross-Platform Infections** — A combination of propagation methods, narrative sophistication, and evasion techniques enabled the social engineering tactic known as ClickFix to take off the way it did over the past year, accordi...
-  [Read more](https://thehackernews.com/2025/08/clickfix-malware-campaign-exploits.html)
-
-- **Google’s August Patch Fixes Two Qualcomm Vulnerabilities Exploited in the Wild** — Google has released security updates to address multiple security flaws in Android, including fixes for two Qualcomm bugs that were flagged as actively exploited in the wild. The vulnerabilities in...
-  [Read more](https://thehackernews.com/2025/08/google-fixes-3-android-vulnerabilities.html)
-
-- **Cursor AI Code Editor Vulnerability Enables RCE via Malicious MCP File Swaps Post Approval** — Cybersecurity researchers have disclosed a high-severity security flaw in the artificial intelligence (AI)-powered code editor Cursor that could result in remote code execution. The vulnerability, ...
-  [Read more](https://thehackernews.com/2025/08/cursor-ai-code-editor-vulnerability.html)
-
-- **15,000 Fake TikTok Shop Domains Deliver Malware, Steal Crypto via AI-Driven Scam Campaign** — Cybersecurity researchers have lifted the veil on a widespread malicious campaign that's targeting TikTok Shop users globally with an aim to steal credentials and distribute trojanized apps. "Threa...
-  [Read more](https://thehackernews.com/2025/08/15000-fake-tiktok-shop-domains-deliver.html)
-
-- **SonicWall Investigating Potential SSL VPN Zero-Day After 20+ Targeted Attacks Reported** — SonicWall said it's actively investigating reports to determine if there is a new zero-day vulnerability following reports of a spike in Akira ransomware actors in late July 2025. "Over the past 72...
-  [Read more](https://thehackernews.com/2025/08/sonicwall-investigating-potential-ssl.html)
 
 - **Phishers Target Aviation Execs to Scam Customers** — KrebsOnSecurity recently heard from a reader whose boss's email account got phished and was used to trick one of the company's customers into sending a large payment to scammers. An investigation i...
   [Read more](https://krebsonsecurity.com/2025/07/phishers-target-aviation-execs-to-scam-customers/)
@@ -396,16 +448,4 @@ categories: news brief
 
 - **[webapps] Pie Register WordPress Plugin 3.7.1.4 - Authentication Bypass to RCE** — Pie Register WordPress Plugin 3.7.1.4 - Authentication Bypass to RCE
   [Read more](https://www.exploit-db.com/exploits/52370)
-
-- **ToolShell Zero-day: Microsoft Rushes Emergency Patch for Actively Exploited SharePoint Vulnerabilities** — On July 19, 2025, Microsoft issued an emergency out-of-band security update to address two zero-day vulnerabilities in Microsoft SharePoint Server: CVE-2025-53770 and CVE-2025-53771. These vulnerab...
-  [Read more](https://blog.qualys.com/category/vulnerabilities-threat-research)
-
-- **[remote] NodeJS 24.x - Path Traversal** — NodeJS 24.x - Path Traversal
-  [Read more](https://www.exploit-db.com/exploits/52369)
-
-- **[webapps] Langflow 1.2.x - Remote Code Execution (RCE)** — Langflow 1.2.x - Remote Code Execution (RCE)
-  [Read more](https://www.exploit-db.com/exploits/52364)
-
-- **[webapps] PivotX 3.0.0 RC3 - Remote Code Execution (RCE)** — PivotX 3.0.0 RC3 - Remote Code Execution (RCE)
-  [Read more](https://www.exploit-db.com/exploits/52361)
 
