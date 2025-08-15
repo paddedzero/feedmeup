@@ -21,11 +21,11 @@ categories: [newsbrief]
 |---|---|
 | Cloud | 14 |
 | LLM | 18 |
-| Security | 56 |
+| Security | 57 |
 | ThreatIntel | 13 |
 | Vulnerability | 22 |
 
-**Total Articles: 123**
+**Total Articles: 124**
 
 ## Cloud
 
@@ -129,6 +129,27 @@ categories: [newsbrief]
 
 ## Security
 
+- **U.S. Sanctions Garantex and Grinex Over $100M in Ransomware-Linked Illicit Crypto Transactions** — The U.S. Department of the Treasury's Office of Foreign Assets Control (OFAC) on Thursday renewed sanctions against Russian cryptocurrency exchange platform Garantex for facilitating ransomware act...
+  [Read more](https://thehackernews.com/2025/08/us-sanctions-garantex-and-grinex-over.html)
+
+- **Zero Trust + AI: Privacy in the Age of Agentic AI** — We used to think of privacy as a perimeter problem: about walls and locks, permissions, and policies. But in a world where artificial agents are becoming autonomous actors — interacting with data, ...
+  [Read more](https://thehackernews.com/2025/08/zero-trust-ai-privacy-in-age-of-agentic.html)
+
+- **US sanctions Grinex crypto-exchange, successor to Garantex** — The U.S. Department of the Treasury has announced sanctions against Grinex, the successor to Russian cryptocurrency exchange Garantex, which was previously sanctioned for helping ransomware gangs l...
+  [Read more](https://www.bleepingcomputer.com/news/security/us-sanctions-grinex-crypto-exchange-garantexs-successor/)
+
+- **Cisco Patches Critical Vulnerability in Firewall Management Platform** — <p>Cisco has released over 20 advisories as part of its August 2025 bundled publication for ASA, FMC and FTD products.</p> <p>The post <a href="https://www.securityweek.com/cisco-patches-critical-v...
+  [Read more](https://www.securityweek.com/cisco-patches-critical-vulnerability-in-firewall-management-platform/)
+
+- **Cisco Warns of CVSS 10.0 FMC RADIUS Flaw Allowing Remote Code Execution** — Cisco has released security updates to address a maximum-severity security flaw in Secure Firewall Management Center (FMC) Software that could allow an attacker to execute arbitrary code on affecte...
+  [Read more](https://thehackernews.com/2025/08/cisco-warns-of-cvss-100-fmc-radius-flaw.html)
+
+- **Fighting fraud with AI: The new identity security playbook** — <p>In this Help Net Security video, Hal Lonas, CTO at Trulioo, talks about the rise of synthetic identity fraud and how it&#8217;s quickly becoming one of the biggest threats in financial crime. He...
+  [Read more](https://www.helpnetsecurity.com/2025/08/15/synthetic-identity-fraud-video/)
+
+- **Employees race to build custom AI apps despite security risks** — <p>The latest Netskope findings show a 50% increase in GenAI platform usage among enterprise end-users, driven by growing employee demand for tools to develop custom AI applications and agents. Top...
+  [Read more](https://www.helpnetsecurity.com/2025/08/15/shadow-ai-genai-apps/)
+
 - **Over $300 million in cybercrime crypto seized in anti-fraud effort** — More than $300 million worth of cryptocurrency linked to cybercrime and fraud schemes has been frozen due to two separate initiatives involving law enforcement and private companies. [...]
   [Read more](https://www.bleepingcomputer.com/news/security/over-300-million-in-cybercrime-crypto-seized-in-anti-fraud-effort/)
 
@@ -171,15 +192,6 @@ categories: [newsbrief]
 - **Fragmented security: the hidden threat undermining your cyber defenses** — Many companies overlook a critical vulnerability: fragmented security born from the proliferation of connected assets.
   [Read more](https://www.techradar.com/pro/fragmented-security-the-hidden-threat-undermining-your-cyber-defenses)
 
-- **AI security governance converts disorder into deliberate innovation** — <p>AI security governance provides a stable compass, channeling efforts and transforming AI from an experimental tool to a reliable, enterprise-class solution. With adequate governance built at the...
-  [Read more](https://www.helpnetsecurity.com/2025/08/14/ai-security-governance/)
-
-- **Free courses: Master AI tools from Microsoft, AWS, and Google** — <p>Learn how AI technologies can be applied to enhance security, create safe and responsible applications, develop intelligent agents, and improve information discovery. You&#8217;ll gain practical...
-  [Read more](https://www.helpnetsecurity.com/2025/08/14/free-genai-ai-courses/)
-
-- **OpenAI relaxes GPT-5 rate limit, promises to improve the personality** — OpenAI is slowly addressing all concerns around GPT-5, including rate limits and now its personality, which has been criticized for being less affirmative. [...]
-  [Read more](https://www.bleepingcomputer.com/news/artificial-intelligence/openai-relaxes-gpt-5-rate-limit-promises-to-improve-the-personality/)
-
 - **New PS1Bot Malware Campaign Uses Malvertising to Deploy Multi-Stage In-Memory Attacks** — Cybersecurity researchers have discovered a new malvertising campaign that's designed to infect victims with a multi-stage malware framework called PS1Bot. "PS1Bot features a modular design, with s...
   [Read more](https://thehackernews.com/2025/08/new-ps1bot-malware-campaign-uses.html)
 
@@ -194,9 +206,6 @@ categories: [newsbrief]
 
 - **Fortinet Warns About FortiSIEM Vulnerability (CVE-2025-25256) With In-the-Wild Exploit Code** — Fortinet is alerting customers of a critical security flaw in FortiSIEM for which it said there exists an exploit in the wild. The vulnerability, tracked as CVE-2025-25256, carries a CVSS score of ...
   [Read more](https://thehackernews.com/2025/08/fortinet-warns-about-fortisiem.html)
-
-- **Manpower Says Data Breach Stemming From Ransomware Attack Impacts 140,000** — <p>The RansomHub ransomware group stole sensitive information from staffing and recruiting firm Manpower in January.</p> <p>The post <a href="https://www.securityweek.com/manpower-says-data-breach-...
-  [Read more](https://www.securityweek.com/manpower-says-data-breach-stemming-from-ransomware-attack-impacts-140000/)
 
 - **Charon Ransomware Hits Middle East Sectors Using APT-Level Evasion Tactics** — Cybersecurity researchers have discovered a new campaign that employs a previously undocumented ransomware family called Charon to target the Middle East's public sector and aviation industry. The ...
   [Read more](https://thehackernews.com/2025/08/charon-ransomware-hits-middle-east.html)
@@ -284,12 +293,6 @@ categories: [newsbrief]
 
 - **Trend Micro Confirms Active Exploitation of Critical Apex One Flaws in On-Premise Systems** — Trend Micro has released mitigations to address critical security flaws in on-premise versions of Apex One Management Console that it said have been exploited in the wild. The vulnerabilities (CVE-...
   [Read more](https://thehackernews.com/2025/08/trend-micro-confirms-active.html)
-
-- **CERT-UA Warns of HTA-Delivered C# Malware Attacks Using Court Summons Lures** — The Computer Emergency Response Team of Ukraine (CERT-UA) has warned of cyber attacks carried out by a threat actor called UAC-0099 targeting government agencies, the defense forces, and enterprise...
-  [Read more](https://thehackernews.com/2025/08/cert-ua-warns-of-hta-delivered-c.html)
-
-- **CISA Adds 3 D-Link Vulnerabilities to KEV Catalog Amid Active Exploitation Evidence** — The U.S. Cybersecurity and Infrastructure Security Agency (CISA) on Tuesday added three old security flaws impacting D-Link Wi-Fi cameras and video recorders to its Known Exploited Vulnerabilities ...
-  [Read more](https://thehackernews.com/2025/08/cisa-adds-3-d-link-router-flaws-to-kev.html)
 
 - **Phishers Target Aviation Execs to Scam Customers** — KrebsOnSecurity recently heard from a reader whose boss's email account got phished and was used to trick one of the company's customers into sending a large payment to scammers. An investigation i...
   [Read more](https://krebsonsecurity.com/2025/07/phishers-target-aviation-execs-to-scam-customers/)
