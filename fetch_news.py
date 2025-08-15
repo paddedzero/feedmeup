@@ -252,7 +252,10 @@ def main():
 
     # Create news brief
     top_highlights = group_similar_titles(all_titles)
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    #today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    # Use yesterday's date to avoid all future-dating issues with UTC.
+    yesterday = datetime.now(timezone.utc) - timedelta(days=1)
+    today = yesterday.strftime("%Y-%m-%d")
     content_by_category = {}
     
     for cat, entries in reports.items():
