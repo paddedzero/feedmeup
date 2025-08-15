@@ -63,6 +63,9 @@ categories: [newsbrief]
 
 ## Cloud
 
+- **Amazon Neptune now integrates with Cognee for graph-native memory in GenAI Applications** — <p>Today, we’re announcing the integration of Amazon Neptune Analytics with Cognee, a leading agentic memory framework designed to help AI agents structure, retrieve, and reason over information. W...
+  [Read more](https://aws.amazon.com/about-aws/whats-new/2025/08/amazon-neptune-cognee-genai-applications)
+
 - **SageMaker HyperPod now supports fine-grained quota allocation of compute resources** — <p>SageMaker HyperPod task governance now supports fine-grained compute quota allocation of GPU, Trainium accelerator, vCPU, and vCPU memory within an instance. Administrators can allocate fine-gra...
   [Read more](https://aws.amazon.com/about-aws/whats-new/2025/08/sagemaker-hyperpod-fined-grained-quota-allocation-compute-resources/)
 
@@ -101,9 +104,6 @@ categories: [newsbrief]
 
 - **Amazon S3 Access Points now support tags for Attribute-Based Access Control** — <p>Amazon S3 Access Points now support tags for Attribute-Based Access Control (ABAC). S3 Access Points simplify managing data access to your shared datasets in S3 general purpose and directory buc...
   [Read more](https://aws.amazon.com/about-aws/whats-new/2025/08/amazon-s3-access-points-tags-attribute-based-access-control)
-
-- **Amazon CloudWatch launches natural language query generation for OpenSearch PPL and SQL** — <p>Amazon CloudWatch launches natural language query generation powered by generative AI for OpenSearch PPL and SQL query languages in CloudWatch Logs Insights, accelerating logs analysis.<br /> <b...
-  [Read more](https://aws.amazon.com/about-aws/whats-new/2025/08/amazon-cloudwatch-natural-language-query-generation-opensearch-ppl-sql)
 
 ## LLM
 
