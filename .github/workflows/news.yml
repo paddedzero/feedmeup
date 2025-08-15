@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: Checkout main branch
         uses: actions/checkout@v3
-        with:
-          persist-credentials: false  # We'll use GITHUB_TOKEN for pushing
 
       - name: Set up Ruby for Jekyll
         uses: ruby/setup-ruby@v1
@@ -40,33 +38,30 @@ jobs:
       - name: Run fetch_news.py to generate markdown posts
         run: python fetch_news.py
 
-      - name: Build the Jekyll site
-        run: bundle exec jekyll build
-
-      - name: Deploy to gh-pages branch
+      # This new step adds the new post to gh-pages without deleting old ones.
+      - name: Deploy new post to gh-pages branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Clone the gh-pages branch into a temporary directory
+          git clone --branch gh-pages --single-branch https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} ../gh-pages-deploy
+
+          # Copy the newly generated post into the clone's _posts directory
+          # The script already creates _posts, so we just copy the content
+          cp _posts/*.md ../gh-pages-deploy/_posts/
+
+          # Go into the cloned directory to commit and push
+          cd ../gh-pages-deploy
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Add the new post file
+          git add _posts/*.md
 
-          # Switch to gh-pages or create it if missing
-          if git show-ref --quiet refs/heads/gh-pages; then
-            git checkout gh-pages
+          # Commit and push if there are changes
+          if git diff-index --quiet --cached HEAD --; then
+            echo "No new news brief to commit."
           else
-            git checkout --orphan gh-pages
-          fi
-
-          # Clear old files and copy the new site
-          git rm -rf . || true
-          cp -r _site/* .
-
-          git add .
-
-          if git diff-index --quiet HEAD --; then
-            echo "No changes to commit"
-          else
-            git commit -m "Deploy site $(date -u +'%Y-%m-%d %H:%M:%S')"
-            # Use GITHUB_TOKEN for HTTPS authentication
-            git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} gh-pages --force
+            git commit -m "Auto: Add latest news brief"
+            git push
           fi
