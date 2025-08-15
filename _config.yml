@@ -61,3 +61,8 @@ paginate_path: "/page:num/"
 author:
   name: Alwyn Y.
   email: longemail@yahoo.com
+
+exclude:
+  - _errors
+  - _errors/*
+  - "*.py"
