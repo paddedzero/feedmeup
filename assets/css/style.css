@@ -15,3 +15,20 @@ header, footer {
 h1 {
   margin-bottom: 1rem;
 }
+
+/* Style for the list of briefs on the homepage */
+.brief-list {
+  list-style: none; /* Removes the default bullet points */
+  padding: 0;
+}
+
+.brief-list li {
+  padding-bottom: 1em; /* Adds some space between the text and the line */
+  margin-bottom: 1em;  /* Adds some space between the line and the next item */
+  border-bottom: 1px solid #ddd; /* This is the horizontal line */
+}
+
+/* This clever rule removes the line from the very last item in the list */
+.brief-list li:last-child {
+  border-bottom: none;
+}
