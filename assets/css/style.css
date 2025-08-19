@@ -32,3 +32,11 @@ h1 {
 .brief-list li:last-child {
   border-bottom: none;
 }
+
+/* Adds spacing and a line between posts on the homepage */
+.post-separator {
+  margin: 2em 0;
+  border-top: 1px solid #ddd;
+  background: none;
+  height: 0;
+}
