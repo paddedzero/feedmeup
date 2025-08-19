@@ -13,9 +13,9 @@ title: Home
   {% for post in sorted_posts %}
     <article class="post">
       <h2>{{ post.title }}</h2>
-      <p class="post-meta"><em>{{ post.date | date: "%B %d, %Y" }}</em></p>
+      <!-- <p class="post-meta"><em>{{ post.date | date: "%B %d, %Y" }}</em></p> -->
         Shareable : <a href="{{ post.url | relative_url }}">
-        {{ post.title }} - <span>{{ post.date | date: "%B %d, %Y" }}</span>
+        <!-- {{ post.title }} - <span>{{ post.date | date: "%B %d, %Y" }}</span> -->
       </a>
 
       {{ post.content }}
