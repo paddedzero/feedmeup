@@ -155,9 +155,14 @@ def create_news_brief(date_str, content_by_category, highlights):
     POSTS_DIR.mkdir(exist_ok=True)
     filename = POSTS_DIR / f"{date_str}-news-brief.md"
 
+    # --- NEW: Create the formatted date for the title ---
+    date_object = datetime.strptime(date_str, "%Y-%m-%d")
+    formatted_title_date = date_object.strftime("%b %d, %Y")
+    # --- END NEW SECTION ---
+
     front_matter = f"""---
 layout: post
-title: "Weekly News Brief — {date_str}"
+title: "Weekly News Brief — {formatted_title_date}"
 date: {date_str} 12:00:00 +0000
 categories: [newsbrief]
 ---
