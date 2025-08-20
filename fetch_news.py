@@ -6,6 +6,7 @@ import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
+from requests.utils import requote_uri
 from zoneinfo import ZoneInfo
 
 # rapidfuzz for fuzzy matching
@@ -160,6 +161,26 @@ def format_entries_for_category(entries):
             return datetime(*entry.published_parsed[:6], tzinfo=LOCAL_TZ)
         return datetime.now(LOCAL_TZ)
 
+    def sanitize_url(url):
+        """Return a safe, percent-encoded URL or None if it can't be used."""
+        try:
+            if not url or not isinstance(url, str):
+                return None
+            u = url.strip()
+            if not u:
+                return None
+            if any(ch.isspace() for ch in u):
+                return None
+            # requote_uri will percent-encode characters that break Markdown/URLs
+            safe = requote_uri(u)
+            # basic parse check
+            p = urlparse(safe)
+            if not p.scheme or not p.netloc:
+                return None
+            return safe
+        except Exception:
+            return None
+
     sorted_entries = sorted(entries, key=get_pub_date, reverse=True)
     formatted = []
     for entry in sorted_entries:
@@ -168,7 +189,13 @@ def format_entries_for_category(entries):
         summary = entry.get("summary", "No summary available").strip().replace('\n', ' ')
         if len(summary) > 200:
             summary = summary[:197] + "..."
-        formatted.append(f"- **{title}** — {summary}\n  [Read more]({link})")
+        safe_link = sanitize_url(link)
+        if safe_link:
+            # use angle-bracket form so parentheses in URLs don't break markdown
+            formatted.append(f"- **{title}** — {summary}\n  [Read more](<{safe_link}>)")
+        else:
+            # omit link to avoid broken formatting
+            formatted.append(f"- **{title}** — {summary}\n  Read more (link omitted)")
     return "\n\n".join(formatted)
 
 
@@ -204,9 +231,18 @@ categories: [newsbrief]
         if len(summary) > 250:
             summary = summary[:247] + "..."
 
+        safe_link = None
+        try:
+            safe_link = requote_uri(link.strip()) if link and isinstance(link, str) and link.strip() else None
+        except Exception:
+            safe_link = None
+
         highlights_section += f"{i}. **{title}** ({count} mentions)\n"
         highlights_section += f"   > {summary}\n"
-        highlights_section += f"   > [Read more]({link})\n\n"
+        if safe_link:
+            highlights_section += f"   > [Read more](<{safe_link}>)\n\n"
+        else:
+            highlights_section += f"   > Read more (link omitted)\n\n"
 
     table = "| Category | Articles |\n|---|---|\n"
     total_articles = 0
