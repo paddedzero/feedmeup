@@ -3,9 +3,10 @@ import yaml
 import re
 import requests
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
 # rapidfuzz for fuzzy matching
 from rapidfuzz.fuzz import ratio as rf_ratio
@@ -24,6 +25,9 @@ GREY = "\033[90m"
 CONFIG_FILE = "config.yaml"
 POSTS_DIR = Path("_posts")
 ERRORS_DIR = Path("_errors")
+
+# Use America/New_York as the local timezone
+LOCAL_TZ = ZoneInfo("America/New_York")
 
 # Defaults (can be overridden by config.yaml)
 DEFAULTS = {
@@ -65,14 +69,15 @@ def save_error_post(feed_url, error_message):
     """Save feed fetch error into _errors folder instead of _posts."""
     try:
         ERRORS_DIR.mkdir(exist_ok=True)
-        date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        now_local = datetime.now(LOCAL_TZ)
+        date_str = now_local.strftime("%Y-%m-%d")
         slug = re.sub(r'[^a-z0-9]+', '-', f"feed-error-{date_str}").strip('-')
         filename = ERRORS_DIR / f"{date_str}-{slug}.md"
 
         front_matter = f"""---
 layout: post
 title: "Feed Fetch Error - {date_str}"
-date: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S +0000')}
+date: {now_local.strftime('%Y-%m-%d %H:%M:%S %z')}
 categories: error
 ---
 
@@ -152,8 +157,8 @@ def format_entries_for_category(entries):
     """Format entries as markdown for a category, newest first."""
     def get_pub_date(entry):
         if "published_parsed" in entry and entry.published_parsed:
-            return datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
-        return datetime.now(timezone.utc)
+            return datetime(*entry.published_parsed[:6], tzinfo=LOCAL_TZ)
+        return datetime.now(LOCAL_TZ)
 
     sorted_entries = sorted(entries, key=get_pub_date, reverse=True)
     formatted = []
@@ -170,22 +175,22 @@ def format_entries_for_category(entries):
 def create_news_brief(date_str, content_by_category, highlights):
     """Create a single news brief post with Top highlights.
 
-    Filename includes UTC HH-MM to avoid collisions and include time.
+    Filename includes local HH-MM to avoid collisions and include time.
     """
     POSTS_DIR.mkdir(exist_ok=True)
 
-    now_utc = datetime.now(timezone.utc)
-    time_filename = now_utc.strftime("%H-%M")        # e.g. "13-45" (safe for filenames)
+    now_local = datetime.now(LOCAL_TZ)
+    time_filename = now_local.strftime("%H-%M")        # e.g. "13-45" (safe for filenames)
     filename = POSTS_DIR / f"{date_str}-{time_filename}-news-brief.md"
 
     date_object = datetime.strptime(date_str, "%Y-%m-%d")
     formatted_title_date = date_object.strftime("%b %d, %Y")
-    time_front = now_utc.strftime("%H:%M:%S")       # e.g. "13:45:00"
+    time_front = now_local.strftime("%H:%M:%S %z")       # includes offset, e.g. -0400
 
     front_matter = f"""---
 layout: post
 title: "Weekly News Brief on Cloud, Cybersecurity, AI, ML — {formatted_title_date}"
-date: {date_str} {time_front} +0000
+date: {now_local.strftime('%Y-%m-%d %H:%M:%S %z')}
 categories: [newsbrief]
 ---
 
@@ -242,11 +247,11 @@ def group_similar_entries(entries, threshold=None, max_per_domain=None, max_resu
         title_l = title.lower()
         try:
             if "published_parsed" in e and e.published_parsed:
-                pub = datetime(*e.published_parsed[:6], tzinfo=timezone.utc)
+                pub = datetime(*e.published_parsed[:6], tzinfo=LOCAL_TZ)
             else:
-                pub = datetime.now(timezone.utc)
+                pub = datetime.now(LOCAL_TZ)
         except Exception:
-            pub = datetime.now(timezone.utc)
+            pub = datetime.now(LOCAL_TZ)
         pre.append({"idx": idx, "entry": e, "title_l": title_l, "pub": pub})
 
     grouped = []
@@ -326,7 +331,7 @@ def main():
     total_entries = 0
     recent_entries = 0
     matched_entries = 0
-    cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
+    cutoff_date = datetime.now(LOCAL_TZ) - timedelta(days=30)
 
     logging.debug("Looking for entries after: %s", cutoff_date.strftime('%Y-%m-%d'))
 
@@ -350,7 +355,7 @@ def main():
         matched_count = 0
 
         for entry in entries:
-            pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc) if "published_parsed" in entry and entry.published_parsed else datetime.now(timezone.utc)
+            pub_date = datetime(*entry.published_parsed[:6], tzinfo=LOCAL_TZ) if "published_parsed" in entry and entry.published_parsed else datetime.now(LOCAL_TZ)
 
             if pub_date >= cutoff_date:
                 recent_count += 1
@@ -387,7 +392,8 @@ def main():
 
     top_highlights = group_similar_entries(all_matched_entries, threshold=fuzz_threshold, max_per_domain=max_per_domain, max_results=max_results)
 
-    yesterday = datetime.now(timezone.utc) - timedelta(days=1)
+    now_local = datetime.now(LOCAL_TZ)
+    yesterday = now_local - timedelta(days=1)
     today = yesterday.strftime("%Y-%m-%d")
     content_by_category = {}
 
