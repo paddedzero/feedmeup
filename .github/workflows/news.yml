@@ -15,6 +15,9 @@ jobs:
     steps:
       - name: Checkout main branch
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0        # get full history so we can compare/merge
+          persist-credentials: true  # allow authenticated push using GITHUB_TOKEN
 
       - name: Set up Ruby for Jekyll
         uses: ruby/setup-ruby@v1
@@ -44,11 +47,20 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -B gh-pages
-          git add _posts/*.md
+          # Ensure remote tip is available locally
+          git fetch origin gh-pages || true
+          # Create/checkout local gh-pages at remote tip if it exists, otherwise create new
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git checkout -B gh-pages origin/gh-pages
+          else
+            git checkout -B gh-pages
+          fi
+
+          git add _posts/*.md || true
           if git diff --staged --quiet; then
             echo "No new posts to commit"
           else
             git commit -m "chore: add weekly news brief"
-            git push --set-upstream origin gh-pages
+            # push; set upstream if branch is new
+            git push origin gh-pages
           fi
