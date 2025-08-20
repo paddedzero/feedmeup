@@ -47,8 +47,14 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # remove bundler artifacts and other untracked files that block branch switch
+          rm -rf vendor vendor/bundle vendor/cache .bundle Gemfile.lock || true
+          git clean -fdx || true
+
           # Ensure remote tip is available locally
           git fetch origin gh-pages || true
+
           # Create/checkout local gh-pages at remote tip if it exists, otherwise create new
           if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
             git checkout -B gh-pages origin/gh-pages
@@ -61,6 +67,5 @@ jobs:
             echo "No new posts to commit"
           else
             git commit -m "chore: add weekly news brief"
-            # push; set upstream if branch is new
             git push origin gh-pages
           fi
