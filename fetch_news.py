@@ -187,13 +187,13 @@ def create_news_brief(date_str, content_by_category, highlights):
     formatted_title_date = date_object.strftime("%b %d, %Y")
     time_front = now_local.strftime("%H:%M:%S %z")       # includes offset, e.g. -0400
 
+    # use the same calendar date (date_str) for front-matter while keeping time format unchanged
     front_matter = f"""---
 layout: post
 title: "Weekly News Brief on Cloud, Cybersecurity, AI, ML — {formatted_title_date}"
-date: {now_local.strftime('%Y-%m-%d %H:%M:%S %z')}
+date: {date_str} {time_front}
 categories: [newsbrief]
 ---
-
 """
 
     highlights_section = "## Top Highlights\n\n"
