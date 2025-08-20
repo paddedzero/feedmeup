@@ -38,30 +38,17 @@ jobs:
       - name: Run fetch_news.py to generate markdown posts
         run: python fetch_news.py
 
-      # This new step adds the new post to gh-pages without deleting old ones.
-      - name: Deploy new post to gh-pages branch
+      - name: Commit generated posts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Clone the gh-pages branch into a temporary directory
-          git clone --branch gh-pages --single-branch https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} ../gh-pages-deploy
-
-          # Copy the newly generated post into the clone's _posts directory
-          # The script already creates _posts, so we just copy the content
-          cp _posts/*.md ../gh-pages-deploy/_posts/
-
-          # Go into the cloned directory to commit and push
-          cd ../gh-pages-deploy
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Add the new post file
+          git checkout -B gh-pages
           git add _posts/*.md
-
-          # Commit and push if there are changes
-          if git diff-index --quiet --cached HEAD --; then
-            echo "No new news brief to commit."
+          if git diff --staged --quiet; then
+            echo "No new posts to commit"
           else
-            git commit -m "Auto: Add latest news brief"
-            git push
+            git commit -m "chore: add weekly news brief"
+            git push --set-upstream origin gh-pages
           fi
