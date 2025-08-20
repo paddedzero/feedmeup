@@ -50,6 +50,9 @@ sources:
   - name: Bruce Schneier Blog
     url: https://www.schneier.com/blog/atom.xml
     category: Security
+  - name: TheRegister
+    url: https://www.theregister.com/headlines.atom
+    category: Tech
 
   # === Vulnerability & CVE Feeds ===
   - name: CVE Feed (High/Critical)
@@ -269,3 +272,9 @@ filters:
     - "Taiwan Personal Data Protection Act"
     - "Myanmar E-Commerce Law"
     - "Cambodia PDPA"
+
+# optional settings
+log_level: "DEBUG"
+fuzz_threshold: 0.8
+max_per_domain: 2
+max_results: 10

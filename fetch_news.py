@@ -3,6 +3,7 @@ import yaml
 import re
 import requests
 import logging
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
@@ -361,8 +362,12 @@ def group_similar_entries(entries, threshold=None, max_per_domain=None, max_resu
 
 def main():
     config = load_config()
-    log_level = config.get("log_level", DEFAULTS["log_level"]).upper()
+    # allow overriding via env for quick debugging in CI/local
+    log_level = os.environ.get("LOG_LEVEL", config.get("log_level", DEFAULTS["log_level"])).upper()
     logging.basicConfig(level=getattr(logging, log_level, logging.INFO), format="%(levelname)s: %(message)s")
+    logging.info("Loaded config keys: %s", list(config.keys()))
+    logging.info("Configured sources count: %d", len(config.get("sources", [])))
+    logging.info("Configured keywords: %s", config.get("filters", {}).get("keywords", []))
 
     init_requests_session(
         retries=config.get("request_retries", DEFAULTS["request_retries"]),
