@@ -61,8 +61,9 @@ def load_config():
 
 
 def compile_keywords_pattern(keywords):
+    # If no keywords configured, return None -> match everything
     if not keywords:
-        return re.compile(r"$^")  # never matches
+        return None
     escaped = [re.escape(k) for k in keywords]
     pattern = r"(?i)\b(" + "|".join(escaped) + r")\b"
     return re.compile(pattern)
@@ -71,7 +72,7 @@ def compile_keywords_pattern(keywords):
 def save_error_post(feed_url, error_message):
     """Save feed fetch error into _errors folder instead of _posts."""
     try:
-        ERRORS_DIR.mkdir(exist_ok=True)
+        ERRORS_DIR.mkdir(parents=True, exist_ok=True)
         now_local = datetime.now(LOCAL_TZ)
         date_str = now_local.strftime("%Y-%m-%d")
         slug = re.sub(r'[^a-z0-9]+', '-', f"feed-error-{date_str}").strip('-')
@@ -132,10 +133,8 @@ def fetch_feed_entries(url, feed_name):
         resp.raise_for_status()
 
         content_type = resp.headers.get("Content-Type", "").lower()
-        if content_type and not any(x in content_type for x in ["xml", "rss", "atom"]):
-            msg = f"Invalid content type: {content_type}"
-            save_error_post(url, msg)
-            return [], msg
+        if content_type and not any(x in content_type for x in ["xml", "rss", "atom", "xml+xml", "application/rss"]):
+            logging.warning("Unexpected Content-Type for %s: %s — attempting to parse anyway", url, content_type)
 
         feed = feedparser.parse(resp.content)
         if feed.bozo and not feed.entries:
@@ -152,7 +151,23 @@ def fetch_feed_entries(url, feed_name):
 
 
 def entry_matches(entry, pattern):
-    text_to_check = (entry.get("title", "") + " " + entry.get("summary", "")).lower()
+    # If pattern is None => no keywords configured -> match everything
+    if pattern is None:
+        return True
+
+    parts = [entry.get("title", ""), entry.get("summary", ""), entry.get("description", "")]
+    # include common content blocks
+    try:
+        content = entry.get("content")
+        if content:
+            if isinstance(content, list):
+                parts += [c.get("value", "") if isinstance(c, dict) else str(c) for c in content]
+            else:
+                parts.append(str(content))
+    except Exception:
+        pass
+
+    text_to_check = " ".join([p for p in parts if p]).lower()
     return bool(pattern.search(text_to_check))
 
 
@@ -218,7 +233,7 @@ def create_news_brief(date_str, content_by_category, highlights):
 
     Filename includes local HH-MM to avoid collisions and include time.
     """
-    POSTS_DIR.mkdir(exist_ok=True)
+    POSTS_DIR.mkdir(parents=True, exist_ok=True)
 
     now_local = datetime.now(LOCAL_TZ)
     time_filename = now_local.strftime("%H-%M")        # e.g. "13-45" (safe for filenames)
