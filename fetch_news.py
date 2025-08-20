@@ -162,7 +162,7 @@ def create_news_brief(date_str, content_by_category, highlights):
 
     front_matter = f"""---
 layout: post
-title: "Weekly News Brief — {formatted_title_date}"
+title: "Weekly News Brief on Cloud, Cybersecurity, AI, ML — {formatted_title_date}"
 date: {date_str} 12:00:00 +0000
 categories: [newsbrief]
 ---
