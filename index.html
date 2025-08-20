@@ -4,7 +4,7 @@ title: Home
 ---
 <div class="home">
 
-  <p>Welcome to the Weekly News Brief!</p>
+  <p>Welcome to the Weekly Cloud, AI, ML, Cybersecurity News Brief!</p>
   <p>Here I attempt to distill news on Cybersecurity, Cloud, AI and Regulatory News.</p>
 
   <hr class="post-separator">
@@ -14,9 +14,7 @@ title: Home
     <article class="post">
       <h2>{{ post.title }}</h2>
       <p class="post-meta"><em>{{ post.date | date: "%B %d, %Y" }}</em></p>
-        Shareable : <a href="{{ post.url | relative_url }}">
-        {{ post.title }} - <span>{{ post.date | date: "%B %d, %Y" }}</span>
-        </a>
+        Shareable : <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
         
       {{ post.content }}
     </article>
