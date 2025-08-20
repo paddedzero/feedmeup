@@ -8,6 +8,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 from requests.utils import requote_uri
 from zoneinfo import ZoneInfo
+from bs4 import BeautifulSoup      # new import
 
 # rapidfuzz for fuzzy matching
 from rapidfuzz.fuzz import ratio as rf_ratio
@@ -154,6 +155,38 @@ def entry_matches(entry, pattern):
     return bool(pattern.search(text_to_check))
 
 
+def clean_summary(html):
+    """Return plaintext summary extracted from HTML; collapse whitespace."""
+    if not html:
+        return ""
+    try:
+        soup = BeautifulSoup(html, "html.parser")
+        text = soup.get_text(separator=" ", strip=True)
+        # collapse repeated whitespace
+        return " ".join(text.split())
+    except Exception:
+        # fallback: strip tags crudely
+        return " ".join(re.sub(r"<[^>]+>", " ", str(html)).split())
+
+
+def sanitize_url(url):
+    """Return a safe, percent-encoded URL or None if invalid."""
+    try:
+        if not url or not isinstance(url, str):
+            return None
+        u = url.strip()
+        if not u:
+            return None
+        # percent-encode problematic chars
+        safe = requote_uri(u)
+        p = urlparse(safe)
+        if not p.scheme or not p.netloc:
+            return None
+        return safe
+    except Exception:
+        return None
+
+
 def format_entries_for_category(entries):
     """Format entries as markdown for a category, newest first."""
     def get_pub_date(entry):
@@ -161,41 +194,21 @@ def format_entries_for_category(entries):
             return datetime(*entry.published_parsed[:6], tzinfo=LOCAL_TZ)
         return datetime.now(LOCAL_TZ)
 
-    def sanitize_url(url):
-        """Return a safe, percent-encoded URL or None if it can't be used."""
-        try:
-            if not url or not isinstance(url, str):
-                return None
-            u = url.strip()
-            if not u:
-                return None
-            if any(ch.isspace() for ch in u):
-                return None
-            # requote_uri will percent-encode characters that break Markdown/URLs
-            safe = requote_uri(u)
-            # basic parse check
-            p = urlparse(safe)
-            if not p.scheme or not p.netloc:
-                return None
-            return safe
-        except Exception:
-            return None
-
     sorted_entries = sorted(entries, key=get_pub_date, reverse=True)
     formatted = []
     for entry in sorted_entries:
         title = entry.get("title", "No Title")
         link = entry.get("link", "")
-        summary = entry.get("summary", "No summary available").strip().replace('\n', ' ')
+        raw_summary = entry.get("summary", "") or entry.get("description", "")
+        summary = clean_summary(raw_summary)
         if len(summary) > 200:
             summary = summary[:197] + "..."
         safe_link = sanitize_url(link)
         if safe_link:
-            # use angle-bracket form so parentheses in URLs don't break markdown
-            formatted.append(f"- **{title}** — {summary}\n  [Read more](<{safe_link}>)")
+            # use an explicit HTML anchor to avoid markdown processor mangling feed HTML
+            formatted.append(f"- **{title}** — {summary}\n  <a href=\"{safe_link}\">Read more</a>")
         else:
-            # omit link to avoid broken formatting
-            formatted.append(f"- **{title}** — {summary}\n  Read more (link omitted)")
+            formatted.append(f"- **{title}** — {summary}")
     return "\n\n".join(formatted)
 
 
@@ -237,10 +250,15 @@ categories: [newsbrief]
         except Exception:
             safe_link = None
 
+        summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
+        if len(summary) > 250:
+            summary = summary[:247] + "..."
+
+        safe_link = sanitize_url(entry.get("link", ""))
         highlights_section += f"{i}. **{title}** ({count} mentions)\n"
         highlights_section += f"   > {summary}\n"
         if safe_link:
-            highlights_section += f"   > [Read more](<{safe_link}>)\n\n"
+            highlights_section += f"   > <a href=\"{safe_link}\">Read more</a>\n\n"
         else:
             highlights_section += f"   > Read more (link omitted)\n\n"
 
