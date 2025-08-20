@@ -163,7 +163,6 @@ categories: [newsbrief]
 ---
 
 """
-
     # --- NEW: Top 10 highlights section ---
     highlights_section = "## Top 10 Highlights\n\n"
     for i, (entry, count) in enumerate(highlights, start=1):
@@ -187,8 +186,8 @@ categories: [newsbrief]
         table += f"| {category} | {article_count} |\n"
         total_articles += article_count
 
-    body = f"# Weekly News Brief — {date_str}\n\n"
-    body += highlights_section
+    # body = f"# Weekly News Brief — {date_str}\n\n"
+    body = highlights_section
     body += "## Summary\n\n"
     body += table + f"\n**Total Articles: {total_articles}**\n\n"
 
