@@ -86,25 +86,25 @@ sources:
     category: "Threat Intel & Vulnerability"
   - name: Cisco Talos Intelligence
     url: https://blog.talosintelligence.com/feeds/posts/default
-    category: "Intel & Vulnerability"
+    category: "Threat Intel & Vulnerability"
   - name: Malwarebytes Labs
     url: https://blog.malwarebytes.com/feed/
-    category: "Intel & Vulnerability"
+    category: "Threat Intel & Vulnerability"
   - name: Palo Alto Networks Unit 42
     url: https://unit42.paloaltonetworks.com/feed/
-    category: "Intel & Vulnerability"
+    category: "Threat Intel & Vulnerability"
   - name: SANS Internet Storm Center
     url: https://isc.sans.edu/rssfeed.xml
-    category: "Intel & Vulnerability"
+    category: "Threat Intel & Vulnerability"
   - name: Microsoft Security Blog
     url: https://www.microsoft.com/en-us/security/blog/feed/
     category: "Cybersecurity"
   - name: US-CERT National Cyber Awareness System
     url: https://us-cert.cisa.gov/ncas/alerts.xml
-    category: "Intel & Vulnerability"
+    category: "Threat Intel & Vulnerability"
   - name: Fortinet Blog
     url: https://blog.fortinet.com/rss.xml
-    category: "Intel & Vulnerability"
+    category: "Threat Intel & Vulnerability"
 
   # === Asia-Pacific Regulatory & Security Feeds ===
   - name: Singapore MAS
