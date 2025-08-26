@@ -1,7 +1,3 @@
-Here’s a short but clear README draft you can drop into your repo to remind yourself how the whole setup works and what to edit.
-
----
-
 ## **README.md**
 
 ### 📌 Project Overview
