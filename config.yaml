@@ -2,13 +2,13 @@ sources:
   # === LLM & AI Blogs ===
   - name: OpenAI News
     url: https://openai.com/news/rss.xml
-    category: LLM
+    category: "AI & LLM"
   - name: Google AI Blog
     url: https://blog.google/technology/ai/rss/
-    category: LLM
+    category: "AI & LLM"
   - name: Microsoft AI Blog
     url: https://blogs.microsoft.com/ai/feed/
-    category: LLM
+    category: "AI & LLM"
   # Note: Anthropic doesn't have an official RSS feed - removed for now
 
   # === Cloud Provider Updates ===
@@ -25,31 +25,31 @@ sources:
   # === Security News Websites ===
   - name: TechRadar Pro Security
     url: https://www.techradar.com/feeds/tag/security
-    category: Security
+    category: "Cybersecurity"
   - name: Dark Reading
     url: https://www.darkreading.com/rss_simple.asp
-    category: Security
+    category: "Cybersecurity"
   - name: Krebs on Security
     url: https://krebsonsecurity.com/feed/
-    category: Security
+    category: "Cybersecurity"
   - name: The Hacker News
     url: https://feeds.feedburner.com/TheHackersNews
-    category: Security
+    category: "Cybersecurity"
   - name: BleepingComputer
     url: https://www.bleepingcomputer.com/feed/
-    category: Security
+    category: "Cybersecurity"
   - name: SC Magazine
     url: https://www.scmagazine.com/home/feed/
-    category: Security
+    category: "Cybersecurity"
   - name: SecurityWeek
     url: https://feeds.feedburner.com/securityweek
-    category: Security
+    category: "Cybersecurity"
   - name: Help Net Security
     url: https://www.helpnetsecurity.com/feed/
-    category: Security
+    category: "Cybersecurity"
   - name: Bruce Schneier Blog
     url: https://www.schneier.com/blog/atom.xml
-    category: Security
+    category: "Cybersecurity"
   - name: TheRegister
     url: https://www.theregister.com/headlines.atom
     category: Tech
@@ -57,80 +57,80 @@ sources:
   # === Vulnerability & CVE Feeds ===
   - name: CVE Feed (High/Critical)
     url: https://cvefeed.io/rssfeed/
-    category: Vulnerability
+    category: "Threat Intel & Vulnerability"
   - name: CVE Details Recent
     url: https://www.cvedetails.com/vulnerability-feeds-form.php?type=rss&orderby=3&cvssscoremin=7
-    category: Vulnerability
+    category: "Threat Intel & Vulnerability"
   - name: Rapid7 Vulnerability Research
     url: https://blog.rapid7.com/tag/vulnerability-research/rss/
-    category: Vulnerability
+    category: "Threat Intel & Vulnerability"
   - name: Tenable Research
     url: https://www.tenable.com/blog/rss.xml
-    category: Vulnerability
+    category: "Threat Intel & Vulnerability"
   - name: VulnDB
     url: https://vuldb.com/rss.xml
-    category: Vulnerability
+    category: "Threat Intel & Vulnerability"
   - name: ExploitDB
     url: https://www.exploit-db.com/rss.xml
-    category: Vulnerability
+    category: "Threat Intel & Vulnerability"
   - name: Qualys VMDR Blog
     url: https://blog.qualys.com/feed
-    category: Vulnerability
+    category: "Threat Intel & Vulnerability"
 
   # === Threat Intelligence & Research ===
   - name: Recorded Future Threat Intelligence
     url: https://www.recordedfuture.com/feed/
-    category: ThreatIntel
+    category: "Threat Intel & Vulnerability"
   - name: CrowdStrike Blog
     url: https://www.crowdstrike.com/blog/feed/
-    category: ThreatIntel
+    category: "Threat Intel & Vulnerability"
   - name: Cisco Talos Intelligence
     url: https://blog.talosintelligence.com/feeds/posts/default
-    category: ThreatIntel
+    category: "Intel & Vulnerability"
   - name: Malwarebytes Labs
     url: https://blog.malwarebytes.com/feed/
-    category: ThreatIntel
+    category: "Intel & Vulnerability"
   - name: Palo Alto Networks Unit 42
     url: https://unit42.paloaltonetworks.com/feed/
-    category: ThreatIntel
+    category: "Intel & Vulnerability"
   - name: SANS Internet Storm Center
     url: https://isc.sans.edu/rssfeed.xml
-    category: ThreatIntel
+    category: "Intel & Vulnerability"
   - name: Microsoft Security Blog
     url: https://www.microsoft.com/en-us/security/blog/feed/
-    category: Security
+    category: "Cybersecurity"
   - name: US-CERT National Cyber Awareness System
     url: https://us-cert.cisa.gov/ncas/alerts.xml
-    category: ThreatIntel
+    category: "Intel & Vulnerability"
   - name: Fortinet Blog
     url: https://blog.fortinet.com/rss.xml
-    category: ThreatIntel
+    category: "Intel & Vulnerability"
 
   # === Asia-Pacific Regulatory & Security Feeds ===
   - name: Singapore MAS
     url: https://www.mas.gov.sg/rss/news
-    category: Regulation
+    category: "Cyber Regulatory"
   - name: Singapore CSA
     url: https://www.csa.gov.sg/rss/news
-    category: Security
+    category: "Cyber Regulatory"
   - name: Japan NISC
     url: https://www.nisc.go.jp/rss/eng-news.xml
-    category: Security
+    category: "Cyber Regulatory"
   - name: India CERT-In
     url: https://www.cert-in.org.in/rss
-    category: Security
+    category: "Cyber Regulatory"
   - name: Hong Kong PCPD
     url: https://www.pcpd.org.hk/rss/press.xml
-    category: Regulation
+    category: "Cyber Regulatory"
   - name: Philippines NPC
     url: https://www.privacy.gov.ph/rss/feed.xml
-    category: Regulation
+    category: "Cyber Regulatory"
   - name: Korea KISA
     url: https://www.kisa.or.kr/rss/eng.xml
-    category: Security
+    category: "Cyber Regulatory"
   - name: Malaysia MyCERT
     url: https://www.mycert.org.my/rss
-    category: Security
+    category: "Cyber Regulatory"
 
 filters:
   keywords:
@@ -273,7 +273,6 @@ filters:
     - "Myanmar E-Commerce Law"
     - "Cambodia PDPA"
 
-# optional settings
 log_level: "DEBUG"
 fuzz_threshold: 0.8
 max_per_domain: 2
