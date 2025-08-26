@@ -7,7 +7,6 @@ vendor/
 vendor/bundle/
 vendor/cache/
 .bundle
-Gemfile.lock
 
 # Python local env / caches
 .venv/
@@ -15,5 +14,4 @@ __pycache__/
 *.pyc
 
 # Editor/temp
-index.html.old
 *.swp
