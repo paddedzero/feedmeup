@@ -7,7 +7,8 @@ url: "https://paddedzero.github.io"  # Replace <your-username> with your GitHub 
 
 # Build settings
 markdown: kramdown
-theme: minima  # Simple built-in theme, you can change if you want
+theme: null  # unset minima when using remote_theme
+remote_theme: cotes2020/jekyll-theme-chirpy
 
 # Permalinks format for posts: /year/month/day/title/
 permalink: /:year/:month/:day/:title/
@@ -28,7 +29,10 @@ defaults:
 
 # Plugins (if you need them)
 plugins:
+  - jekyll-remote-theme
   - jekyll-feed  # RSS feed support
+  - jekyll-sitemap
+  - jekyll-seo-tag
 
 # Exclude from build
 exclude:
