@@ -70,23 +70,36 @@ jobs:
           # Switch to gh-pages, rebasing on remote (not creating orphan)
           git checkout -B gh-pages origin/gh-pages || git checkout --orphan gh-pages
           
-          # Save existing posts before cleaning
+          # CRITICAL: Save existing posts from gh-pages before cleaning
           mkdir -p /tmp/posts_backup
           if [ -d "_posts" ]; then
             cp -r _posts /tmp/posts_backup/ || true
           fi
           
-          # Remove build artifacts but preserve .git and _posts
-          rm -rf _site .jekyll-cache .jekyll-metadata index.html assets/js assets/css 404.html || true
+          # CRITICAL: Remove ONLY unwanted files from gh-pages, preserve what matters
+          # Keep: _posts, assets (except build artifacts), _config.yml, README
+          # Remove: .github, source markdown files, build cache
+          rm -rf .github .jekyll-cache .jekyll-metadata _site || true
           
-          # Restore posts
+          # Remove unwanted markdown documentation files that shouldn't be on gh-pages
+          rm -f CHIRPY_THEME_IMPLEMENTATION.md CHIRPY_V7.4.1_UPDATE.md CRITICAL_SAFETY_RULES.md || true
+          rm -f IMPLEMENTATION_EVALUATION.md MAIN_BRANCH_VERIFICATION.md THEME_FIX_DIAGNOSTIC.md || true
+          rm -f THEME_RENDERING_FIX.md fetch_news.py config.yaml requirements.txt || true
+          
+          # Restore posts from backup
           if [ -d "/tmp/posts_backup/_posts" ]; then
             cp -r /tmp/posts_backup/_posts .
           fi
           
+          # Verify posts directory exists (FAIL if missing)
+          if [ ! -d "_posts" ]; then
+            echo "❌ CRITICAL ERROR: Posts directory missing after cleanup!"
+            exit 1
+          fi
+          
           # Copy built site contents to root (this is the pre-built HTML from Jekyll 4.4)
           if [ -d "_site" ]; then
-            # Copy only HTML, images, and data files, NOT the _posts
+            # Copy everything from _site to root, which includes all built HTML, CSS, JS, assets
             cp -r _site/* . || true
             rm -rf _site
           fi
@@ -94,7 +107,7 @@ jobs:
           # Create .nojekyll to tell GitHub Pages NOT to rebuild (we've pre-built with Jekyll 4.4)
           touch .nojekyll
           
-          # Stage all changes
+          # Stage all changes (but not .github or markdown docs)
           git add -A
           
           # Commit if there are changes
