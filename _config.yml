@@ -40,6 +40,7 @@ exclude:
   - fetch_news.py
   - requirements.txt
   - .github/
+  - vendor/
 
 # Include other files/folders as needed
 include: []
