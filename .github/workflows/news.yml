@@ -46,6 +46,12 @@ jobs:
       - name: Build site with Jekyll
         run: bundle exec jekyll build
 
+      - name: Remove conflicting custom styles to allow Chirpy theme CSS to load
+        run: |
+          # Remove custom CSS that overrides Chirpy theme
+          rm -f assets/css/style.css || true
+          echo "Removed custom style.css to use Chirpy theme CSS"
+
       - name: Deploy to gh-pages branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -64,21 +70,17 @@ jobs:
           # Switch to gh-pages, rebasing on remote (not creating orphan)
           git checkout -B gh-pages origin/gh-pages || git checkout --orphan gh-pages
           
-          # Remove old _site and build artifacts but keep our config
-          rm -rf _site .jekyll-cache .jekyll-metadata .nojekyll Gemfile.lock || true
+          # Remove everything except .git and the newly built _site
+          git ls-files -z | xargs -0 rm -f || true
           
-          # Copy built site contents (skip if _site doesn't exist)
+          # Copy built site contents to root (this is the pre-built HTML from Jekyll 4.4)
           if [ -d "_site" ]; then
-            # Move everything from _site to root
             cp -r _site/* .
             rm -rf _site
           fi
           
-          # Create .nojekyll to tell GitHub Pages NOT to rebuild (we pre-build with bundle exec jekyll)
+          # Create .nojekyll to tell GitHub Pages NOT to rebuild (we've pre-built with Jekyll 4.4)
           touch .nojekyll
-          
-          # Ensure _config.yml from main is present
-          git checkout main -- _config.yml Gemfile || true
           
           # Stage all changes
           git add -A
