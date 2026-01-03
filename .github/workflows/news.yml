@@ -62,12 +62,15 @@ jobs:
           # Save the built site directory
           cp -r _site /tmp/gh_pages_content
 
+          # Copy _config.yml to the site (needed for GitHub Pages theme recognition)
+          cp _config.yml /tmp/gh_pages_content/
+
           # Switch to gh-pages branch (orphan, clean slate)
           git fetch origin gh-pages || true
           git checkout --orphan gh-pages-new 2>/dev/null || git checkout --orphan gh-pages-new
           git rm -rf . 2>/dev/null || true
 
-          # Copy built site as the new gh-pages content
+          # Copy built site + config as the new gh-pages content
           cp -r /tmp/gh_pages_content/* .
 
           # Create .nojekyll to prevent double-building on GitHub Pages
