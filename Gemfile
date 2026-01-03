@@ -2,8 +2,9 @@
 
 source "https://rubygems.org"
 
-# GitHub Pages uses the github-pages gem which includes Jekyll and all supported themes
-gem "github-pages", "~> 232", group: :jekyll_plugins
+# Use local Jekyll build with Chirpy theme
+gem "jekyll", "~> 4.4"
+gem "jekyll-theme-chirpy", "~> 7.4"
 gem "html-proofer", "~> 5.0", group: :test
 
 platforms :windows, :jruby do
