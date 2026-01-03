@@ -43,6 +43,11 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python fetch_news.py
 
+      - name: Clean build artifacts before branch switching
+        run: |
+          rm -rf _site Gemfile.lock .jekyll-cache .jekyll-metadata || true
+          git clean -fdx -- Gemfile.lock _site .jekyll-cache .jekyll-metadata || true
+
       - name: Build Jekyll site with Chirpy theme
         run: |
           bundle exec jekyll build --source . --destination _site
@@ -54,11 +59,16 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Clean untracked files that would block branch switching
+          rm -rf Gemfile.lock _site .jekyll-cache .jekyll-metadata || true
+          git clean -fdx -- Gemfile.lock _site .jekyll-cache .jekyll-metadata || true
+          git reset --hard || true
+
           # Get the built site files and posts
           mkdir -p /tmp/site_files
-          cp -r _site/* /tmp/site_files/ || true
+          cp -r _site/* /tmp/site_files/ 2>/dev/null || true
           mkdir -p /tmp/posts_source
-          cp _posts/*.md /tmp/posts_source/ || true
+          cp _posts/*.md /tmp/posts_source/ 2>/dev/null || true
 
           # Switch to gh-pages branch
           git fetch origin gh-pages || true
