@@ -50,12 +50,16 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Clean up any stray tracked/untracked files that might block branch switching
+          rm -f Gemfile.lock || true
+          git clean -fd || true
+
           # Switch to gh-pages branch (create if doesn't exist)
           git fetch origin gh-pages || true
           git checkout gh-pages || git checkout --orphan gh-pages
 
           # Remove old build artifacts and any .nojekyll that prevents rebuilding
-          rm -rf _site .jekyll-cache .jekyll-metadata .nojekyll || true
+          rm -rf _site .jekyll-cache .jekyll-metadata .nojekyll Gemfile.lock || true
 
           # Copy essential source files from main branch
           git checkout main -- _config.yml Gemfile || true
