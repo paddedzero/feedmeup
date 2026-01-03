@@ -22,4 +22,4 @@ __pycache__/
 *.pyc
 
 # Editor/temp
-*.swp
+*.swpGemfile.lock
