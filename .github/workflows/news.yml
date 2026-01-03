@@ -46,10 +46,21 @@ jobs:
       - name: Build site with Jekyll
         run: bundle exec jekyll build
 
-      - name: Remove symlinks from build output
+      - name: Remove symlinks and hardlinks from build output
         run: |
-          find ./_site -type l -delete
-          echo "Removed symlinks from _site directory"
+          # Copy _site following symlinks (dereferences them)
+          cp -R -L ./_site ./_site_clean
+          rm -rf ./_site
+          mv ./_site_clean ./_site
+          
+          # Verify no symlinks remain
+          if find ./_site -type l | grep -q .; then
+            echo "ERROR: Symlinks still found!"
+            find ./_site -type l
+            exit 1
+          fi
+          
+          echo "Symlinks removed. Build output ready for deployment."
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
