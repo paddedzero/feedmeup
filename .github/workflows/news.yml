@@ -50,6 +50,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Clean up any stray Gemfile.lock and untracked files before branch switching
+          rm -f Gemfile.lock || true
+          git clean -fd || true
+          
           # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -57,8 +61,8 @@ jobs:
           # Fetch gh-pages branch
           git fetch origin gh-pages || true
           
-          # Create or switch to gh-pages
-          git checkout gh-pages || git checkout --orphan gh-pages
+          # Switch to gh-pages, rebasing on remote (not creating orphan)
+          git checkout -B gh-pages origin/gh-pages || git checkout --orphan gh-pages
           
           # Remove old _site and build artifacts but keep our config
           rm -rf _site .jekyll-cache .jekyll-metadata .nojekyll Gemfile.lock || true
@@ -79,7 +83,7 @@ jobs:
           # Commit if there are changes
           if ! git diff --cached --quiet; then
             git commit -m "publish: Jekyll build $(date +%Y-%m-%d\ %H:%M:%S)"
-            git push origin gh-pages
+            git push -u origin gh-pages
           else
             echo "No changes to deploy"
           fi
