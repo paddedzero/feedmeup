@@ -1,4 +1,4 @@
-name: Weekly News Brief
+name: 'Weekly News Brief - Phase 1-2 (Gemini Synthesis + Dual-Post Output)'
 
 on:
   schedule:
@@ -39,6 +39,8 @@ jobs:
         run: pip install -r requirements.txt || true
 
       - name: Run fetch_news.py to generate markdown posts
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python fetch_news.py
 
       - name: Commit generated posts

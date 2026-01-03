@@ -2,6 +2,9 @@
 _errors/
 _posts/*.md
 
+# Test scripts and development documentation (not for production)
+testscript/
+
 # Ruby/Bundler artifacts
 vendor/
 vendor/bundle/
