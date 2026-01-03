@@ -48,7 +48,7 @@ theme_mode: # [light | dark]
 # cdn: "https://chirpy-img.netlify.app"
 
 # Avatar on sidebar (local or CORS)
-avatar: "/feedmeup/assets/img/avatar.svg"
+# avatar: "/feedmeup/assets/img/avatar.svg"
 
 # Table of Contents
 toc: true
