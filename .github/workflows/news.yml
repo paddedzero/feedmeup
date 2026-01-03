@@ -43,15 +43,6 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python fetch_news.py
 
-      - name: Clean build artifacts before branch switching
-        run: |
-          rm -rf _site Gemfile.lock .jekyll-cache .jekyll-metadata || true
-          git clean -fdx -- Gemfile.lock _site .jekyll-cache .jekyll-metadata || true
-
-      - name: Build Jekyll site with Chirpy theme
-        run: |
-          bundle exec jekyll build --source . --destination _site
-
       - name: Deploy to gh-pages branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,28 +50,23 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Save the built site directory
-          cp -r _site /tmp/gh_pages_content
-
-          # Copy _config.yml to the site (needed for GitHub Pages theme recognition)
-          cp _config.yml /tmp/gh_pages_content/
-
-          # Switch to gh-pages branch (orphan, clean slate)
+          # Switch to gh-pages branch (create if doesn't exist)
           git fetch origin gh-pages || true
-          git checkout --orphan gh-pages-new 2>/dev/null || git checkout --orphan gh-pages-new
-          git rm -rf . 2>/dev/null || true
+          git checkout gh-pages || git checkout --orphan gh-pages
 
-          # Copy built site + config as the new gh-pages content
-          cp -r /tmp/gh_pages_content/* .
+          # Remove old build artifacts
+          rm -rf _site .jekyll-cache .jekyll-metadata || true
 
-          # Create .nojekyll to prevent double-building on GitHub Pages
-          touch .nojekyll
+          # Copy source files from main branch (needed for Jekyll to rebuild on GitHub Pages)
+          git checkout main -- _config.yml Gemfile Gemfile.lock
+          git checkout main -- _posts/ _layouts/ assets/ || true
 
-          # Commit everything
-          git add -A
-          git commit -m "publish: site built with Chirpy theme ($(date +%Y-%m-%d\ %H:%M:%S))" || echo "Nothing to commit"
+          # Stage only the new posts
+          git add _posts/ _config.yml Gemfile Gemfile.lock
+          git add _layouts/ assets/ || true
 
-          # Force replace gh-pages with this new branch
-          git branch -D gh-pages 2>/dev/null || true
-          git branch -m gh-pages-new gh-pages
-          git push origin gh-pages --force-with-lease
+          # Commit if there are changes
+          git commit -m "publish: posts and theme config ($(date +%Y-%m-%d\ %H:%M:%S))" || echo "Nothing new to commit"
+
+          # Push to gh-pages
+          git push origin gh-pages
