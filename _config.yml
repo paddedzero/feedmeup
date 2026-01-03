@@ -27,7 +27,7 @@ social:
 
 # Build settings
 markdown: kramdown
-theme: jekyll-theme-chirpy
+remote_theme: cotes2020/jekyll-theme-chirpy
 
 # Language of the webpage › http://www.lingoes.net/en/translator/langcode.htm
 lang: en
