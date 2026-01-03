@@ -1,5 +1,5 @@
 ---
-layout: home
+layout: page
 title: Home
 icon: fas fa-home
 order: 1
