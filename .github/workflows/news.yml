@@ -52,10 +52,40 @@ jobs:
           rm -f assets/css/style.css || true
           echo "Removed custom style.css to use Chirpy theme CSS"
 
+      - name: "🔵 BLUE: Verify user content integrity before deployment"
+        run: |
+          echo "Checking that all user content is present..."
+          bash scripts/verify-content-safety.sh
+          echo "✅ User content verified - safe to proceed with deployment"
+
+      - name: "🟢 GREEN: Build and test in staging area"
+        run: |
+          # Create a staging directory to test the build
+          mkdir -p /tmp/staging
+          cp -r ./_site/* /tmp/staging/ 2>/dev/null || true
+          
+          # Verify critical files exist in staging
+          if [ ! -f "/tmp/staging/index.html" ]; then
+            echo "❌ ERROR: index.html not built in staging!"
+            exit 1
+          fi
+          
+          if [ ! -f "/tmp/staging/feed.xml" ]; then
+            echo "⚠️  WARNING: feed.xml not found in staging"
+          fi
+          
+          echo "✅ Staging build validated - ready for production deployment"
+          ls -lh /tmp/staging/index.html /tmp/staging/feed.xml 2>/dev/null || true
+
       - name: Deploy to gh-pages branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # BLUE-GREEN DEPLOYMENT
+          # 1. Prepare "green" (new) environment
+          # 2. Test it completely
+          # 3. Only then remove "blue" (old) and promote green
+          
           # Clean up any stray Gemfile.lock and untracked files before branch switching
           rm -f Gemfile.lock || true
           git clean -fd || true
@@ -64,56 +94,100 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Fetch gh-pages branch
+          # Fetch gh-pages branch (current production)
           git fetch origin gh-pages || true
           
-          # Switch to gh-pages, rebasing on remote (not creating orphan)
+          # Switch to gh-pages, rebasing on remote
           git checkout -B gh-pages origin/gh-pages || git checkout --orphan gh-pages
           
-          # CRITICAL: Save existing posts from gh-pages before cleaning
+          # ===== BACKUP PHASE (BLUE) =====
+          echo "📦 Backing up current production..."
+          BACKUP_TIME=$(date +%s)
+          mkdir -p /tmp/blue_backup_$BACKUP_TIME
+          cp -r . /tmp/blue_backup_$BACKUP_TIME/ || true
+          echo "✅ Production backed up to: /tmp/blue_backup_$BACKUP_TIME"
+          
+          # ===== PREPARE GREEN DEPLOYMENT =====
+          echo "🟢 Preparing green deployment..."
+          
+          # Save existing posts (ALWAYS backup user content)
           mkdir -p /tmp/posts_backup
           if [ -d "_posts" ]; then
             cp -r _posts /tmp/posts_backup/ || true
           fi
+          POSTS_BEFORE=$(find _posts -name "*.md" 2>/dev/null | wc -l || echo 0)
+          echo "Posts before deployment: $POSTS_BEFORE"
           
-          # CRITICAL: Remove ONLY unwanted files from gh-pages, preserve what matters
-          # Keep: _posts, assets (except build artifacts), _config.yml, README
-          # Remove: .github, source markdown files, build cache
-          rm -rf .github .jekyll-cache .jekyll-metadata _site || true
-          
-          # Remove unwanted markdown documentation files that shouldn't be on gh-pages
+          # Remove build artifacts ONLY (keep user content)
+          rm -rf .github .jekyll-cache .jekyll-metadata _site fetch_news.py config.yaml requirements.txt || true
           rm -f CHIRPY_THEME_IMPLEMENTATION.md CHIRPY_V7.4.1_UPDATE.md CRITICAL_SAFETY_RULES.md || true
           rm -f IMPLEMENTATION_EVALUATION.md MAIN_BRANCH_VERIFICATION.md THEME_FIX_DIAGNOSTIC.md || true
-          rm -f THEME_RENDERING_FIX.md fetch_news.py config.yaml requirements.txt || true
+          rm -f THEME_RENDERING_FIX.md 404.md index.md Gemfile .gitignore tests/ 2>/dev/null || true
           
           # Restore posts from backup
           if [ -d "/tmp/posts_backup/_posts" ]; then
             cp -r /tmp/posts_backup/_posts .
           fi
           
-          # Verify posts directory exists (FAIL if missing)
-          if [ ! -d "_posts" ]; then
-            echo "❌ CRITICAL ERROR: Posts directory missing after cleanup!"
-            exit 1
-          fi
-          
-          # Copy built site contents to root (this is the pre-built HTML from Jekyll 4.4)
+          # Copy built site contents from _site to root
           if [ -d "_site" ]; then
-            # Copy everything from _site to root, which includes all built HTML, CSS, JS, assets
             cp -r _site/* . || true
             rm -rf _site
           fi
           
-          # Create .nojekyll to tell GitHub Pages NOT to rebuild (we've pre-built with Jekyll 4.4)
+          # Create .nojekyll to prevent GitHub Pages rebuild
           touch .nojekyll
           
-          # Stage all changes (but not .github or markdown docs)
+          # ===== TEST GREEN DEPLOYMENT =====
+          echo "🧪 Testing green deployment..."
+          
+          # Verify critical files exist
+          if [ ! -f "index.html" ]; then
+            echo "❌ CRITICAL: index.html missing in green deployment!"
+            echo "Rolling back to blue (production)..."
+            cp -r /tmp/blue_backup_$BACKUP_TIME/* . || true
+            git add -A
+            git commit -m "rollback: Green deployment failed - index.html missing" || true
+            git push -u origin gh-pages
+            exit 1
+          fi
+          
+          # Verify feed.xml
+          if [ ! -f "feed.xml" ]; then
+            echo "⚠️  WARNING: feed.xml missing (non-critical)"
+          fi
+          
+          # Verify posts count didn't decrease
+          POSTS_AFTER=$(find _posts -name "*.md" 2>/dev/null | wc -l || echo 0)
+          echo "Posts after deployment: $POSTS_AFTER"
+          if [ "$POSTS_AFTER" -lt "$POSTS_BEFORE" ]; then
+            echo "❌ CRITICAL: Posts were deleted! ($POSTS_BEFORE → $POSTS_AFTER)"
+            echo "Rolling back to blue..."
+            cp -r /tmp/blue_backup_$BACKUP_TIME/* . || true
+            git add -A
+            git commit -m "rollback: Post count decreased" || true
+            git push -u origin gh-pages
+            exit 1
+          fi
+          
+          echo "✅ Green deployment validated"
+          
+          # ===== PROMOTE GREEN (remove old blue) =====
+          echo "🟢 Promoting green to production..."
+          
+          # Stage all changes
           git add -A
           
           # Commit if there are changes
           if ! git diff --cached --quiet; then
-            git commit -m "publish: Jekyll build $(date +%Y-%m-%d\ %H:%M:%S)"
+            git commit -m "publish: Jekyll build $(date +%Y-%m-%d\ %H:%M:%S) - blue-green deployment verified"
             git push -u origin gh-pages
+            echo "✅ Green promoted to production"
+            echo "📊 Deployment stats: Posts=$POSTS_AFTER, Timestamp=$(date)"
           else
-            echo "No changes to deploy"
+            echo "ℹ️  No changes to deploy"
           fi
+          
+          # Cleanup old backups (keep only last 3)
+          echo "🧹 Cleaning up old backups..."
+          ls -1d /tmp/blue_backup_* 2>/dev/null | sort -r | tail -n +4 | xargs rm -rf 2>/dev/null || true
