@@ -64,11 +64,13 @@ jobs:
           git clean -fdx -- Gemfile.lock _site .jekyll-cache .jekyll-metadata || true
           git reset --hard || true
 
-          # Get the built site files and posts
-          mkdir -p /tmp/site_files
-          cp -r _site/* /tmp/site_files/ 2>/dev/null || true
-          mkdir -p /tmp/posts_source
-          cp _posts/*.md /tmp/posts_source/ 2>/dev/null || true
+          # Save the built site, posts, config before switching branches
+          mkdir -p /tmp/gh_pages_deploy
+          cp -r _site/* /tmp/gh_pages_deploy/ 2>/dev/null || true
+          mkdir -p /tmp/gh_pages_deploy/_posts
+          cp _posts/*.md /tmp/gh_pages_deploy/_posts/ 2>/dev/null || true
+          cp _config.yml /tmp/gh_pages_deploy/ 2>/dev/null || true
+          cp Gemfile /tmp/gh_pages_deploy/ 2>/dev/null || true
 
           # Switch to gh-pages branch
           git fetch origin gh-pages || true
@@ -79,16 +81,18 @@ jobs:
             git checkout --orphan gh-pages
           fi
 
-          # Clean everything except .git
-          git rm -rf . --cached --force || true
-          rm -rf * .github .gitignore 2>/dev/null || true
+          # Clean everything except .git, prepare for new content
+          git rm -rf . --cached --force 2>/dev/null || true
+          rm -rf * 2>/dev/null || true
 
-          # Restore built site
-          cp -r /tmp/site_files/* . 2>/dev/null || true
+          # Restore built site and configuration
+          cp -r /tmp/gh_pages_deploy/* . 2>/dev/null || true
 
-          # Restore original _posts for reference (optional)
+          # Ensure _posts directory exists with posts
           mkdir -p _posts
-          cp /tmp/posts_source/*.md _posts/ 2>/dev/null || true
+          if [ -d /tmp/gh_pages_deploy/_posts ]; then
+            cp /tmp/gh_pages_deploy/_posts/*.md _posts/ 2>/dev/null || true
+          fi
 
           # Commit if there are changes
           git add -A || true
