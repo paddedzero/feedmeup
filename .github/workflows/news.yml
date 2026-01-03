@@ -70,12 +70,24 @@ jobs:
           # Switch to gh-pages, rebasing on remote (not creating orphan)
           git checkout -B gh-pages origin/gh-pages || git checkout --orphan gh-pages
           
-          # Remove everything except .git and the newly built _site
-          git ls-files -z | xargs -0 rm -f || true
+          # Save existing posts before cleaning
+          mkdir -p /tmp/posts_backup
+          if [ -d "_posts" ]; then
+            cp -r _posts /tmp/posts_backup/ || true
+          fi
+          
+          # Remove build artifacts but preserve .git and _posts
+          rm -rf _site .jekyll-cache .jekyll-metadata index.html assets/js assets/css 404.html || true
+          
+          # Restore posts
+          if [ -d "/tmp/posts_backup/_posts" ]; then
+            cp -r /tmp/posts_backup/_posts .
+          fi
           
           # Copy built site contents to root (this is the pre-built HTML from Jekyll 4.4)
           if [ -d "_site" ]; then
-            cp -r _site/* .
+            # Copy only HTML, images, and data files, NOT the _posts
+            cp -r _site/* . || true
             rm -rf _site
           fi
           
