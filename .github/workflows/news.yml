@@ -46,43 +46,40 @@ jobs:
       - name: Build site with Jekyll
         run: bundle exec jekyll build
 
-      - name: Remove symlinks and hardlinks from build output
+      - name: Deploy to gh-pages branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Copy _site following symlinks (dereferences them)
-          cp -R -L ./_site ./_site_clean
-          rm -rf ./_site
-          mv ./_site_clean ./_site
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Verify no symlinks remain
-          if find ./_site -type l | grep -q .; then
-            echo "ERROR: Symlinks still found!"
-            find ./_site -type l
-            exit 1
+          # Fetch gh-pages branch
+          git fetch origin gh-pages || true
+          
+          # Create or switch to gh-pages
+          git checkout gh-pages || git checkout --orphan gh-pages
+          
+          # Remove old _site and build artifacts but keep our config
+          rm -rf _site .jekyll-cache .jekyll-metadata .nojekyll Gemfile.lock || true
+          
+          # Copy built site contents (skip if _site doesn't exist)
+          if [ -d "_site" ]; then
+            # Move everything from _site to root
+            cp -r _site/* .
+            rm -rf _site
           fi
           
-          echo "Symlinks removed. Build output ready for deployment."
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: github-pages
-          path: './_site'
-          retention-days: 1
-
-  deploy-pages:
-    needs: build-and-deploy
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: github-pages
-          path: './_site'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          # Ensure _config.yml from main is present
+          git checkout main -- _config.yml Gemfile || true
+          
+          # Stage all changes
+          git add -A
+          
+          # Commit if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "publish: Jekyll build $(date +%Y-%m-%d\ %H:%M:%S)"
+            git push origin gh-pages
+          else
+            echo "No changes to deploy"
+          fi
