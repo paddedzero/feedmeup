@@ -277,3 +277,63 @@ log_level: "DEBUG"
 fuzz_threshold: 0.8
 max_per_domain: 2
 max_results: 10
+
+# === Gemini API Configuration (Phase 1: Summarization) ===
+gemini:
+  # API key loaded from environment variable GEMINI_API_KEY
+  # Set in: GitHub Actions secrets OR local .env OR shell export
+  api_key: ${GEMINI_API_KEY}
+  
+  # Model selection: gemini-1.5-flash (fast, cost-effective) or gemini-2.0-flash (more capable)
+  model: "gemini-1.5-flash"
+  
+  # Constraints for summarization output
+  max_output_tokens: 150
+  temperature: 0.7  # Balanced: factual but not robotic
+  
+  # Summarization prompt template
+  # Placeholders: {keywords} (comma-separated), {article_text}
+  summarization_prompt: |
+    Summarize the following article in 2-3 sentences maximum.
+    Focus on strategic impact and operational relevance to cybersecurity and technology.
+    If these keywords are present, explicitly highlight them: {keywords}
+    
+    Requirements:
+    - Analytical and professional tone (Executive ready)
+    - Avoid flowery AI language ("rapidly evolving", "groundbreaking")
+    - Focus on: What happened, why it matters, operational impact
+    - Be concise; no more than 3 sentences
+    
+    Article:
+    {article_text}
+    
+    Response (2-3 sentences):
+
+# === Synthesis Configuration (Phase 1 & Phase 2 features) ===
+synthesis:
+  # Feature flags for gradual rollout
+  enable_gemini_summarization: true   # Phase 1: Summarize with Gemini
+  enable_trend_analysis: false         # Phase 2: Analyze trends
+  enable_opinion_post: true            # Phase 2: Generate Analyst Opinion (ENABLED)
+  
+  # Trend analysis settings (Phase 2+)
+  trend_threshold: 2                   # Minimum sources to consider a story a "trend"
+  lookback_days: 7                     # Weekly analysis window
+  
+  # Post output naming
+  post_output:
+    weekly_scan_prefix: "weekly-scan"           # Filename: YYYY-MM-DD-HH-MM-weekly-scan.md
+    analyst_opinion_prefix: "analyst-opinion"   # Filename: YYYY-MM-DD-HH-MM-analyst-opinion.md
+
+# === Error Handling & Logging ===
+error_handling:
+  # What to do if Gemini API fails
+  gemini_api_fallback: "clean_summary"  # Options: "clean_summary" (raw), "skip_article"
+  
+  # Retry strategy for API calls
+  api_retry_max: 3
+  api_retry_backoff: 0.5  # exponential backoff multiplier
+  api_timeout_seconds: 15
+  
+  # Save errors to _errors/ folder
+  save_error_posts: true
