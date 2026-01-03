@@ -1,0 +1,41 @@
+name: Visual Regression Check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '_data/**'
+      - '_includes/**'
+      - '_layouts/**'
+      - '_sass/**'
+      - 'assets/**'
+
+jobs:
+  visual-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+      
+      - name: Capture Production Screenshot
+        run: |
+          npx playwright screenshot https://paddedzero.github.io/feedmeup/ production.png
+      
+      - name: Build and Serve Preview
+        run: |
+          # This would require Jekyll setup, keeping as placeholder
+          echo "Preview build would go here"
+      
+      - name: Upload Screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: '*.png'
+          retention-days: 30
