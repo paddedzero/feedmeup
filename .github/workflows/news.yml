@@ -54,8 +54,8 @@ jobs:
           git fetch origin gh-pages || true
           git checkout gh-pages || git checkout --orphan gh-pages
 
-          # Remove old build artifacts
-          rm -rf _site .jekyll-cache .jekyll-metadata || true
+          # Remove old build artifacts and any .nojekyll that prevents rebuilding
+          rm -rf _site .jekyll-cache .jekyll-metadata .nojekyll || true
 
           # Copy essential source files from main branch
           git checkout main -- _config.yml Gemfile || true
@@ -63,6 +63,9 @@ jobs:
 
           # Stage the files
           git add _posts/ _config.yml Gemfile _layouts/ assets/ || true
+
+          # Remove .nojekyll if it exists in the index
+          git rm --cached .nojekyll 2>/dev/null || true
 
           # Commit if there are changes
           git commit -m "publish: posts and theme config ($(date +%Y-%m-%d\ %H:%M:%S))" || echo "Nothing new to commit"
