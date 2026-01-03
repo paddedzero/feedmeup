@@ -1,6 +1,5 @@
-# Generated posts / errors
+# Generated error files (keep _posts - they need to be tracked!)
 _errors/
-_posts/*.md
 
 # Test scripts and development documentation (not for production)
 testscript/
@@ -12,7 +11,7 @@ vendor/cache/
 .bundle
 Gemfile.lock
 
-# Jekyll build output
+# Jekyll build output (don't track, rebuilt each deploy)
 _site/
 .jekyll-cache/
 .jekyll-metadata
