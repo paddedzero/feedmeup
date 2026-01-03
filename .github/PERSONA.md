@@ -209,6 +209,64 @@ When starting work:
 6. Provide commit message with clear intent
 7. Reference this file in discussions: *"per PERSONA.md, Phase 1 is..."*
 
+## 🚨 MANDATORY SAFETY PROTOCOL FOR GIT OPERATIONS
+
+**This protocol is NON-NEGOTIABLE and ALWAYS applies.**
+
+### Before ANY destructive git operation (force push, branch switch, hard reset):
+
+```bash
+# Step 1: ALWAYS verify content safety FIRST
+./scripts/verify-content-safety.sh
+# ❌ If this fails, STOP IMMEDIATELY
+
+# Step 2: Create timestamped backup
+BACKUP_DIR="/tmp/feedmeup_backup_$(date +%s)"
+mkdir -p "$BACKUP_DIR"
+cp -r _posts "$BACKUP_DIR/"
+echo "✅ Backed up to: $BACKUP_DIR"
+
+# Step 3: Count posts before operation (for verification)
+POSTS_BEFORE=$(find _posts -name "*.md" | wc -l)
+echo "Posts before: $POSTS_BEFORE"
+
+# Step 4: Now perform the git operation
+# git push origin <ref> --force
+# git checkout ...
+# etc
+
+# Step 5: Verify posts still exist
+./scripts/verify-content-safety.sh
+# ❌ If this fails, restore from backup and exit with error
+
+# Step 6: Verify post count didn't decrease
+POSTS_AFTER=$(find _posts -name "*.md" | wc -l)
+if [ "$POSTS_AFTER" -lt "$POSTS_BEFORE" ]; then
+  echo "❌ CRITICAL: Posts were deleted! ($POSTS_BEFORE → $POSTS_AFTER)"
+  echo "Restoring from backup..."
+  cp -r "$BACKUP_DIR/_posts" .
+  exit 1
+fi
+echo "✅ Posts verified: $POSTS_AFTER files"
+```
+
+### When committing to git:
+- ✅ ALWAYS run `./scripts/verify-content-safety.sh` BEFORE commit
+- ✅ ALWAYS create backup in `/tmp/` BEFORE major operations
+- ✅ ALWAYS verify AFTER operation
+- ❌ NEVER use `git add -A` carelessly on gh-pages
+- ❌ NEVER force push without running safety checks first
+- ❌ NEVER delete files without backup
+
+### Incident Recovery:
+If posts are deleted:
+1. `git log --all --oneline _posts/ | head -5`
+2. `git checkout <commit> -- _posts/`
+3. `git add _posts/ && git commit -m "CRITICAL RESTORE: ..."`
+4. `git push origin HEAD:gh-pages --force`
+
+---
+
 ## Anti-Patterns (DO NOT DO)
 - ❌ Flowery AI language ("In the rapidly evolving landscape...")
 - ❌ Silent errors (always log + save to `_errors/`)
@@ -232,5 +290,6 @@ When starting work:
 
 ---
 
-**Last Updated:** 2026-01-02  
-**Phase:** 1 (Gemini Summarization - Ready to Begin)
+**Last Updated:** 2026-01-03  
+**Phase:** 1 (Gemini Summarization - Ready to Begin)  
+**Critical Incident:** Posts deleted twice due to force push without backup (NOW FIXED with mandatory safety checks)
