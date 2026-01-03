@@ -43,47 +43,48 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python fetch_news.py
 
-      - name: Deploy posts to gh-pages with Chirpy theme
+      - name: Build Jekyll site with Chirpy theme
+        run: |
+          bundle exec jekyll build --source . --destination _site
+
+      - name: Deploy to gh-pages branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Save generated posts
-          mkdir -p /tmp/generated_posts
-          mv _posts/*.md /tmp/generated_posts/ || true
+          # Get the built site files and posts
+          mkdir -p /tmp/site_files
+          cp -r _site/* /tmp/site_files/ || true
+          mkdir -p /tmp/posts_source
+          cp _posts/*.md /tmp/posts_source/ || true
 
-          # Clean up temporary files (preserve _config.yml)
-          rm -rf _errors vendor vendor/bundle vendor/cache .bundle Gemfile.lock || true
-          git reset --hard
-          git clean -fdx || true
-
-          # Fetch and checkout gh-pages, preserving theme configuration
+          # Switch to gh-pages branch
           git fetch origin gh-pages || true
           if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
-            git checkout -B gh-pages origin/gh-pages
+            git checkout gh-pages
+            git pull origin gh-pages --allow-unrelated-histories || true
           else
-            git checkout -B gh-pages
-            # Initialize gh-pages with theme config from main
-            mkdir -p _posts _layouts assets
-            git checkout main -- _config.yml || true
+            git checkout --orphan gh-pages
           fi
 
-          # Restore generated posts to _posts directory
+          # Clean everything except .git
+          git rm -rf . --cached --force || true
+          rm -rf * .github .gitignore 2>/dev/null || true
+
+          # Restore built site
+          cp -r /tmp/site_files/* . 2>/dev/null || true
+
+          # Restore original _posts for reference (optional)
           mkdir -p _posts
-          mv /tmp/generated_posts/*.md _posts/ || true
+          cp /tmp/posts_source/*.md _posts/ 2>/dev/null || true
 
-          # Ensure _config.yml exists with Chirpy theme config
-          if [ ! -f _config.yml ]; then
-            git checkout main -- _config.yml || true
-          fi
-
-          # Only commit if there are new posts
-          git add _posts/*.md || true
-          if ! git diff --staged --quiet; then
-            git commit -m "chore: add weekly news brief posts (Chirpy theme enabled)"
-            git push origin gh-pages
+          # Commit if there are changes
+          git add -A || true
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: publish site with Chirpy theme ($(date +%Y-%m-%d\ %H:%M:%S))"
+            git push origin gh-pages --force-with-lease
           else
-            echo "No new posts to deploy"
+            echo "No changes to deploy"
           fi
