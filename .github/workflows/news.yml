@@ -57,13 +57,12 @@ jobs:
           # Remove old build artifacts
           rm -rf _site .jekyll-cache .jekyll-metadata || true
 
-          # Copy source files from main branch (needed for Jekyll to rebuild on GitHub Pages)
-          git checkout main -- _config.yml Gemfile Gemfile.lock
+          # Copy essential source files from main branch
+          git checkout main -- _config.yml Gemfile || true
           git checkout main -- _posts/ _layouts/ assets/ || true
 
-          # Stage only the new posts
-          git add _posts/ _config.yml Gemfile Gemfile.lock
-          git add _layouts/ assets/ || true
+          # Stage the files
+          git add _posts/ _config.yml Gemfile _layouts/ assets/ || true
 
           # Commit if there are changes
           git commit -m "publish: posts and theme config ($(date +%Y-%m-%d\ %H:%M:%S))" || echo "Nothing new to commit"
