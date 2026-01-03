@@ -1,0 +1,77 @@
+
+
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>https://paddedzero.github.io/feedmeup/</id>
+  <title>FeedMeUp News Brief</title>
+  <subtitle>Curated weekly news on AI, Cybersecurity, Cloud, and APAC Regulatory topics.</subtitle>
+  <updated>2026-01-03T10:23:11-05:00</updated>
+  <author>
+    <name>FeedMeUp Team</name>
+    <uri>https://paddedzero.github.io/feedmeup/</uri>
+  </author>
+  <link rel="self" type="application/atom+xml" href="https://paddedzero.github.io/feedmeup/feed.xml"/>
+  <link rel="alternate" type="text/html" hreflang="en"
+    href="https://paddedzero.github.io/feedmeup/"/>
+  <generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator>
+  <rights> © 2026 FeedMeUp Team </rights>
+  <icon>/feedmeup/assets/img/favicons/favicon.ico</icon>
+  <logo>/feedmeup/assets/img/favicons/favicon-96x96.png</logo>
+
+
+  
+  <entry>
+    <title>Weekly Scan: Cloud, Cybersecurity, AI News — Jan 02, 2026</title>
+    <link href="https://paddedzero.github.io/feedmeup/posts/10-23-weekly-scan/" rel="alternate" type="text/html" title="Weekly Scan: Cloud, Cybersecurity, AI News — Jan 02, 2026" />
+    <published>2026-01-02T10:23:10-05:00</published>
+  
+    <updated>2026-01-02T10:23:10-05:00</updated>
+  
+    <id>https://paddedzero.github.io/feedmeup/posts/10-23-weekly-scan/</id>
+    <content type="text/html" src="https://paddedzero.github.io/feedmeup/posts/10-23-weekly-scan/" />
+    <author>
+      <name>FeedMeUp Team</name>
+    </author>
+
+  
+    
+    <category term="newsbrief" />
+    
+    <category term="weekly-scan" />
+    
+  
+
+  <summary>Top Trending Stories     Introducing GPT-5.2-Codex (3 mentions)            GPT-5.2-Codex is OpenAI’s most advanced coding model, offering long-horizon reasoning, large-scale code transformations, and enhanced cybersecurity capabilities. Read more           Two US Cybersecurity Pros Plead Guilty Over Ransomware Attacks (2 mentions)            Ryan Goldberg and Kevin Martin have admitted being af...</summary>
+
+  </entry>
+
+  
+  <entry>
+    <title>Analyst Opinion: This Week in Cybersecurity — Jan 02, 2026</title>
+    <link href="https://paddedzero.github.io/feedmeup/posts/10-23-analyst-opinion/" rel="alternate" type="text/html" title="Analyst Opinion: This Week in Cybersecurity — Jan 02, 2026" />
+    <published>2026-01-02T10:23:10-05:00</published>
+  
+    <updated>2026-01-02T10:23:10-05:00</updated>
+  
+    <id>https://paddedzero.github.io/feedmeup/posts/10-23-analyst-opinion/</id>
+    <content type="text/html" src="https://paddedzero.github.io/feedmeup/posts/10-23-analyst-opinion/" />
+    <author>
+      <name>FeedMeUp Team</name>
+    </author>
+
+  
+    
+    <category term="analysis" />
+    
+    <category term="opinion" />
+    
+    <category term="cybersecurity" />
+    
+  
+
+  <summary>Weekly Trend: Cybersecurity  This week, the Cybersecurity category dominated our news feeds with 63 articles and 7 trending highlights. Here’s what you need to know from a strategic perspective.  Key Developments  1. Two US Cybersecurity Pros Plead Guilty Over Ransomware Attacks  Ryan Goldberg and Kevin Martin have admitted being affiliates of the BlackCat/Alphv ransomware group. The post Two U...</summary>
+
+  </entry>
+
+</feed>
+
+
