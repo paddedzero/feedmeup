@@ -1,12 +1,8 @@
 ---
 layout: tags
-title: Tags
 icon: fas fa-tags
-order: 6
-permalink: /tags/
+order: 2
 ---
-
-Browse all posts by tag. Each tag represents a specific topic or technology.
 
 ## How Tags Work
 

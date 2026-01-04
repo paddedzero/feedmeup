@@ -1,12 +1,8 @@
 ---
 layout: archives
-title: Archives
 icon: fas fa-archive
 order: 3
-permalink: /archives/
 ---
-
-Browse all posts by category or tag using the links below.
 
 ## Posts by Category
 

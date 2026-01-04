@@ -1,12 +1,8 @@
 ---
 layout: categories
-title: Categories
-icon: fas fa-th
-order: 4
-permalink: /categories/
+icon: fas fa-stream
+order: 1
 ---
-
-Browse all posts grouped by topic. Click any category below to view related articles.
 
 ## Available Categories
 

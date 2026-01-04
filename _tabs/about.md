@@ -1,9 +1,7 @@
 ---
-layout: page
-title: About
+# the default layout is 'page'
 icon: fas fa-info-circle
-order: 2
-permalink: /about/
+order: 4
 ---
 
 ## About FeedMeUp News Brief
