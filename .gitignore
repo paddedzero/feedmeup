@@ -1,0 +1,25 @@
+# Generated error files (keep _posts - they need to be tracked!)
+_errors/
+
+# Test scripts and development documentation (not for production)
+testscript/
+
+# Ruby/Bundler artifacts
+vendor/
+vendor/bundle/
+vendor/cache/
+.bundle
+# Gemfile.lock is now tracked for GitHub Pages
+
+# Jekyll build output (don't track, rebuilt each deploy)
+_site/
+.jekyll-cache/
+.jekyll-metadata
+
+# Python local env / caches
+.venv/
+__pycache__/
+*.pyc
+
+# Editor/temp
+*.swpGemfile.lock

@@ -1,0 +1,43 @@
+# _data/locales/en.yml
+# English locale file for Chirpy theme
+
+tabs:
+  home: Home
+  archives: Archives
+  categories: Categories
+  tags: Tags
+  about: About
+  subscribe: Subscribe
+
+panel:
+  lastmod: Recently Updated
+  trending_tags: Trending Tags
+  toc: Contents
+
+post:
+  written_by: By
+  updated: Updated
+  posted: Posted
+  pageview_measure: views
+  read_time:
+    unit: min
+  relate_posts: Further Reading
+  share: Share
+  button:
+    next: Newer
+    previous: Older
+    copy_code:
+      succeed: Copied!
+    share_link:
+      title: Copy link
+      succeed: Link copied successfully!
+
+categories:
+  category_measure:
+    singular: category
+    plural: categories
+
+tags:
+  tag_measure:
+    singular: tag
+    plural: tags
