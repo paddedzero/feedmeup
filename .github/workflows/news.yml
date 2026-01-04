@@ -43,14 +43,14 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python fetch_news.py
 
-      - name: Build site with Jekyll
-        run: bundle exec jekyll build
-
       - name: Remove conflicting custom styles to allow Chirpy theme CSS to load
         run: |
           # Remove custom CSS that overrides Chirpy theme
           rm -f assets/css/style.css || true
           echo "Removed custom style.css to use Chirpy theme CSS"
+
+      - name: Build site with Jekyll
+        run: bundle exec jekyll build
 
       - name: "🔵 BLUE: Verify user content integrity before deployment"
         run: |
@@ -81,6 +81,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Capture artifacts from main branch BEFORE switching branches.
+          # Otherwise, `_site` and newly-generated `_posts` are lost after checkout.
+          echo "📦 Capturing build artifacts from main..."
+          SITE_BUILD_DIR=/tmp/site_build
+          POSTS_BUILD_DIR=/tmp/generated_posts
+          rm -rf "$SITE_BUILD_DIR" "$POSTS_BUILD_DIR" || true
+          mkdir -p "$SITE_BUILD_DIR" "$POSTS_BUILD_DIR" || true
+
+          if [ ! -d "_site" ]; then
+            echo "❌ ERROR: _site not found; Jekyll build likely failed"
+            exit 1
+          fi
+          cp -r ./_site/* "$SITE_BUILD_DIR/" 2>/dev/null || true
+
+          if [ -d "_posts" ]; then
+            cp -r ./_posts "$POSTS_BUILD_DIR/" || true
+          fi
+
           # BLUE-GREEN DEPLOYMENT
           # 1. Prepare "green" (new) environment
           # 2. Test it completely
@@ -117,22 +135,18 @@ jobs:
           fi
           POSTS_BEFORE=$(find _posts -name "*.md" 2>/dev/null | wc -l || echo 0)
           echo "Posts before deployment: $POSTS_BEFORE"
-          
-          # Remove build artifacts ONLY (keep user content)
-          rm -rf .github .jekyll-cache .jekyll-metadata _site fetch_news.py config.yaml requirements.txt || true
-          rm -f CHIRPY_THEME_IMPLEMENTATION.md CHIRPY_V7.4.1_UPDATE.md CRITICAL_SAFETY_RULES.md || true
-          rm -f IMPLEMENTATION_EVALUATION.md MAIN_BRANCH_VERIFICATION.md THEME_FIX_DIAGNOSTIC.md || true
-          rm -f THEME_RENDERING_FIX.md 404.md index.md Gemfile .gitignore tests/ 2>/dev/null || true
-          
-          # Restore posts from backup
-          if [ -d "/tmp/posts_backup/_posts" ]; then
-            cp -r /tmp/posts_backup/_posts .
-          fi
-          
-          # Copy built site contents from _site to root
-          if [ -d "_site" ]; then
-            cp -r _site/* . || true
-            rm -rf _site
+
+          # Replace gh-pages contents with the freshly built site.
+          # Keep .git intact.
+          echo "🧹 Clearing existing gh-pages working tree..."
+          find . -mindepth 1 -maxdepth 1 -not -name ".git" -exec rm -rf {} + || true
+
+          echo "📦 Restoring freshly built site to gh-pages..."
+          cp -r "$SITE_BUILD_DIR"/* . || true
+
+          # Also publish the generated markdown posts for audit/history purposes.
+          if [ -d "$POSTS_BUILD_DIR/_posts" ]; then
+            cp -r "$POSTS_BUILD_DIR/_posts" ./_posts || true
           fi
           
           # Create .nojekyll to prevent GitHub Pages rebuild
