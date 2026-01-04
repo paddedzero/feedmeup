@@ -27,9 +27,16 @@ social:
 
 # Build settings
 markdown: kramdown
-theme: jekyll-theme-chirpy
+remote_theme: cotes2020/jekyll-theme-chirpy@master
 
-# Language of the webpage › http://www.lingoes.net/en/translator/langcode.htm
+plugins:
+  - jekyll-feed
+  - jekyll-remote-theme
+  - jekyll-paginate
+  - jekyll-redirect-from
+  - jekyll-seo-tag
+  - jekyll-archives
+  - jekyll-include-cache
 lang: en
 
 # Change to your timezone › https://zones.arilyn.cc
