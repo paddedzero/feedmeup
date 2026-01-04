@@ -1,0 +1,42 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#2a2a2a" stroke="#00d4ff" stroke-width="3"/>
+  
+  <!-- Inner circle for emphasis -->
+  <circle cx="100" cy="100" r="85" fill="none" stroke="#00d4ff" stroke-width="1" opacity="0.3"/>
+  
+  <!-- RSS/Feed symbol (left wave) -->
+  <circle cx="65" cy="100" r="8" fill="#00d4ff"/>
+  <path d="M 55 100 Q 50 85 65 80 Q 80 75 85 90" stroke="#00d4ff" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M 50 100 Q 42 75 65 65 Q 88 55 95 85" stroke="#00d4ff" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.6"/>
+  
+  <!-- Upward arrow (right side) representing growth/curation -->
+  <path d="M 130 130 L 130 80 M 130 80 L 120 90 M 130 80 L 140 90" stroke="#00ff88" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Document/News symbol (center-right) -->
+  <rect x="110" y="100" width="25" height="30" rx="2" fill="none" stroke="#00ff88" stroke-width="2"/>
+  <line x1="115" y1="107" x2="130" y2="107" stroke="#00ff88" stroke-width="1.5"/>
+  <line x1="115" y1="114" x2="130" y2="114" stroke="#00ff88" stroke-width="1.5"/>
+  <line x1="115" y1="121" x2="125" y2="121" stroke="#00ff88" stroke-width="1.5"/>
+  
+  <!-- Center accent dot -->
+  <circle cx="100" cy="100" r="3" fill="#00d4ff"/>
+  
+  <!-- Top text arc path and text -->
+  <defs>
+    <path id="topArc" d="M 40 100 A 60 60 0 0 1 160 100" fill="none"/>
+    <path id="bottomArc" d="M 160 100 A 60 60 0 0 1 40 100" fill="none"/>
+  </defs>
+  
+  <text font-family="Arial, sans-serif" font-size="14" font-weight="bold" letter-spacing="2" fill="#00d4ff" opacity="0.8">
+    <textPath href="#topArc" startOffset="50%" text-anchor="middle">
+      FEEDMEUP
+    </textPath>
+  </text>
+  
+  <text font-family="Arial, sans-serif" font-size="10" letter-spacing="1" fill="#00ff88" opacity="0.7">
+    <textPath href="#bottomArc" startOffset="50%" text-anchor="middle">
+      NEWS BRIEF
+    </textPath>
+  </text>
+</svg>
