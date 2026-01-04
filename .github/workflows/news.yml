@@ -6,12 +6,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read   # Read source code
+  pages: write     # Deploy to GitHub Pages
+  id-token: write  # Verify deployment identity
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -77,147 +81,21 @@ jobs:
           echo "✅ Staging build validated - ready for production deployment"
           ls -lh /tmp/staging/index.html /tmp/staging/feed.xml 2>/dev/null || true
 
-      - name: Deploy to gh-pages branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Capture artifacts from main branch BEFORE switching branches.
-          # Otherwise, `_site` and newly-generated `_posts` are lost after checkout.
-          echo "📦 Capturing build artifacts from main..."
-          SITE_BUILD_DIR=/tmp/site_build
-          POSTS_BUILD_DIR=/tmp/generated_posts
-          MAIN_SOURCE=/tmp/main_source
-          rm -rf "$SITE_BUILD_DIR" "$POSTS_BUILD_DIR" "$MAIN_SOURCE" || true
-          mkdir -p "$SITE_BUILD_DIR" "$POSTS_BUILD_DIR" "$MAIN_SOURCE" || true
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
 
-          if [ ! -d "_site" ]; then
-            echo "❌ ERROR: _site not found; Jekyll build likely failed"
-            exit 1
-          fi
-          cp -r ./_site/* "$SITE_BUILD_DIR/" 2>/dev/null || true
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './_site'
 
-          if [ -d "_posts" ]; then
-            cp -r ./_posts "$POSTS_BUILD_DIR/" || true
-          fi
-          
-          # Capture source files needed for GitHub Pages Jekyll build
-          cp _config.yml "$MAIN_SOURCE/" || true
-          cp -r _tabs "$MAIN_SOURCE/" || true
-          cp -r _data "$MAIN_SOURCE/" || true
-          cp -r assets "$MAIN_SOURCE/" || true
-          cp Gemfile* "$MAIN_SOURCE/" || true
-          cp index.md "$MAIN_SOURCE/" || true
-
-          # BLUE-GREEN DEPLOYMENT
-          # 1. Prepare "green" (new) environment
-          # 2. Test it completely
-          # 3. Only then remove "blue" (old) and promote green
-          
-          # Clean up any stray Gemfile.lock and untracked files before branch switching
-          rm -f Gemfile.lock || true
-          git clean -fd || true
-          
-          # Configure git
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Fetch gh-pages branch (current production)
-          git fetch origin gh-pages || true
-          
-          # Switch to gh-pages, rebasing on remote
-          git checkout -B gh-pages origin/gh-pages || git checkout --orphan gh-pages
-          
-          # ===== BACKUP PHASE (BLUE) =====
-          echo "📦 Backing up current production..."
-          BACKUP_TIME=$(date +%s)
-          mkdir -p /tmp/blue_backup_$BACKUP_TIME
-          cp -r . /tmp/blue_backup_$BACKUP_TIME/ || true
-          echo "✅ Production backed up to: /tmp/blue_backup_$BACKUP_TIME"
-          
-          # ===== PREPARE GREEN DEPLOYMENT =====
-          echo "🟢 Preparing green deployment..."
-          
-          # Save existing posts (ALWAYS backup user content)
-          mkdir -p /tmp/posts_backup
-          if [ -d "_posts" ]; then
-            cp -r _posts /tmp/posts_backup/ || true
-          fi
-          POSTS_BEFORE=$(find _posts -name "*.md" 2>/dev/null | wc -l || echo 0)
-          echo "Posts before deployment: $POSTS_BEFORE"
-
-          # Deploy freshly built site + source files for GitHub Pages Jekyll build
-          # Keep .git intact.
-          echo "🧹 Clearing existing gh-pages working tree..."
-          find . -mindepth 1 -maxdepth 1 -not -name ".git" -exec rm -rf {} + || true
-
-          echo "📦 Deploying Jekyll source files for GitHub Pages to rebuild..."
-          # Copy essential source files from main branch artifacts
-          cp -r /tmp/main_source/_config.yml . || true
-          cp -r /tmp/main_source/_tabs . || true
-          cp -r /tmp/main_source/_data . || true
-          cp -r /tmp/main_source/Gemfile* . || true
-          cp -r /tmp/main_source/index.md . || true
-          cp -r /tmp/main_source/assets . || true
-          
-          # Deploy generated posts
-          if [ -d "$POSTS_BUILD_DIR/_posts" ]; then
-            mkdir -p _posts
-            cp -r "$POSTS_BUILD_DIR/_posts"/* ./_posts/ || true
-          fi
-          
-          # CRITICAL: Remove .nojekyll to allow GitHub Pages to rebuild Jekyll with theme
-          rm -f .nojekyll || true
-          
-          # ===== TEST GREEN DEPLOYMENT =====
-          echo "🧪 Testing green deployment..."
-          
-          # Verify critical Jekyll source files exist
-          if [ ! -f "_config.yml" ]; then
-            echo "❌ CRITICAL: _config.yml missing in green deployment!"
-            echo "Rolling back to blue (production)..."
-            cp -r /tmp/blue_backup_$BACKUP_TIME/* . || true
-            git add -A
-            git commit -m "rollback: Green deployment failed - _config.yml missing" || true
-            git push -u origin gh-pages
-            exit 1
-          fi
-          
-          # Verify _tabs directory exists
-          if [ ! -d "_tabs" ]; then
-            echo "⚠️  WARNING: _tabs directory missing (sidebar tabs won't render)"
-          fi
-          
-          # Verify posts count didn't decrease
-          POSTS_AFTER=$(find _posts -name "*.md" 2>/dev/null | wc -l || echo 0)
-          echo "Posts after deployment: $POSTS_AFTER"
-          if [ "$POSTS_AFTER" -lt "$POSTS_BEFORE" ]; then
-            echo "❌ CRITICAL: Posts were deleted! ($POSTS_BEFORE → $POSTS_AFTER)"
-            echo "Rolling back to blue..."
-            cp -r /tmp/blue_backup_$BACKUP_TIME/* . || true
-            git add -A
-            git commit -m "rollback: Post count decreased" || true
-            git push -u origin gh-pages
-            exit 1
-          fi
-          
-          echo "✅ Green deployment validated"
-          
-          # ===== PROMOTE GREEN (remove old blue) =====
-          echo "🟢 Promoting green to production..."
-          
-          # Stage all changes
-          git add -A
-          
-          # Commit if there are changes
-          if ! git diff --cached --quiet; then
-            git commit -m "publish: Jekyll build $(date +%Y-%m-%d\ %H:%M:%S) - blue-green deployment verified"
-            git push -u origin gh-pages
-            echo "✅ Green promoted to production"
-            echo "📊 Deployment stats: Posts=$POSTS_AFTER, Timestamp=$(date)"
-          else
-            echo "ℹ️  No changes to deploy"
-          fi
-          
-          # Cleanup old backups (keep only last 3)
-          echo "🧹 Cleaning up old backups..."
-          ls -1d /tmp/blue_backup_* 2>/dev/null | sort -r | tail -n +4 | xargs rm -rf 2>/dev/null || true
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
