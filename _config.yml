@@ -113,11 +113,8 @@ defaults:
       path: _drafts
     values:
       comments: false
-  - scope:
-      path: ""
-      type: tabs # see `site.collections`
-    values:
-      layout: page
+  # Note: tabs use their own specific layouts (archives, categories, tags, etc.)
+  # defined in each tab file's frontmatter. No default layout needed.
 
 
 sass:
