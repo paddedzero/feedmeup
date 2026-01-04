@@ -136,39 +136,49 @@ jobs:
           POSTS_BEFORE=$(find _posts -name "*.md" 2>/dev/null | wc -l || echo 0)
           echo "Posts before deployment: $POSTS_BEFORE"
 
-          # Replace gh-pages contents with the freshly built site.
+          # Replace gh-pages contents with Jekyll SOURCE FILES (not pre-built HTML)
+          # GitHub Pages will build Jekyll server-side with Chirpy theme
           # Keep .git intact.
           echo "🧹 Clearing existing gh-pages working tree..."
           find . -mindepth 1 -maxdepth 1 -not -name ".git" -exec rm -rf {} + || true
 
-          echo "📦 Restoring freshly built site to gh-pages..."
-          cp -r "$SITE_BUILD_DIR"/* . || true
-
-          # Also publish the generated markdown posts for audit/history purposes.
+          echo "📦 Deploying Jekyll source files to gh-pages..."
+          # Deploy essential Jekyll source files for GitHub Pages to build
+          git checkout main -- _config.yml Gemfile Gemfile.lock || true
+          git checkout main -- _tabs || true
+          git checkout main -- _data || true
+          git checkout main -- assets || true
+          git checkout main -- _includes || true
+          git checkout main -- _layouts || true
+          git checkout main -- index.md || true
+          git checkout main -- .gitignore || true
+          
+          # Deploy generated posts
           if [ -d "$POSTS_BUILD_DIR/_posts" ]; then
-            cp -r "$POSTS_BUILD_DIR/_posts" ./_posts || true
+            mkdir -p _posts
+            cp -r "$POSTS_BUILD_DIR/_posts"/* ./_posts/ || true
           fi
           
-          # Create .nojekyll to prevent GitHub Pages rebuild
-          touch .nojekyll
+          # REMOVE .nojekyll to allow GitHub Pages to rebuild Jekyll with Chirpy theme
+          rm -f .nojekyll || true
           
           # ===== TEST GREEN DEPLOYMENT =====
           echo "🧪 Testing green deployment..."
           
-          # Verify critical files exist
-          if [ ! -f "index.html" ]; then
-            echo "❌ CRITICAL: index.html missing in green deployment!"
+          # Verify critical Jekyll source files exist
+          if [ ! -f "_config.yml" ]; then
+            echo "❌ CRITICAL: _config.yml missing in green deployment!"
             echo "Rolling back to blue (production)..."
             cp -r /tmp/blue_backup_$BACKUP_TIME/* . || true
             git add -A
-            git commit -m "rollback: Green deployment failed - index.html missing" || true
+            git commit -m "rollback: Green deployment failed - _config.yml missing" || true
             git push -u origin gh-pages
             exit 1
           fi
           
-          # Verify feed.xml
-          if [ ! -f "feed.xml" ]; then
-            echo "⚠️  WARNING: feed.xml missing (non-critical)"
+          # Verify _tabs directory exists
+          if [ ! -d "_tabs" ]; then
+            echo "⚠️  WARNING: _tabs directory missing (sidebar tabs won't render)"
           fi
           
           # Verify posts count didn't decrease
