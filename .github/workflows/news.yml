@@ -86,8 +86,9 @@ jobs:
           echo "📦 Capturing build artifacts from main..."
           SITE_BUILD_DIR=/tmp/site_build
           POSTS_BUILD_DIR=/tmp/generated_posts
-          rm -rf "$SITE_BUILD_DIR" "$POSTS_BUILD_DIR" || true
-          mkdir -p "$SITE_BUILD_DIR" "$POSTS_BUILD_DIR" || true
+          MAIN_SOURCE=/tmp/main_source
+          rm -rf "$SITE_BUILD_DIR" "$POSTS_BUILD_DIR" "$MAIN_SOURCE" || true
+          mkdir -p "$SITE_BUILD_DIR" "$POSTS_BUILD_DIR" "$MAIN_SOURCE" || true
 
           if [ ! -d "_site" ]; then
             echo "❌ ERROR: _site not found; Jekyll build likely failed"
@@ -98,6 +99,14 @@ jobs:
           if [ -d "_posts" ]; then
             cp -r ./_posts "$POSTS_BUILD_DIR/" || true
           fi
+          
+          # Capture source files needed for GitHub Pages Jekyll build
+          cp _config.yml "$MAIN_SOURCE/" || true
+          cp -r _tabs "$MAIN_SOURCE/" || true
+          cp -r _data "$MAIN_SOURCE/" || true
+          cp -r assets "$MAIN_SOURCE/" || true
+          cp Gemfile* "$MAIN_SOURCE/" || true
+          cp index.md "$MAIN_SOURCE/" || true
 
           # BLUE-GREEN DEPLOYMENT
           # 1. Prepare "green" (new) environment
@@ -136,22 +145,19 @@ jobs:
           POSTS_BEFORE=$(find _posts -name "*.md" 2>/dev/null | wc -l || echo 0)
           echo "Posts before deployment: $POSTS_BEFORE"
 
-          # Replace gh-pages contents with Jekyll SOURCE FILES (not pre-built HTML)
-          # GitHub Pages will build Jekyll server-side with Chirpy theme
+          # Deploy freshly built site + source files for GitHub Pages Jekyll build
           # Keep .git intact.
           echo "🧹 Clearing existing gh-pages working tree..."
           find . -mindepth 1 -maxdepth 1 -not -name ".git" -exec rm -rf {} + || true
 
-          echo "📦 Deploying Jekyll source files to gh-pages..."
-          # Deploy essential Jekyll source files for GitHub Pages to build
-          git checkout main -- _config.yml Gemfile Gemfile.lock || true
-          git checkout main -- _tabs || true
-          git checkout main -- _data || true
-          git checkout main -- assets || true
-          git checkout main -- _includes || true
-          git checkout main -- _layouts || true
-          git checkout main -- index.md || true
-          git checkout main -- .gitignore || true
+          echo "📦 Deploying Jekyll source files for GitHub Pages to rebuild..."
+          # Copy essential source files from main branch artifacts
+          cp -r /tmp/main_source/_config.yml . || true
+          cp -r /tmp/main_source/_tabs . || true
+          cp -r /tmp/main_source/_data . || true
+          cp -r /tmp/main_source/Gemfile* . || true
+          cp -r /tmp/main_source/index.md . || true
+          cp -r /tmp/main_source/assets . || true
           
           # Deploy generated posts
           if [ -d "$POSTS_BUILD_DIR/_posts" ]; then
@@ -159,7 +165,7 @@ jobs:
             cp -r "$POSTS_BUILD_DIR/_posts"/* ./_posts/ || true
           fi
           
-          # REMOVE .nojekyll to allow GitHub Pages to rebuild Jekyll with Chirpy theme
+          # CRITICAL: Remove .nojekyll to allow GitHub Pages to rebuild Jekyll with theme
           rm -f .nojekyll || true
           
           # ===== TEST GREEN DEPLOYMENT =====
