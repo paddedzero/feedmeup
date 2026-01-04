@@ -27,16 +27,8 @@ social:
 
 # Build settings
 markdown: kramdown
-remote_theme: cotes2020/jekyll-theme-chirpy@master
+theme: jekyll-theme-chirpy
 
-plugins:
-  - jekyll-feed
-  - jekyll-remote-theme
-  - jekyll-paginate
-  - jekyll-redirect-from
-  - jekyll-seo-tag
-  - jekyll-archives
-  - jekyll-include-cache
 lang: en
 
 # Change to your timezone › https://zones.arilyn.cc

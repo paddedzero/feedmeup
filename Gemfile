@@ -2,15 +2,12 @@
 
 source "https://rubygems.org"
 
-# Use local Jekyll build with remote Chirpy theme
-gem "jekyll", "~> 4.4"
-gem "jekyll-remote-theme"
-gem "jekyll-feed"
-gem "jekyll-paginate"
-gem "jekyll-redirect-from"
-gem "jekyll-seo-tag"
-gem "jekyll-archives"
-gem "jekyll-include-cache"
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+gem "jekyll-theme-chirpy", "~> 7.4", ">= 7.4.1"
+
 gem "html-proofer", "~> 5.0", group: :test
 
 platforms :windows, :jruby do
