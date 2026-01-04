@@ -1,8 +1,9 @@
 ---
-layout: page
+layout: categories
 title: Categories
 icon: fas fa-th
 order: 4
+permalink: /categories/
 ---
 
 Browse all posts grouped by topic. Click any category below to view related articles.

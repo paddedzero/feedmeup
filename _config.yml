@@ -118,7 +118,7 @@ defaults:
       type: tabs # see `site.collections`
     values:
       layout: page
-      permalink: /:title/
+
 
 sass:
   style: compressed

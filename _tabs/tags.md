@@ -1,8 +1,9 @@
 ---
-layout: page
+layout: tags
 title: Tags
 icon: fas fa-tags
 order: 6
+permalink: /tags/
 ---
 
 Browse all posts by tag. Each tag represents a specific topic or technology.

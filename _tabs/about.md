@@ -3,6 +3,7 @@ layout: page
 title: About
 icon: fas fa-info-circle
 order: 2
+permalink: /about/
 ---
 
 ## About FeedMeUp News Brief

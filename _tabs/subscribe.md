@@ -3,6 +3,7 @@ layout: page
 title: Subscribe
 icon: fas fa-envelope
 order: 5
+permalink: /subscribe/
 ---
 
 Stay updated with the latest news from FeedMeUp! Choose your preferred way to follow.

@@ -3,6 +3,7 @@ layout: page
 title: Home
 icon: fas fa-home
 order: 1
+published: false
 ---
 
 Welcome to **FeedMeUp News Brief**!
