@@ -45,14 +45,6 @@ An intelligent news aggregator that automatically curates, summarizes, and publi
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Technology Stack
-
-- **Backend**: Python 3.10+ (feedparser, requests, rapidfuzz, BeautifulSoup4)
-- **AI**: Google Gemini 1.5 Flash (via google-generativeai SDK)
-- **Frontend**: Jekyll 4.3+ with Chirpy theme v7.4.1
-- **Deployment**: GitHub Actions + GitHub Pages
-- **Config**: YAML-based configuration management
-
 ---
 
 ## 📰 News Sources (40+ Feeds)
@@ -268,17 +260,6 @@ feedmeup/
 ├── tests/                     # Test suite
 └── _backup/                   # Historical diagnostic files
 ```
-
----
-
-## 📝 Development History
-
-See [`.github/LESSONS_LEARNED.md`](.github/LESSONS_LEARNED.md) for:
-- Multi-layer debugging journey (5 critical fixes)
-- Jekyll front matter requirement discovery
-- Git workflow safety patterns
-- Deployment strategy evolution
-- 14.5 hours of documented problem-solving
 
 ---
 
