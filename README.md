@@ -40,7 +40,7 @@ An intelligent news aggregator that automatically curates, summarizes, and publi
 │  3. Deduplicates using RapidFuzz                          │
 │  4. Gemini AI → Generates summaries & analysis            │
 │  5. Creates Jekyll markdown posts                          │
-│  6. Deploys to gh-pages branch                            │
+│  6. Publishes to GitHub Pages                             │
 │  7. GitHub Pages → Renders with Chirpy theme              │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -142,8 +142,7 @@ tags: [weekly-scan, automation]
 - Runs: Monday 08:00 UTC (schedule) or manual dispatch
 - Installs: Python + Ruby dependencies
 - Executes: fetch_news.py
-- Deploys: Generated posts to gh-pages branch
-- Preserves: Theme config and structure
+- Publishes: Generated posts to GitHub Pages
 ```
 
 ---
