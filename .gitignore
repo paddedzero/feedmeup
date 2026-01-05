@@ -1,6 +1,9 @@
 # Generated error files (keep _posts - they need to be tracked!)
 _errors/
 
+# Backup folder with historical diagnostic/implementation files
+_backup/
+
 # Test scripts and development documentation (not for production)
 testscript/
 
