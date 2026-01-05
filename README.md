@@ -47,7 +47,23 @@ An intelligent news aggregator that automatically curates, summarizes, and publi
 
 ---
 
-## 📰 News Sources (40+ Feeds)
+## � Backup & Recovery Strategy
+
+**gh-pages branch**: Automated weekly snapshot backup of the main branch  
+**Schedule**: Every Sunday at 2 AM UTC  
+**Purpose**: Emergency recovery point in case main branch becomes unstable
+
+If main branch breaks and needs recovery:
+1. Check gh-pages for the last known-good state
+2. Create a recovery branch from gh-pages: `git checkout -b recovery gh-pages`
+3. Review changes and test
+4. If confirmed safe, force update main: `git push origin recovery:main -f`
+
+This automated backup system ensures you always have a fallback point without manual effort.
+
+---
+
+## �📰 News Sources (40+ Feeds)
 
 ### LLM & AI (3 sources)
 - OpenAI News, Google AI Blog, Microsoft AI Blog
