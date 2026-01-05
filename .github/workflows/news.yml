@@ -1,0 +1,101 @@
+name: 'Weekly News Brief - Phase 1-2 (Gemini Synthesis + Dual-Post Output)'
+
+on:
+  schedule:
+    - cron: '0 8 * * MON'  # Every Monday at 08:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read   # Read source code
+  pages: write     # Deploy to GitHub Pages
+  id-token: write  # Verify deployment identity
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Ruby for Jekyll
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.2
+          bundler-cache: true
+
+      - name: Install Ruby dependencies
+        run: bundle install
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run fetch_news.py to generate markdown posts
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python fetch_news.py
+
+      - name: Remove conflicting custom styles to allow Chirpy theme CSS to load
+        run: |
+          # Remove custom CSS that overrides Chirpy theme
+          rm -f assets/css/style.css || true
+          echo "Removed custom style.css to use Chirpy theme CSS"
+
+      - name: Build site with Jekyll
+        run: bundle exec jekyll build
+
+      - name: "🔵 BLUE: Verify user content integrity before deployment"
+        run: |
+          echo "Checking that all user content is present..."
+          bash scripts/verify-content-safety.sh
+          echo "✅ User content verified - safe to proceed with deployment"
+
+      - name: "🟢 GREEN: Build and test in staging area"
+        run: |
+          # Create a staging directory to test the build
+          mkdir -p /tmp/staging
+          cp -r ./_site/* /tmp/staging/ 2>/dev/null || true
+          
+          # Verify critical files exist in staging
+          if [ ! -f "/tmp/staging/index.html" ]; then
+            echo "❌ ERROR: index.html not built in staging!"
+            exit 1
+          fi
+          
+          if [ ! -f "/tmp/staging/feed.xml" ]; then
+            echo "⚠️  WARNING: feed.xml not found in staging"
+          fi
+          
+          echo "✅ Staging build validated - ready for production deployment"
+          ls -lh /tmp/staging/index.html /tmp/staging/feed.xml 2>/dev/null || true
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './_site'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

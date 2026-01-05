@@ -1,0 +1,64 @@
+name: Weekly Backup - Main to gh-pages
+
+on:
+  schedule:
+    # Every Sunday at 2 AM UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "Backup Bot"
+          git config user.email "noreply@github.com"
+
+      - name: Backup main to gh-pages
+        run: |
+          # Create/switch to gh-pages
+          git checkout -b gh-pages-temp origin/gh-pages 2>/dev/null || git checkout -b gh-pages-temp
+
+          # Copy all files from main
+          git checkout main -- .
+
+          # Stage all changes
+          git add -A
+
+          # Create backup commit with timestamp
+          BACKUP_DATE=$(date '+%Y-%m-%d %H:%M:%S UTC')
+          git commit -m "Backup: Main branch snapshot from ${BACKUP_DATE}" || echo "No changes to commit"
+
+      - name: Push backup to gh-pages
+        run: |
+          git push origin gh-pages-temp:gh-pages
+
+      - name: Create backup summary
+        run: |
+          cat > BACKUP_INFO.txt <<EOF
+          BACKUP INFORMATION
+          ==================
+          
+          Last Backup: $(date '+%Y-%m-%d %H:%M:%S UTC')
+          Source Branch: main
+          Backup Type: Weekly automated snapshot
+          Purpose: Emergency recovery point
+          
+          To restore from this backup:
+          1. Create a new branch: git checkout -b restore-point gh-pages
+          2. Review changes compared to main
+          3. If confirmed safe, force update main: git push origin restore-point:main -f
+          
+          This backup is automatically created every Sunday at 2 AM UTC.
+          EOF
+          cat BACKUP_INFO.txt

@@ -29,7 +29,6 @@ social:
 markdown: kramdown
 theme: jekyll-theme-chirpy
 
-# Language of the webpage › http://www.lingoes.net/en/translator/langcode.htm
 lang: en
 
 # Change to your timezone › https://zones.arilyn.cc
