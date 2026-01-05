@@ -1,4 +1,4 @@
-name: Weekly Backup - Main to gh-pages
+name: Weekly Backup - Main to gh-pages-feedmeup-snapshot
 
 on:
   schedule:
@@ -24,10 +24,10 @@ jobs:
           git config user.name "Backup Bot"
           git config user.email "noreply@github.com"
 
-      - name: Backup main to gh-pages
+      - name: Backup main to gh-pages-feedmeup-snapshot
         run: |
-          # Create/switch to gh-pages
-          git checkout -b gh-pages-temp origin/gh-pages 2>/dev/null || git checkout -b gh-pages-temp
+          # Create/switch to gh-pages-feedmeup-snapshot
+          git checkout -b gh-pages-temp origin/gh-pages-feedmeup-snapshot 2>/dev/null || git checkout -b gh-pages-temp
 
           # Copy all files from main
           git checkout main -- .
@@ -39,9 +39,9 @@ jobs:
           BACKUP_DATE=$(date '+%Y-%m-%d %H:%M:%S UTC')
           git commit -m "Backup: Main branch snapshot from ${BACKUP_DATE}" || echo "No changes to commit"
 
-      - name: Push backup to gh-pages
+      - name: Push backup to gh-pages-feedmeup-snapshot
         run: |
-          git push origin gh-pages-temp:gh-pages
+          git push origin gh-pages-temp:gh-pages-feedmeup-snapshot
 
       - name: Create backup summary
         run: |
@@ -55,7 +55,7 @@ jobs:
           Purpose: Emergency recovery point
           
           To restore from this backup:
-          1. Create a new branch: git checkout -b restore-point gh-pages
+          1. Create a new branch: git checkout -b restore-point gh-pages-feedmeup-snapshot
           2. Review changes compared to main
           3. If confirmed safe, force update main: git push origin restore-point:main -f
           

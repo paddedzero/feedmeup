@@ -49,13 +49,13 @@ An intelligent news aggregator that automatically curates, summarizes, and publi
 
 ## � Backup & Recovery Strategy
 
-**gh-pages branch**: Automated weekly snapshot backup of the main branch  
+**gh-pages-feedmeup-snapshot branch**: Automated weekly snapshot backup of the main branch  
 **Schedule**: Every Sunday at 2 AM UTC  
 **Purpose**: Emergency recovery point in case main branch becomes unstable
 
 If main branch breaks and needs recovery:
-1. Check gh-pages for the last known-good state
-2. Create a recovery branch from gh-pages: `git checkout -b recovery gh-pages`
+1. Check gh-pages-feedmeup-snapshot for the last known-good state
+2. Create a recovery branch from gh-pages-feedmeup-snapshot: `git checkout -b recovery gh-pages-feedmeup-snapshot`
 3. Review changes and test
 4. If confirmed safe, force update main: `git push origin recovery:main -f`
 
