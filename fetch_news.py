@@ -663,12 +663,200 @@ categories: [newsbrief, weekly-scan]
     return filename
 
 
+def find_historical_context(keyword_topics, lookback_weeks=12):
+    """
+    Search past posts for similar topics to provide historical context.
+    
+    Args:
+        keyword_topics: List of keywords/topics to search for (e.g., ['cybersecurity', 'ransomware'])
+        lookback_weeks: How many weeks back to search
+    
+    Returns:
+        list of dicts with {title, date, summary} from past posts
+    """
+    historical_posts = []
+    cutoff_date = datetime.now(LOCAL_TZ) - timedelta(weeks=lookback_weeks)
+    
+    try:
+        for post_file in sorted(POSTS_DIR.glob("*.md"), reverse=True):
+            # Skip analyst opinion posts to avoid self-reference
+            if "analyst-opinion" in post_file.name:
+                continue
+                
+            file_mtime = datetime.fromtimestamp(post_file.stat().st_mtime, tz=LOCAL_TZ)
+            if file_mtime < cutoff_date:
+                break
+            
+            with open(post_file, "r", encoding="utf-8") as f:
+                content = f.read()
+            
+            # Check if any keywords appear in the post
+            content_lower = content.lower()
+            matching_keywords = [kw for kw in keyword_topics if kw.lower() in content_lower]
+            
+            if matching_keywords:
+                # Extract title from front matter
+                title_match = re.search(r'title:\s*["\']?([^"\'\n]+)["\']?', content)
+                title = title_match.group(1) if title_match else post_file.stem
+                
+                # Extract date from front matter
+                date_match = re.search(r'date:\s*(\d{4}-\d{2}-\d{2})', content)
+                post_date = date_match.group(1) if date_match else "Unknown"
+                
+                # Extract first 200 chars of body (after front matter)
+                body_start = content.find("---", content.find("---") + 3) + 3
+                body = content[body_start:].strip()[:200]
+                
+                historical_posts.append({
+                    'title': title,
+                    'date': post_date,
+                    'summary': body,
+                    'keywords': matching_keywords
+                })
+    
+    except Exception as e:
+        logging.warning("[HISTORY] Failed to search historical context: %s", str(e))
+    
+    return historical_posts[:3]  # Return top 3 similar posts
+
+
+def generate_gemini_opinion_analysis(article, category, historical_posts, config):
+    """
+    Generate deep Gemini analysis for analyst opinion post.
+    
+    Creates:
+    - Expanded Executive Brief (~5 lines, 150-200 words)
+    - Historical Context & Comparison
+    - Risk/Opportunity Matrix
+    
+    Args:
+        article: The article of the week
+        category: Trend category
+        historical_posts: List of similar past posts for comparison
+        config: Config dict with synthesis settings
+    
+    Returns:
+        dict with {executive_brief, historical_context, risk_assessment}
+    """
+    if not GEMINI_CLIENT or not GEMINI_AVAILABLE:
+        return {
+            'executive_brief': article.get('gemini_excerpt', clean_summary(article.get("summary", "") or article.get("description", ""))),
+            'historical_context': "",
+            'risk_assessment': ""
+        }
+    
+    try:
+        article_text = clean_summary(article.get("summary", "") or article.get("description", ""))[:1500]
+        article_title = article.get("title", "Unknown")
+        
+        # Build historical context string
+        history_context = ""
+        if historical_posts:
+            history_context = "\n\nRelated past articles:\n"
+            for hp in historical_posts:
+                history_context += f"- {hp['date']}: {hp['title']}\n"
+        
+        # Prompt 1: Expanded Executive Brief
+        brief_prompt = f"""
+Analyze this {category} article and provide an expanded executive brief (5 sentences, 150-200 words):
+
+Title: {article_title}
+Content: {article_text}
+
+Write a professional, actionable executive summary that:
+1. Explains WHAT happened and the immediate impact
+2. Explains WHY it matters to organizations
+3. Identifies the key risk or opportunity
+4. Connects to broader industry trends
+5. Hints at what organizations should monitor
+
+Be specific, avoid generic language, and target cybersecurity professionals.
+"""
+        
+        response_brief = GEMINI_CLIENT.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=brief_prompt,
+            config={"max_output_tokens": 250, "temperature": 0.7}
+        )
+        
+        executive_brief = response_brief.text.strip() if response_brief.text else ""
+        
+        # Prompt 2: Historical Context & Novelty Assessment
+        history_prompt = f"""
+Article: {article_title}
+{article_text}
+
+{history_context if history_context else "No related historical articles found."}
+
+Provide a HISTORICAL CONTEXT section (3-4 sentences):
+1. Have we seen something similar before? If yes: when and how was it similar?
+2. What has CHANGED or IMPROVED since then? OR if novel: what makes this unprecedented?
+3. What should organizations have learned from past incidents? How does this incident differ?
+4. Is this a recurring threat with new tactics, or something entirely new?
+
+Be concise and insightful.
+"""
+        
+        response_history = GEMINI_CLIENT.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=history_prompt,
+            config={"max_output_tokens": 200, "temperature": 0.7}
+        )
+        
+        historical_context = response_history.text.strip() if response_history.text else ""
+        
+        # Prompt 3: Risk/Opportunity Matrix
+        risk_prompt = f"""
+Based on this article: {article_title}
+{article_text}
+
+Create a RISK/OPPORTUNITY ASSESSMENT with three timeframes:
+
+**Immediate (0-30 days):** [What needs attention now?]
+**Medium-term (30-90 days):** [What should we prepare for?]
+**Strategic (90+ days):** [How does this reshape the landscape?]
+
+For each, specify:
+- Threat/Opportunity Type (e.g., Ransomware Evolution, New Compliance Requirement, AI Defense Gap)
+- Impact Severity (High/Medium/Low)
+- Recommended Action Priority
+
+Keep it brief and actionable for a cybersecurity team.
+"""
+        
+        response_risk = GEMINI_CLIENT.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=risk_prompt,
+            config={"max_output_tokens": 300, "temperature": 0.5}
+        )
+        
+        risk_assessment = response_risk.text.strip() if response_risk.text else ""
+        
+        logging.info("[OPINION] Generated deep Gemini analysis for: %s", article_title)
+        
+        return {
+            'executive_brief': executive_brief,
+            'historical_context': historical_context,
+            'risk_assessment': risk_assessment
+        }
+    
+    except Exception as e:
+        logging.warning("[OPINION] Gemini analysis failed: %s; using fallback", str(e))
+        return {
+            'executive_brief': article.get('gemini_excerpt', clean_summary(article.get("summary", "") or article.get("description", ""))),
+            'historical_context': "",
+            'risk_assessment': ""
+        }
+
+
 def create_analyst_opinion_post(date_str, trending_data, config):
     """
-    Create the Analyst Opinion post (strategic commentary on trending topic).
+    Create the Analyst Opinion post (strategic commentary on article of the week).
     
-    Phase 2: Second post providing expert perspective on the week's top trend.
-    Uses Gemini to generate contextual analysis if enabled.
+    Phase 2 Enhanced: Single article deep-dive with:
+    - Expanded Executive Brief (5 sentences)
+    - Historical Context & Comparison
+    - Risk/Opportunity Matrix (3 timeframes)
     
     Args:
         date_str: YYYY-MM-DD date string
@@ -697,56 +885,86 @@ def create_analyst_opinion_post(date_str, trending_data, config):
     highlight_count = trending_data['highlight_count']
     top_articles = trending_data.get('top_articles', [])
 
+    if not top_articles:
+        logging.warning("[OPINION] No articles in trending data; skipping opinion post")
+        return None
+    
+    # Article of the week is the first (most trending)
+    article_of_week = top_articles[0]
+
     front_matter = f"""---
 layout: post
-title: "Analyst Opinion: This Week in {category} — {formatted_title_date}"
+title: "Article of the Week: {category} — {formatted_title_date}"
 date: {date_str} {time_front}
 categories: [analysis, opinion, {category.lower().replace(' ', '-')}]
 ---
 """
 
-    # Introduction with trend metrics
-    intro_section = f"""## Weekly Trend: {category}
+    # Introduction
+    intro_section = f"""## This Week's Trends: {category}
 
-This week, the **{category}** category dominated our news feeds with **{article_count}** articles and **{highlight_count}** trending highlights.
-Here's what you need to know from a strategic perspective.
+The **{category}** category captured significant attention this week with **{article_count}** articles and **{highlight_count}** trending stories.
+
+Here's the **Article of the Week**—a deep dive into the most impactful story:
 
 """
 
-    # Key articles with expert framing
-    key_articles_section = "## Key Developments\n\n"
-    for i, article in enumerate(top_articles[:3], start=1):
-        title = article.get("title", "No Title")
-        summary = article.get('gemini_excerpt', clean_summary(article.get("summary", "") or article.get("description", "")))
-        if len(summary) > 300:
-            summary = summary[:297] + "..."
-        
-        safe_link = sanitize_url(article.get("link", ""))
-        key_articles_section += f"### {i}. {title}\n\n"
-        key_articles_section += f"{summary}\n\n"
-        if safe_link:
-            key_articles_section += f"<a href=\"{safe_link}\">Full story</a>\n\n"
+    # Featured article
+    article_title = article_of_week.get("title", "No Title")
+    article_link = sanitize_url(article_of_week.get("link", ""))
+    article_summary = article_of_week.get('gemini_excerpt', clean_summary(article_of_week.get("summary", "") or article_of_week.get("description", "")))
+    
+    featured_section = f"""## {article_title}
 
-    # Strategic takeaway
-    takeaway_section = """## Strategic Takeaway
+{article_summary}
 
-The convergence of these stories points to a critical shift in the industry. Organizations should focus on the following:
+"""
+    if article_link:
+        featured_section += f"<a href=\"{article_link}\">Read the full article</a>\n\n"
 
-1. **Immediate Actions**: Review current practices against emerging threats and innovations mentioned above.
-2. **Medium-term Planning**: Allocate resources to areas highlighted by this week's trends.
-3. **Long-term Vision**: Consider how these developments align with your organization's strategic roadmap.
+    # Get historical context and Gemini analysis
+    keywords_for_history = [category.lower()] + (article_of_week.get('keywords_hit', []) if isinstance(article_of_week.get('keywords_hit'), list) else [])
+    historical_posts = find_historical_context(keywords_for_history, lookback_weeks=12)
+    
+    gemini_analysis = generate_gemini_opinion_analysis(article_of_week, category, historical_posts, config)
 
----
+    # Executive Brief section (expanded)
+    executive_brief_section = f"""## Executive Brief
 
-*This analyst opinion reflects trends observed from RSS feeds covering industry news. Always conduct due diligence before making strategic decisions.*
+{gemini_analysis['executive_brief']}
+
 """
 
-    body = intro_section + key_articles_section + takeaway_section
+    # Historical Context section
+    historical_section = ""
+    if gemini_analysis['historical_context']:
+        historical_section = f"""## How We Got Here: Historical Context
+
+{gemini_analysis['historical_context']}
+
+"""
+
+    # Risk/Opportunity Assessment
+    risk_section = ""
+    if gemini_analysis['risk_assessment']:
+        risk_section = f"""## Risk & Opportunity Matrix
+
+{gemini_analysis['risk_assessment']}
+
+"""
+
+    # Closing
+    closing_section = """---
+
+**Analyst Note:** This article-of-the-week analysis synthesizes industry trends with expert assessment. For strategic decisions, conduct thorough validation with your security, compliance, and risk teams.
+"""
+
+    body = intro_section + featured_section + executive_brief_section + historical_section + risk_section + closing_section
 
     with open(filename, "w", encoding="utf-8") as f:
         f.write(front_matter + body)
     
-    logging.info("[ANALYST OPINION] Created: %s", filename)
+    logging.info("[ANALYST OPINION] Created with deep analysis: %s", filename)
     return filename
 
 
