@@ -987,12 +987,20 @@ Tone: Investigative journalism with technical accountability. Deep technical exp
 """
         
         response_technical = GEMINI_CLIENT.models.generate_content(
-            model="gemini-3-flash-preview",
+            model="gemini-3-flash",
             contents=technical_prompt,
             config={"max_output_tokens": 1200, "temperature": 0.4}
         )
         
-        technical_analysis = response_technical.text.strip() if response_technical.text else ""
+        # Handle response - might be in different format
+        if hasattr(response_technical, 'text'):
+            technical_analysis = response_technical.text.strip()
+        elif hasattr(response_technical, 'content'):
+            technical_analysis = response_technical.content.strip()
+        else:
+            technical_analysis = str(response_technical).strip()
+        
+        logging.debug("[OPINION] Technical analysis response type: %s, length: %d", type(response_technical), len(technical_analysis) if technical_analysis else 0)
         
         # Prompt 2: Defense Strategy & Actionable Intelligence (Detection, Mitigation, Strategic Actions)
         defense_prompt = f"""
@@ -1032,12 +1040,20 @@ For each timeframe, explain WHY (tied to the technical analysis). Avoid generic 
 """
         
         response_defense = GEMINI_CLIENT.models.generate_content(
-            model="gemini-3-flash-preview",
+            model="gemini-3-flash",
             contents=defense_prompt,
             config={"max_output_tokens": 800, "temperature": 0.3}
         )
         
-        defense_strategy = response_defense.text.strip() if response_defense.text else ""
+        # Handle response - might be in different format
+        if hasattr(response_defense, 'text'):
+            defense_strategy = response_defense.text.strip()
+        elif hasattr(response_defense, 'content'):
+            defense_strategy = response_defense.content.strip()
+        else:
+            defense_strategy = str(response_defense).strip()
+        
+        logging.debug("[OPINION] Defense strategy response type: %s, length: %d", type(response_defense), len(defense_strategy) if defense_strategy else 0)
         
         logging.info("[OPINION] Generated investigative journalism analysis for: %s", article_title)
         
@@ -1048,9 +1064,49 @@ For each timeframe, explain WHY (tied to the technical analysis). Avoid generic 
     
     except Exception as e:
         logging.warning("[OPINION] Gemini analysis failed: %s; using fallback", str(e))
+        
+        # Provide structured fallback content when Gemini is unavailable
+        article_summary = article.get('gemini_excerpt', clean_summary(article.get("summary", "") or article.get("description", "")))
+        
+        # Create a basic technical analysis from the article summary and category
+        fallback_technical = f"""
+**Technical Overview**
+
+{article_summary}
+
+**Key Points**
+
+This article relates to the {category.upper()} security category. The content addresses important developments in this area that security teams should be aware of.
+
+*Note: Full technical analysis requires Gemini API access for deep investigative journalism synthesis.*
+"""
+        
+        # Create structured fallback defense strategy with action items
+        fallback_defense = f"""
+**Immediate Actions (0-30 days)**
+
+1. Review this article for relevant context to your organization's security posture
+2. Share findings with your security team for discussion
+3. Assess applicability to your systems and infrastructure
+
+**Medium-Term Planning (30-90 days)**
+
+1. Incorporate findings into your security strategy review
+2. Update relevant security policies if needed
+3. Schedule team training if new threats are identified
+
+**Long-Term Vision (90+ days)**
+
+1. Track evolution of this threat/trend over time
+2. Integrate learnings into future security architecture decisions
+3. Build defense capabilities to address identified gaps
+
+*Full defense strategy recommendations require Gemini API access for comprehensive threat analysis.*
+"""
+        
         return {
-            'technical_analysis': article.get('gemini_excerpt', clean_summary(article.get("summary", "") or article.get("description", ""))),
-            'defense_strategy': ""
+            'technical_analysis': fallback_technical,
+            'defense_strategy': fallback_defense
         }
 
 
