@@ -727,8 +727,8 @@ def generate_gemini_opinion_analysis(article, category, historical_posts, config
     Uses gemini-3-flash-preview for cost-effective reasoning depth.
     Hybrid Strategy: Flash for investigative analysis, Flash for weekly summaries.
     
-    Transforms article into Krebs-style investigative journalism with:
-    - Technical Analysis & Threat Intelligence (900-1100 words): Technical breakdown, threat ecosystem, attribution, monetization
+    Transforms article into deep investigative journalism with technical accountability:
+    - Technical Analysis & Threat Intelligence (900-1100 words): Technical breakdown, defense failures, threat ecosystem, attribution, monetization
     - Defense Strategy (600+ words): Immediate actions, medium-term planning, strategic vision
     
     Args:
@@ -798,8 +798,7 @@ Write a comprehensive TECHNICAL ANALYSIS & THREAT INTELLIGENCE section (6-7 para
 - Future trajectory: "Expect to see [trend] accelerate in [timeframe] because [reason]"
 - Why this matters for cybersecurity professionals AND business decision-makers
 
-Tone: Investigative, factual, opinionated. Like Brian Krebs. Be specific with product names, CVE IDs, threat actor TTPs, and monetization details. 
-Flow naturally from technical to threat ecosystem. Avoid generic advice like "improve security posture"—give CONCRETE technical and threat insights.
+Tone: Investigative journalism with technical accountability. Deep technical expertise + real-world impact analysis. Be specific with product names, CVE IDs, threat actor TTPs, monetization details, and vendor accountability. Avoid generic security advice—focus on HOW and WHY attacks succeed against current defenses, not just THAT they succeed. Examine defense failures and gaps with nuance.
 """
         
         response_technical = GEMINI_CLIENT.models.generate_content(
@@ -874,7 +873,7 @@ def create_analyst_opinion_post(date_str, trending_data, config):
     """
     Create the Analyst Opinion post (investigative journalism on article of the week).
     
-    Phase 3 Enhanced: Krebs-style investigative analysis with:
+    Phase 3 Enhanced: Deep investigative analysis with technical accountability:
     - Technical Analysis & Threat Intelligence (900-1100 words): Attack chains, defense failures, threat ecosystem, attribution, monetization
     - Defense Strategy (600+ words): Immediate actions, medium-term planning, strategic vision
     
