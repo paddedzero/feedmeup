@@ -724,12 +724,11 @@ def generate_gemini_opinion_analysis(article, category, historical_posts, config
     """
     Generate investigative journalism analysis for analyst opinion post.
     
-    Uses gemini-2.0-pro (not flash) for superior reasoning depth.
-    Hybrid Strategy: Pro for investigative analysis, Flash for weekly summaries.
+    Uses gemini-3-flash-preview for cost-effective reasoning depth.
+    Hybrid Strategy: Flash for investigative analysis, Flash for weekly summaries.
     
     Transforms article into Krebs-style investigative journalism with:
-    - Technical Deep-Dive (400-600 words): Attack chains, CVE details, defense failures
-    - Threat Intelligence & Ecosystem (300-400 words): Attribution, monetization, infrastructure
+    - Technical Analysis & Threat Intelligence (900-1100 words): Technical breakdown, threat ecosystem, attribution, monetization
     - Defense Strategy (600+ words): Immediate actions, medium-term planning, strategic vision
     
     Args:
@@ -739,12 +738,11 @@ def generate_gemini_opinion_analysis(article, category, historical_posts, config
         config: Config dict with synthesis settings
     
     Returns:
-        dict with {technical_analysis, threat_intelligence, defense_strategy}
+        dict with {technical_analysis, defense_strategy}
     """
     if not GEMINI_CLIENT or not GEMINI_AVAILABLE:
         return {
             'technical_analysis': article.get('gemini_excerpt', clean_summary(article.get("summary", "") or article.get("description", ""))),
-            'threat_intelligence': "",
             'defense_strategy': ""
         }
     
@@ -759,92 +757,60 @@ def generate_gemini_opinion_analysis(article, category, historical_posts, config
             for hp in historical_posts:
                 history_context += f"- {hp['date']}: {hp['title']}\n"
         
-        # Prompt 1: Technical Deep-Dive & Opinion Analysis (Investigative Journalism)
+        # Prompt 1: Combined Technical Analysis & Threat Intelligence (Investigative Journalism)
+        # Merges technical deep-dive with threat ecosystem for cohesive 900-1100 word narrative
         technical_prompt = f"""
 You are a senior cybersecurity analyst writing an investigative article about this {category} story.
 
 Title: {article_title}
 Content: {article_text}
 
-Write a TECHNICAL DEEP-DIVE section (3-4 paragraphs, 400-600 words) that:
+{history_context if history_context else ""}
 
-**Paragraph 1: What Happened & Technical Breakdown**
+Write a comprehensive TECHNICAL ANALYSIS & THREAT INTELLIGENCE section (6-7 paragraphs, 900-1100 words) that tells a cohesive story:
+
+**Section Opening (Paragraph 1): What Happened & Technical Breakdown**
 - Explain the incident/vulnerability/trend in technical detail
 - If it's an attack: describe the attack chain (initial access → persistence → lateral movement → impact)
 - If it's a vulnerability: explain the flaw, affected systems, exploitation mechanics
 - Include specific technical details: CVE IDs, product versions, protocols, techniques used
 
-**Paragraph 2: Why This Succeeds (Defense Failure Analysis)**
-- Explain WHY this attack/vulnerability is effective
-- What specific security controls fail or are bypassed?
+**Technical Deep-Dive (Paragraphs 2-3): Why This Succeeds & Defense Failures**
+- Explain WHY this attack/vulnerability is effective against defenses
+- What specific security controls fail or are bypassed? (EDR, SIEM, WAF, etc.)
 - Why do defenders miss this? (detection blind spots, configuration errors, vendor gaps)
 - Provide concrete examples: "EDR solutions miss this because they don't monitor X behavior"
-
-**Paragraph 3: Historical Context & Evolution**
-- Have we seen similar techniques before? When?
-- What has changed? How have attackers evolved this technique?
+- Historical context: "Have we seen similar techniques before? How have attackers evolved this?"
 - Compare to past incidents: "This mirrors the 2023 [incident] but adds [new capability]"
-- Success rate: "Based on threat intel, this technique has X% success rate against [target type]"
 
-**Paragraph 4: Real-World Impact & Implications**
-- Who is affected? (specific sectors, organization types, technologies)
-- Cascade effects: "If attackers compromise X, they gain access to Y"
-- Regulatory/business impact: GDPR fines, SEC disclosure, customer trust
-- Why this matters for cybersecurity professionals AND non-technical readers
+**Threat Ecosystem (Paragraphs 4-5): Who Exploits This & Monetization**
+- Who benefits from this? (specific threat actors, APT groups, criminal forums)
+- Attribution clues: infrastructure patterns, TTPs, targeting preferences
+- Name specific actors/groups if applicable (e.g., "Scattered Spider", "Kimsuky", "LockBit")
+- How do attackers monetize this? (ransomware payments, data sales, crypto mixers, fraud)
+- Criminal marketplace dynamics: who sells what, pricing, access models
+- Supply chain: initial access brokers → ransomware operators → money launderers
 
-Tone: Investigative, factual, opinionated. Like Brian Krebs. Be specific with product names, CVE IDs, threat actor TTPs. 
-Avoid generic advice like "improve security posture"—give CONCRETE technical insights.
+**Ecosystem Evolution & Outlook (Paragraphs 6-7): Timeline & Predictions**
+- How has this threat evolved over time? (timeline: first seen [date], widespread by [date])
+- Escalation patterns: increasing sophistication, new targets, cross-border coordination
+- Real-world impact: Who is affected? (sectors, organization types, cascade effects)
+- Future trajectory: "Expect to see [trend] accelerate in [timeframe] because [reason]"
+- Why this matters for cybersecurity professionals AND business decision-makers
+
+Tone: Investigative, factual, opinionated. Like Brian Krebs. Be specific with product names, CVE IDs, threat actor TTPs, and monetization details. 
+Flow naturally from technical to threat ecosystem. Avoid generic advice like "improve security posture"—give CONCRETE technical and threat insights.
 """
         
         response_technical = GEMINI_CLIENT.models.generate_content(
             model="gemini-3-flash-preview",
             contents=technical_prompt,
-            config={"max_output_tokens": 800, "temperature": 0.4}
+            config={"max_output_tokens": 1200, "temperature": 0.4}
         )
         
         technical_analysis = response_technical.text.strip() if response_technical.text else ""
         
-        # Prompt 2: Threat Intelligence & Ecosystem Context (Attribution, Infrastructure, Monetization)
-        threat_intel_prompt = f"""
-Analyze the threat intelligence and criminal ecosystem behind this article.
-
-Article: {article_title}
-{article_text}
-
-{history_context if history_context else "No related historical articles found."}
-
-Write a THREAT INTELLIGENCE & ECOSYSTEM section (2-3 paragraphs, 300-400 words):
-
-**Paragraph 1: Attribution & Actor Profile**
-- Who benefits from this? (specific threat actors, APT groups, criminal forums)
-- Attribution clues: infrastructure patterns, TTPs, targeting preferences
-- Name specific actors/groups if applicable (e.g., "Scattered Spider", "Kimsuky", "LockBit")
-- Connection to known campaigns or operations
-
-**Paragraph 2: Follow the Money (Monetization & Infrastructure)**
-- How do attackers monetize this? (ransomware payments, data sales, crypto mixers, fraud)
-- Infrastructure: hosting providers, bulletproof hosts, command-and-control patterns
-- Criminal marketplace dynamics: who sells what, pricing, access models
-- Supply chain: initial access brokers → ransomware operators → money launderers
-
-**Paragraph 3: Historical Evolution & Trend Analysis**
-- How has this threat evolved over time? (timeline: first seen [date], widespread by [date])
-- Compare to past similar incidents: what's different now?
-- Escalation patterns: increasing sophistication, new targets, cross-border coordination
-- Prediction: "Expect to see [trend] accelerate in [timeframe] because [reason]"
-
-Be specific: name tools, forums, hosting providers, ransom amounts. Use threat intelligence language.
-"""
-        
-        response_threat_intel = GEMINI_CLIENT.models.generate_content(
-            model="gemini-3-flash-preview",
-            contents=threat_intel_prompt,
-            config={"max_output_tokens": 600, "temperature": 0.4}
-        )
-        
-        threat_intelligence = response_threat_intel.text.strip() if response_threat_intel.text else ""
-        
-        # Prompt 3: Defense Strategy & Actionable Intelligence (Detection, Mitigation, Strategic Actions)
+        # Prompt 2: Defense Strategy & Actionable Intelligence (Detection, Mitigation, Strategic Actions)
         defense_prompt = f"""
 Provide DEFENSE STRATEGY & ACTIONABLE INTELLIGENCE for security teams.
 
@@ -893,7 +859,6 @@ For each timeframe, explain WHY (tied to the technical analysis). Avoid generic 
         
         return {
             'technical_analysis': technical_analysis,
-            'threat_intelligence': threat_intelligence,
             'defense_strategy': defense_strategy
         }
     
@@ -901,7 +866,6 @@ For each timeframe, explain WHY (tied to the technical analysis). Avoid generic 
         logging.warning("[OPINION] Gemini analysis failed: %s; using fallback", str(e))
         return {
             'technical_analysis': article.get('gemini_excerpt', clean_summary(article.get("summary", "") or article.get("description", ""))),
-            'threat_intelligence': "",
             'defense_strategy': ""
         }
 
@@ -911,8 +875,7 @@ def create_analyst_opinion_post(date_str, trending_data, config):
     Create the Analyst Opinion post (investigative journalism on article of the week).
     
     Phase 3 Enhanced: Krebs-style investigative analysis with:
-    - Technical Deep-Dive (400-600 words): Attack chains, CVE details, why defenses fail
-    - Threat Intelligence & Ecosystem (300-400 words): Attribution, monetization, infrastructure
+    - Technical Analysis & Threat Intelligence (900-1100 words): Attack chains, defense failures, threat ecosystem, attribution, monetization
     - Defense Strategy (600+ words): Immediate actions, medium-term planning, strategic vision
     
     Args:
@@ -985,19 +948,10 @@ Here's the **Article of the Week**—a deep dive into the most impactful story:
     
     gemini_analysis = generate_gemini_opinion_analysis(article_of_week, category, historical_posts, config)
 
-    # Technical Deep-Dive section
-    technical_section = f"""## Technical Deep-Dive: What's Really Happening
+    # Technical Analysis & Threat Intelligence section (combined)
+    technical_section = f"""## Technical Analysis: What's Really Happening
 
 {gemini_analysis['technical_analysis']}
-
-"""
-
-    # Threat Intelligence section
-    threat_intel_section = ""
-    if gemini_analysis['threat_intelligence']:
-        threat_intel_section = f"""## Threat Intelligence: Follow the Money
-
-{gemini_analysis['threat_intelligence']}
 
 """
 
@@ -1016,7 +970,7 @@ Here's the **Article of the Week**—a deep dive into the most impactful story:
 **Analyst Note:** This article-of-the-week analysis synthesizes industry trends with expert assessment. For strategic decisions, conduct thorough validation with your security, compliance, and risk teams.
 """
 
-    body = intro_section + featured_section + technical_section + threat_intel_section + defense_section + closing_section
+    body = intro_section + featured_section + technical_section + defense_section + closing_section
 
     with open(filename, "w", encoding="utf-8") as f:
         f.write(front_matter + body)
