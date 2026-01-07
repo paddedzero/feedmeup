@@ -787,7 +787,8 @@ categories: [newsbrief, weekly-scan]
     
     for entry, count in highlights:
         category = entry.get('_article_category', '')
-        if category in ['Threat Intelligence', 'CVE/Vulnerability']:
+        # Check for threat intel or vulnerability categories (handle various formats)
+        if 'threat' in category.lower() or 'vulnerability' in category.lower() or 'cve' in category.lower():
             threat_intel_vuln.append((entry, count))
         else:
             other_highlights.append((entry, count))
