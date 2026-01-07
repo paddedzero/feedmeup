@@ -432,6 +432,78 @@ categories: [newsbrief]
     logging.info("[NEWS BRIEF] Created: %s", filename)
 
 
+def cluster_articles_by_theme(articles, num_clusters=3):
+    """
+    Cluster articles into thematic groups based on title and summary similarity.
+    Uses fuzzy matching to group related stories together.
+    
+    Args:
+        articles: list of (entry, count) tuples from highlights
+        num_clusters: target number of clusters (default 3-5 groups)
+    
+    Returns:
+        list of dicts: [{cluster_name, articles: [(entry, count), ...], article_count}, ...]
+    """
+    if not articles:
+        return []
+    
+    try:
+        from collections import Counter
+        
+        # Build clustering by grouping similar titles
+        clusters = {}
+        cluster_assignments = {}
+        
+        for idx, (entry, count) in enumerate(articles):
+            if idx in cluster_assignments:
+                continue
+            
+            title = (entry.get("title") or "").strip().lower()
+            cluster_id = len(clusters)
+            clusters[cluster_id] = {'articles': [(entry, count)], 'titles': [title]}
+            cluster_assignments[idx] = cluster_id
+            
+            # Find similar articles for this cluster
+            for other_idx in range(idx + 1, len(articles)):
+                if other_idx in cluster_assignments:
+                    continue
+                
+                other_entry, other_count = articles[other_idx]
+                other_title = (other_entry.get("title") or "").strip().lower()
+                similarity = rf_ratio(title.split(), other_title.split()) / 100.0
+                
+                if similarity >= 0.4:
+                    clusters[cluster_id]['articles'].append((other_entry, other_count))
+                    clusters[cluster_id]['titles'].append(other_title)
+                    cluster_assignments[other_idx] = cluster_id
+        
+        # Generate cluster names from common keywords
+        result = []
+        for cluster_id, cluster_data in clusters.items():
+            all_words = ' '.join(cluster_data['titles']).split()
+            stop_words = {'the', 'a', 'an', 'and', 'or', 'is', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'}
+            keywords = [w for w in all_words if w not in stop_words and len(w) > 3]
+            
+            if keywords:
+                top_keywords = Counter(keywords).most_common(2)
+                cluster_name = ' & '.join([k[0].title() for k in top_keywords])
+            else:
+                cluster_name = f"Topic {cluster_id + 1}"
+            
+            result.append({
+                'cluster_name': cluster_name,
+                'articles': cluster_data['articles'],
+                'article_count': len(cluster_data['articles'])
+            })
+        
+        result.sort(key=lambda c: c['article_count'], reverse=True)
+        return result[:num_clusters]
+    
+    except Exception as e:
+        logging.warning("[CLUSTERING] Failed to cluster articles: %s", str(e))
+        return []
+
+
 def group_similar_entries(entries, threshold=None, max_per_domain=None, max_results=None):
     """Group entries by fuzzy title similarity, choose recent representative,
     sort by group size then recency, and diversify by normalized domain.
@@ -623,8 +695,25 @@ categories: [newsbrief, weekly-scan]
 ---
 """
 
-    # Highlights section
-    highlights_section = "## Top Trending Stories\n\n"
+    # Highlights section with topic clustering
+    highlights_section = ""
+    
+    # Add story clusters section
+    if highlights:
+        clusters = cluster_articles_by_theme(highlights, num_clusters=3)
+        if clusters:
+            highlights_section += "## Story Clusters: What's Trending Together\n\n"
+            for cluster in clusters:
+                cluster_name = cluster['cluster_name']
+                article_count = cluster['article_count']
+                highlights_section += f"### {cluster_name} ({article_count} stories)\n"
+                for entry, count in cluster['articles'][:2]:
+                    title = entry.get("title", "No Title")
+                    highlights_section += f"   - {title}\n"
+                highlights_section += "\n"
+    
+    # Top Trending Stories - detailed list
+    highlights_section += "## Top Trending Stories\n\n"
     for i, (entry, count) in enumerate(highlights, start=1):
         title = entry.get("title", "No Title")
         summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
@@ -871,11 +960,12 @@ For each timeframe, explain WHY (tied to the technical analysis). Avoid generic 
 
 def create_analyst_opinion_post(date_str, trending_data, config):
     """
-    Create the Analyst Opinion post (investigative journalism on article of the week).
+    Create the Analyst Opinion post with Top 3 Articles of the Week.
     
-    Phase 3 Enhanced: Deep investigative analysis with technical accountability:
-    - Technical Analysis & Threat Intelligence (900-1100 words): Attack chains, defense failures, threat ecosystem, attribution, monetization
-    - Defense Strategy (600+ words): Immediate actions, medium-term planning, strategic vision
+    Phase 3 Enhanced: Deep investigative analysis for top 3 trending stories:
+    - Full technical analysis for each article (900-1100 words per story)
+    - Defense strategy for each article (600+ words per story)
+    - Maintains complete analytical depth across all 3 articles
     
     Args:
         date_str: YYYY-MM-DD date string
@@ -908,73 +998,64 @@ def create_analyst_opinion_post(date_str, trending_data, config):
         logging.warning("[OPINION] No articles in trending data; skipping opinion post")
         return None
     
-    # Article of the week is the first (most trending)
-    article_of_week = top_articles[0]
+    # Get top 3 articles (or fewer if not available)
+    top_3_articles = top_articles[:3]
 
     front_matter = f"""---
 layout: post
-title: "Article of the Week: {category} — {formatted_title_date}"
+title: "Analyst Top 3: {category} — {formatted_title_date}"
 date: {date_str} {time_front}
 categories: [analysis, opinion, {category.lower().replace(' ', '-')}]
 ---
 """
 
     # Introduction
-    intro_section = f"""## This Week's Trends: {category}
+    intro_section = f"""## This Week's Top 3: {category}
 
 The **{category}** category captured significant attention this week with **{article_count}** articles and **{highlight_count}** trending stories.
 
-Here's the **Article of the Week**—a deep dive into the most impactful story:
+Here are the **Top 3 Articles of the Week**—comprehensive analysis of the most impactful stories:
 
 """
 
-    # Featured article
-    article_title = article_of_week.get("title", "No Title")
-    article_link = sanitize_url(article_of_week.get("link", ""))
-    article_summary = article_of_week.get('gemini_excerpt', clean_summary(article_of_week.get("summary", "") or article_of_week.get("description", "")))
+    # Build full analysis for each of the top 3 articles
+    articles_body = ""
+    for rank, article in enumerate(top_3_articles, start=1):
+        article_title = article.get("title", "No Title")
+        article_link = sanitize_url(article.get("link", ""))
+        article_summary = article.get('gemini_excerpt', clean_summary(article.get("summary", "") or article.get("description", "")))
+        
+        # Article header
+        articles_body += f"## Article {rank}: {article_title}\n\n"
+        articles_body += f"{article_summary}\n\n"
+        if article_link:
+            articles_body += f"<a href=\"{article_link}\">Read the full article</a>\n\n"
+        
+        # Get historical context and Gemini analysis for this article
+        keywords_for_history = [category.lower()] + (article.get('keywords_hit', []) if isinstance(article.get('keywords_hit'), list) else [])
+        historical_posts = find_historical_context(keywords_for_history, lookback_weeks=12)
+        gemini_analysis = generate_gemini_opinion_analysis(article, category, historical_posts, config)
+        
+        # Technical Analysis section with full depth
+        articles_body += f"### Technical Analysis: What's Really Happening\n\n"
+        articles_body += f"{gemini_analysis['technical_analysis']}\n\n"
+        
+        # Defense Strategy section with full depth
+        if gemini_analysis['defense_strategy']:
+            articles_body += f"### Defense Strategy: What Security Teams Should Do\n\n"
+            articles_body += f"{gemini_analysis['defense_strategy']}\n\n"
+        
+        articles_body += "---\n\n"
     
-    featured_section = f"""## {article_title}
-
-{article_summary}
-
-"""
-    if article_link:
-        featured_section += f"<a href=\"{article_link}\">Read the full article</a>\n\n"
-
-    # Get historical context and Gemini analysis
-    keywords_for_history = [category.lower()] + (article_of_week.get('keywords_hit', []) if isinstance(article_of_week.get('keywords_hit'), list) else [])
-    historical_posts = find_historical_context(keywords_for_history, lookback_weeks=12)
-    
-    gemini_analysis = generate_gemini_opinion_analysis(article_of_week, category, historical_posts, config)
-
-    # Technical Analysis & Threat Intelligence section (combined)
-    technical_section = f"""## Technical Analysis: What's Really Happening
-
-{gemini_analysis['technical_analysis']}
-
-"""
-
-    # Defense Strategy section
-    defense_section = ""
-    if gemini_analysis['defense_strategy']:
-        defense_section = f"""## Defense Strategy: What Security Teams Should Do
-
-{gemini_analysis['defense_strategy']}
-
-"""
-
     # Closing
-    closing_section = """---
+    closing_section = """**Analyst Note:** These top 3 articles this week synthesize industry trends with expert assessment. For strategic decisions, conduct thorough validation with your security, compliance, and risk teams."""
 
-**Analyst Note:** This article-of-the-week analysis synthesizes industry trends with expert assessment. For strategic decisions, conduct thorough validation with your security, compliance, and risk teams.
-"""
-
-    body = intro_section + featured_section + technical_section + defense_section + closing_section
+    body = intro_section + articles_body + closing_section
 
     with open(filename, "w", encoding="utf-8") as f:
         f.write(front_matter + body)
     
-    logging.info("[ANALYST OPINION] Created with deep analysis: %s", filename)
+    logging.info("[ANALYST OPINION] Created with Top 3 deep analysis: %s", filename)
     return filename
 
 
