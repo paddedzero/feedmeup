@@ -797,7 +797,7 @@ Avoid generic advice like "improve security posture"—give CONCRETE technical i
 """
         
         response_technical = GEMINI_CLIENT.models.generate_content(
-            model="gemini-2.0-pro",
+            model="gemini-3-flash-preview",
             contents=technical_prompt,
             config={"max_output_tokens": 800, "temperature": 0.4}
         )
@@ -837,7 +837,7 @@ Be specific: name tools, forums, hosting providers, ransom amounts. Use threat i
 """
         
         response_threat_intel = GEMINI_CLIENT.models.generate_content(
-            model="gemini-2.0-pro",
+            model="gemini-3-flash-preview",
             contents=threat_intel_prompt,
             config={"max_output_tokens": 600, "temperature": 0.4}
         )
@@ -882,7 +882,7 @@ For each timeframe, explain WHY (tied to the technical analysis). Avoid generic 
 """
         
         response_defense = GEMINI_CLIENT.models.generate_content(
-            model="gemini-2.0-pro",
+            model="gemini-3-flash-preview",
             contents=defense_prompt,
             config={"max_output_tokens": 800, "temperature": 0.3}
         )
