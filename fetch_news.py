@@ -662,6 +662,89 @@ def detect_trending_category(reports, highlights, trend_threshold=2):
         return None
 
 
+def create_story_clusters_post(date_str, highlights):
+    """Create a standalone narrative-style blog post from story clusters."""
+    from datetime import datetime
+    
+    POSTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    now_local = datetime.now(LOCAL_TZ)
+    time_filename = now_local.strftime("%H-%M")
+    filename = POSTS_DIR / f"{date_str}-{time_filename}-weekly-brief.md"
+
+    date_object = datetime.strptime(date_str, "%Y-%m-%d")
+    formatted_title_date = date_object.strftime("%b %d, %Y")
+    time_front = now_local.strftime("%H:%M:%S %z")
+
+    front_matter = f"""---
+layout: post
+title: "This Week in Security: A Briefing — {formatted_title_date}"
+date: {date_str} {time_front}
+categories: [newsbrief, weekly-brief]
+---
+"""
+
+    # Generate clusters
+    clusters = cluster_articles_by_theme(highlights, num_clusters=5) if highlights else []
+    
+    intro = f"""## This Week in Security: What's Trending
+
+Here's your briefing on the week's most important security stories, organized by theme. We've identified **{len(clusters)}** key topics capturing industry attention from across **{sum(c['article_count'] for c in clusters)}** trending stories.
+
+"""
+    
+    body = intro
+    
+    # Generate narrative sections for each cluster
+    for idx, cluster in enumerate(clusters, start=1):
+        cluster_name = cluster['cluster_name']
+        articles = cluster['articles']
+        
+        # Cluster header
+        body += f"### {idx}. {cluster_name} ({len(articles)} stories)\n\n"
+        
+        # Narrative paragraph with top articles
+        body += f"The **{cluster_name}** theme captured {len(articles)} trending stories this week. "
+        
+        if len(articles) >= 2:
+            top_articles = articles[:2]
+            body += f"Key developments include:\n\n"
+            for rank, (entry, count) in enumerate(top_articles, start=1):
+                title = entry.get("title", "No Title")
+                summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
+                if len(summary) > 200:
+                    summary = summary[:197] + "..."
+                safe_link = sanitize_url(entry.get("link", ""))
+                
+                body += f"**{rank}. {title}** ({count} mentions)\n"
+                body += f"   {summary}\n"
+                if safe_link:
+                    body += f"   [Read more]({safe_link})\n\n"
+                else:
+                    body += f"\n"
+        
+        if len(articles) > 2:
+            remaining = articles[2:]
+            body += f"\nOther notable stories: "
+            titles = [e.get("title", "Untitled") for e, c in remaining[:3]]
+            body += ", ".join(titles)
+            body += "\n"
+        
+        body += f"\n---\n\n"
+    
+    closing = """## Stay Informed
+
+These thematic groupings highlight how similar security issues are emerging across multiple vendors and technologies this week. For each topic, consider how your organization's security strategy aligns with the trends.
+"""
+    
+    body += closing
+    
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(front_matter + body)
+    
+    return str(filename)
+
+
 def create_weekly_scan_post(date_str, content_by_category, highlights):
     """
     Create the Weekly Scan post (aggregated news with trend metrics).
@@ -695,38 +778,50 @@ categories: [newsbrief, weekly-scan]
 ---
 """
 
-    # Highlights section with topic clustering
-    highlights_section = ""
+    # Highlights section with consolidated threat intel/vulnerability
+    highlights_section = "## Top Trending Stories\n\n"
     
-    # Add story clusters section
-    if highlights:
-        clusters = cluster_articles_by_theme(highlights, num_clusters=3)
-        if clusters:
-            highlights_section += "## Story Clusters: What's Trending Together\n\n"
-            for cluster in clusters:
-                cluster_name = cluster['cluster_name']
-                article_count = cluster['article_count']
-                highlights_section += f"### {cluster_name} ({article_count} stories)\n"
-                for entry, count in cluster['articles'][:2]:
-                    title = entry.get("title", "No Title")
-                    highlights_section += f"   - {title}\n"
-                highlights_section += "\n"
+    # Separate threat intel/vulnerability from other articles
+    threat_intel_vuln = []
+    other_highlights = []
     
-    # Top Trending Stories - detailed list
-    highlights_section += "## Top Trending Stories\n\n"
-    for i, (entry, count) in enumerate(highlights, start=1):
+    for entry, count in highlights:
+        category = entry.get('_article_category', '')
+        if category in ['Threat Intelligence', 'CVE/Vulnerability']:
+            threat_intel_vuln.append((entry, count))
+        else:
+            other_highlights.append((entry, count))
+    
+    # Build top trending with consolidated threat intel/vulnerability entry
+    item_num = 1
+    
+    # First add consolidated threat intel & vulnerability if they exist
+    if threat_intel_vuln:
+        top_threats = sorted(threat_intel_vuln, key=lambda x: x[1], reverse=True)[:3]
+        
+        highlights_section += f"{item_num}. **Key Threat Intel & Vulnerability Stories** ({sum(c for e, c in threat_intel_vuln)} mentions)\n"
+        highlights_section += "   > This week's critical security updates and vulnerability disclosures:\n"
+        for entry, count in top_threats:
+            title = entry.get("title", "No Title")
+            highlights_section += f"   > • {title} ({count} mentions)\n"
+        highlights_section += "\n"
+        item_num += 1
+    
+    # Then add other trending stories
+    for entry, count in other_highlights:
         title = entry.get("title", "No Title")
         summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
         if len(summary) > 250:
             summary = summary[:247] + "..."
         
         safe_link = sanitize_url(entry.get("link", ""))
-        highlights_section += f"{i}. **{title}** ({count} mentions)\n"
+        highlights_section += f"{item_num}. **{title}** ({count} mentions)\n"
         highlights_section += f"   > {summary}\n"
         if safe_link:
             highlights_section += f"   > <a href=\"{safe_link}\">Read more</a>\n\n"
         else:
             highlights_section += f"   > Read more (link unavailable)\n\n"
+        item_num += 1
 
     # Summary table
     table = "| Category | Article Count |\n|---|---|\n"
@@ -1144,6 +1239,8 @@ def main():
                         entry['keywords_hit'] = summary_data['keywords_hit']
                     
                     reports.setdefault(category, []).append(entry)
+                    # Store category in entry for later filtering
+                    entry['_article_category'] = category
                     all_matched_entries.append(entry)
 
         logging.debug("    Recent: %d, Matched: %d", recent_count, matched_count)
@@ -1179,13 +1276,17 @@ def main():
     for cat, entries in reports.items():
         content_by_category[cat] = format_entries_for_category(entries)
 
-    # Phase 2: Dual-post output (Weekly Scan + Analyst Opinion)
+    # Phase 2: Dual-post output (Weekly Scan + Analyst Opinion + Story Clusters)
     phase2_enabled = config.get("synthesis", {}).get("enable_opinion_post", False)
     
     if phase2_enabled:
-        # Create Weekly Scan post
+        # Create Weekly Scan post (with consolidated threat intel/vulnerability)
         weekly_scan_file = create_weekly_scan_post(today, content_by_category, top_highlights)
         logging.info("%s [PHASE 2] Weekly Scan generated: %s", GREEN, weekly_scan_file)
+        
+        # Create Story Clusters narrative post (newsroom briefing style)
+        clusters_file = create_story_clusters_post(today, top_highlights)
+        logging.info("%s [PHASE 2] Story Clusters briefing generated: %s", GREEN, clusters_file)
         
         # Detect trending category for analyst opinion
         trend_threshold = config.get("synthesis", {}).get("trend_threshold", 2)
@@ -1198,7 +1299,7 @@ def main():
         else:
             logging.warning("[PHASE 2] Could not detect trending category; skipping opinion post")
         
-        logging.info("%s News aggregation complete: Weekly Scan + Analyst Opinion posts generated", GREEN)
+        logging.info("%s News aggregation complete: Weekly Scan + Story Clusters + Analyst Opinion posts generated", GREEN)
     else:
         # Legacy Phase 1: Single post (news brief)
         create_news_brief(today, content_by_category, top_highlights)
