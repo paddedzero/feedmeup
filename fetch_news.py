@@ -787,10 +787,7 @@ def create_narrative_briefing(highlights):
     # Build narrative
     briefing = "## This Week in Security: Your News Briefing\n\n"
     
-    # ⚡ QUICK HEADLINES - 10-second snapshot as a friendly story paragraph
-    briefing += "### ⚡ The Rundown (10-second read)\n\n"
-    
-    # Extract 3-5 most critical headlines and weave into a story
+    # Extract 3-5 most critical headlines
     top_stories = []
     for entry, count in highlights[:5]:
         title = entry.get("title", "")
@@ -799,34 +796,36 @@ def create_narrative_briefing(highlights):
             if len(title) > 70:
                 title = title[:67].rsplit(' ', 1)[0] + "..."
             top_stories.append((title, count))
+            
+    # Combine Intro + Rundown into a single paragraph
+    total_stories = len(highlights[:10])
+    paragraph = f"Welcome to your weekly security roundup. We've tracked down the **{total_stories} most important stories** this week—the ones everyone's talking about, from critical threats to emerging trends that could shape your security posture. "
     
     if top_stories:
-        # Build a single flowing narrative paragraph
         t1, c1 = top_stories[0]
-        story_text = f"Leading the news this week is **{t1}**, which has sparked conversation across {c1} sources. "
+        paragraph += f"Leading the news this week is **{t1}**, which has sparked conversation across {c1} sources. "
         
         if len(top_stories) > 1:
             t2, c2 = top_stories[1]
-            story_text += f"Meanwhile, the industry is closely tracking **{t2}** with {c2} mentions, "
+            paragraph += f"Meanwhile, the industry is closely tracking **{t2}** with {c2} mentions, "
             
             remaining = top_stories[2:]
             if remaining:
                 titles = [f"**{t}**" for t, c in remaining]
                 if len(titles) == 1:
-                    story_text += f"along with emerging details on {titles[0]}. "
+                    paragraph += f"along with emerging details on {titles[0]}. "
                 else:
                     last = titles.pop()
                     joined = ", ".join(titles)
-                    story_text += f"along with emerging details on {joined}, and {last}. "
+                    paragraph += f"along with emerging details on {joined}, and {last}. "
             else:
-                story_text = story_text.rstrip(", ") + ". "
+                paragraph = paragraph.rstrip(", ") + ". "
         
-        story_text += "Here's the full breakdown of what you need to know."
-        briefing += story_text + "\n\n---\n\n"
-    
-    # Opening hook
-    total_stories = len(highlights[:10])
-    briefing += f"Welcome to your weekly security roundup. We've tracked down the **{total_stories} most important stories** this week—the ones everyone's talking about, from critical threats to emerging trends that could shape your security posture. Let's dive in.\n\n"
+        paragraph += "Here's the full breakdown of what you need to know."
+    else:
+        paragraph += "Let's dive in."
+        
+    briefing += paragraph + "\n\n"
     
     # Critical stories section (if any)
     if critical_stories:
