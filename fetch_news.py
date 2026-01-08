@@ -5,6 +5,7 @@ import requests
 import logging
 import os
 import textwrap
+import base64
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
@@ -307,12 +308,29 @@ def entry_matches(entry, pattern):
 
 
 def clean_summary(html):
-    """Return plaintext summary extracted from HTML; collapse whitespace."""
+    """
+    Return plaintext summary extracted from HTML; collapse whitespace.
+    Optimized to strip common boilerplate (ads, social links) to reduce token noise for LLM.
+    """
     if not html:
         return ""
     try:
         soup = BeautifulSoup(html, "html.parser")
+        
+        # Aggressively remove noise tags before text extraction
+        for tag in soup(["script", "style", "nav", "footer", "iframe", "form", "button"]):
+            tag.decompose()
+            
+        # Remove elements with "share", "social", "subscribe" in class/id
+        for noise_class in ["share", "social", "subscribe", "newsletter", "ads", "related"]:
+            for tag in soup.find_all(lambda t: t.get('class') and any(noise_class in c for c in t.get('class'))):
+                tag.decompose()
+                
         text = soup.get_text(separator=" ", strip=True)
+        
+        # Remove "Read more..." tails common in RSS
+        text = re.sub(r"(Read|Continue) reading.*$", "", text, flags=re.IGNORECASE)
+        
         # collapse repeated whitespace
         return " ".join(text.split())
     except Exception:
@@ -337,6 +355,137 @@ def sanitize_url(url):
     except Exception:
         return None
 
+def get_verified_link(title, url):
+    """
+    Return a verified link.
+    If the title contains a CVE ID, returns a link to NVD.
+    Otherwise, returns a sanitized URL.
+    """
+    if not title:
+        return sanitize_url(url)
+
+    # Check for CVE ID in title
+    cve_pattern = r"(CVE-\d{4}-\d+)"
+    match = re.search(cve_pattern, title, re.IGNORECASE)
+    if match:
+        cve_id = match.group(1).upper()
+        return f"https://nvd.nist.gov/vuln/detail/{cve_id}"
+        
+    return sanitize_url(url)
+
+
+def get_github_repo_details(url):
+    """
+    Fetches repository details and README from GitHub API to provide high-quality context for AI analysis.
+    This identifies a GitHub link, fetches metadata/README via API (simulating MCP server access),
+    and returns a token-efficient context string.
+    """
+    try:
+        if not url or "github.com" not in url:
+            return None
+            
+        parsed = urlparse(url)
+        path_parts = parsed.path.strip("/").split("/")
+        if len(path_parts) < 2:
+            return None
+            
+        owner, repo = path_parts[0], path_parts[1]
+        
+        # Requests session is available globally as SESSION? No, use requests directly or check main
+        # But for portability here, use requests with simple headers
+        headers = {"User-Agent": "feedmeup-news-brief-generator"}
+        if "GITHUB_TOKEN" in os.environ:
+            headers["Authorization"] = f"token {os.environ['GITHUB_TOKEN']}"
+            
+        api_base = f"https://api.github.com/repos/{owner}/{repo}"
+        
+        # 1. Fetch Metadata (Stars, Description, Topics)
+        resp = requests.get(api_base, headers=headers, timeout=5)
+        if resp.status_code != 200:
+            return None
+        data = resp.json()
+        
+        desc = data.get("description", "No description")
+        stars = data.get("stargazers_count", 0)
+        lang = data.get("language", "Unknown")
+        topics = ", ".join(data.get("topics", []))
+        
+        # 2. Fetch Latest Release (High signal for "what's new")
+        release_notes = ""
+        try:
+            resp_rel = requests.get(f"{api_base}/releases/latest", headers=headers, timeout=5)
+            if resp_rel.status_code == 200:
+                rel_data = resp_rel.json()
+                tag_name = rel_data.get("tag_name", "Unknown")
+                rel_body = rel_data.get("body", "")
+                release_notes = f"\nLatest Release ({tag_name}):\n{rel_body[:1000]}"
+        except Exception:
+            pass
+
+        # 3. Fetch README content
+        readme_resp = requests.get(f"{api_base}/readme", headers=headers, timeout=5)
+        readme_text = ""
+        if readme_resp.status_code == 200:
+            try:
+                content_b64 = readme_resp.json().get("content", "")
+                if content_b64:
+                    readme_text = base64.b64decode(content_b64).decode("utf-8", errors="replace")
+            except Exception:
+                pass
+                
+        # 4. Construct Context String
+        # We limit README to 1500 chars to "bring down use of tokens" while keeping high signal
+        context = f"GitHub Repository: {owner}/{repo}\n"
+        context += f"Metrics: {stars} Stars | Language: {lang}\n"
+        context += f"Description: {desc}\n"
+        context += f"Topics: {topics}\n"
+        
+        if release_notes:
+            context += release_notes + "\n"
+            
+        context += "README Summary:\n"
+        context += readme_text[:1500]
+        
+        return context
+
+    except Exception as e:
+        logging.warning(f"[GITHUB] Failed to enrich context for {url}: {e}")
+        return None
+
+def get_cve_details(cve_id):
+    """
+    Fetches structured CVE data from CIRCL.lu (Open API) to replace verbose news articles.
+    Returns a highly compressed, fact-dense JSON summary for the Analyst.
+    """
+    try:
+        # Using cve.circl.lu as it's a reliable, free, auth-less API for CVEs
+        api_url = f"https://cve.circl.lu/api/cve/{cve_id}"
+        resp = requests.get(api_url, timeout=5, headers={"User-Agent": "feedmeup-news"})
+        
+        if resp.status_code != 200:
+            return None
+            
+        data = resp.json()
+        if not data:
+            return None
+            
+        # Extract high-signal fields
+        summary = data.get("summary", "No summary available.")
+        cvss = data.get("cvss", "Unknown")
+        # specific technical cause often found in capec or cwe
+        cwe = data.get("cwe", "Unknown")
+        
+        references = "\n".join(data.get("references", [])[:3])
+        
+        context = f"Vulnerability: {cve_id}\n"
+        context += f"CVSS Score: {cvss} | CWE: {cwe}\n"
+        context += f"Official Summary: {summary}\n"
+        context += f"Key References:\n{references}"
+        
+        return context
+    except Exception as e:
+        logging.warning(f"[CVE] Failed to fetch details for {cve_id}: {e}")
+        return None
 
 def format_entries_for_category(entries):
     """Format entries as markdown for a category, newest first.
@@ -365,7 +514,8 @@ def format_entries_for_category(entries):
         if len(summary) > 200:
             summary = summary[:197] + "..."
         
-        safe_link = sanitize_url(link)
+        # Use verified link (redirects CVEs to NVD, sanitizes others)
+        safe_link = get_verified_link(title, link)
         if safe_link:
             # use an explicit HTML anchor to avoid markdown processor mangling feed HTML
             formatted.append(f"- **{title}** — {summary}\n  <a href=\"{safe_link}\">Read more</a>")
@@ -837,7 +987,7 @@ def create_narrative_briefing(highlights):
         for idx, (entry, count) in enumerate(critical_stories[:3], 1):
             title = entry.get("title", "No Title")
             summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
-            link = sanitize_url(entry.get("link", ""))
+            link = get_verified_link(title, entry.get("link", ""))
             
             # Extract punchy quote or create one from summary
             sentences = [s.strip() for s in summary.split('.') if len(s.strip()) > 20]
@@ -858,7 +1008,7 @@ def create_narrative_briefing(highlights):
         for idx, (entry, count) in enumerate(trend_stories[:3], 1):
             title = entry.get("title", "No Title")
             summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
-            link = sanitize_url(entry.get("link", ""))
+            link = get_verified_link(title, entry.get("link", ""))
             
             sentences = [s.strip() for s in summary.split('.') if len(s.strip()) > 20]
             quote = sentences[0][:120] if sentences else summary[:120]
@@ -878,7 +1028,7 @@ def create_narrative_briefing(highlights):
         for idx, (entry, count) in enumerate(tool_stories[:3], 1):
             title = entry.get("title", "No Title")
             summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
-            link = sanitize_url(entry.get("link", ""))
+            link = get_verified_link(title, entry.get("link", ""))
             
             sentences = [s.strip() for s in summary.split('.') if len(s.strip()) > 20]
             quote = sentences[0][:100] if sentences else summary[:100]
@@ -970,7 +1120,11 @@ categories: [newsbrief, weekly-scan]
         highlights_section += "   > This week's critical security updates and vulnerability disclosures:\n"
         for entry, count in top_threats:
             title = entry.get("title", "No Title")
-            highlights_section += f"   > • {title} ({count} mentions)\n"
+            link = get_verified_link(title, entry.get("link", ""))
+            if link:
+                highlights_section += f"   > • [{title}]({link}) ({count} mentions)\n"
+            else:
+                highlights_section += f"   > • {title} ({count} mentions)\n"
         highlights_section += "\n"
         item_num += 1
     
@@ -981,7 +1135,7 @@ categories: [newsbrief, weekly-scan]
         if len(summary) > 250:
             summary = summary[:247] + "..."
         
-        safe_link = sanitize_url(entry.get("link", ""))
+        safe_link = get_verified_link(title, entry.get("link", ""))
         highlights_section += f"{item_num}. **{title}** ({count} mentions)\n"
         highlights_section += f"   > {summary}\n"
         if safe_link:
@@ -1099,8 +1253,35 @@ def generate_gemini_opinion_analysis(article, category, historical_posts, config
         }
     
     try:
-        article_text = clean_summary(article.get("summary", "") or article.get("description", ""))[:1500]
+        # Optimization: Use "Internal MCP Agents" to fetch high-signal context (GitHub/CVE) 
+        # This reduces token usage by avoiding raw HTML scrapes and providing structured technical data.
+        link = article.get("link", "")
         article_title = article.get("title", "Unknown")
+        article_text = ""
+        
+        # 1. GitHub Agent
+        repo_details = get_github_repo_details(link)
+        
+        # 2. CVE Agent
+        cve_pattern = r"(CVE-\d{4}-\d+)"
+        cve_match = re.search(cve_pattern, article_title, re.IGNORECASE)
+        cve_details = None
+        if cve_match:
+            cve_details = get_cve_details(cve_match.group(1).upper())
+
+        # Select best context source
+        if repo_details:
+            article_text = repo_details
+            logging.info(f"[ANALYST] Enriched context with GitHub data for {article.get('title')}")
+        elif cve_details:
+            article_text = cve_details
+            logging.info(f"[ANALYST] Enriched context with CVE data for {article.get('title')}")
+        else:
+            # Fallback to standard summary
+            article_text = clean_summary(article.get("summary", "") or article.get("description", ""))[:1500]
+
+        
+        # Build historical context string
         
         # Build historical context string
         history_context = ""
@@ -1110,47 +1291,37 @@ def generate_gemini_opinion_analysis(article, category, historical_posts, config
                 history_context += f"- {hp['date']}: {hp['title']}\n"
         
         # Prompt 1: Combined Technical Analysis & Threat Intelligence (Investigative Journalism)
-        # Merges technical deep-dive with threat ecosystem for cohesive 900-1100 word narrative
+        # Optimized for token efficiency: Uses dense technical context instead of narrative fluff
         technical_prompt = f"""
-You are a senior cybersecurity analyst writing an investigative article about this {category} story.
+ROLE: Senior Cybersecurity Analyst.
+TASK: Write investigative technical analysis (900-1100 words).
+FOCUS: Technical mechanics, attack chain, threat ecosystem.
 
+SOURCE DATA:
 Title: {article_title}
-Content: {article_text}
-
+Context: {article_text}
 {history_context if history_context else ""}
 
-Write a comprehensive TECHNICAL ANALYSIS & THREAT INTELLIGENCE section (6-7 paragraphs, 900-1100 words) that tells a cohesive story:
+OUTPUT STRUCTURE:
+1. Technical Breakdown (The Mechanics)
+2. Threat Actor / Attribution (If applicable)
+3. Impact Assessment
 
-**Section Opening (Paragraph 1): What Happened & Technical Breakdown**
-- Explain the incident/vulnerability/trend in technical detail
-- If it's an attack: describe the attack chain (initial access → persistence → lateral movement → impact)
-- If it's a vulnerability: explain the flaw, affected systems, exploitation mechanics
-- Include specific technical details: CVE IDs, product versions, protocols, techniques used
+STYLE: Dense, technical, authoritative. No fluff.
+"""
 
-**Technical Deep-Dive (Paragraphs 2-3): Why This Succeeds & Defense Failures**
-- Explain WHY this attack/vulnerability is effective against defenses
-- What specific security controls fail or are bypassed? (EDR, SIEM, WAF, etc.)
-- Why do defenders miss this? (detection blind spots, configuration errors, vendor gaps)
-- Provide concrete examples: "EDR solutions miss this because they don't monitor X behavior"
-- Historical context: "Have we seen similar techniques before? How have attackers evolved this?"
-- Compare to past incidents: "This mirrors the 2023 [incident] but adds [new capability]"
+        # Prompt 2: Defense Strategy (Operational & Strategic) (600+ words)
+        defense_prompt = f"""
+ROLE: CISO / Security Architect.
+TASK: Write actionable defense strategy (600+ words).
+CONTEXT: {article_title}
 
-**Threat Ecosystem (Paragraphs 4-5): Who Exploits This & Monetization**
-- Who benefits from this? (specific threat actors, APT groups, criminal forums)
-- Attribution clues: infrastructure patterns, TTPs, targeting preferences
-- Name specific actors/groups if applicable (e.g., "Scattered Spider", "Kimsuky", "LockBit")
-- How do attackers monetize this? (ransomware payments, data sales, crypto mixers, fraud)
-- Criminal marketplace dynamics: who sells what, pricing, access models
-- Supply chain: initial access brokers → ransomware operators → money launderers
+OUTPUT STRUCTURE:
+1. Immediate Mitigation (Tactical) - "Do this NOW"
+2. Detection Engineering (SIEM/EDR) - "Hunt for this"
+3. Strategic Defense (Long term) - "Fix the root cause"
 
-**Ecosystem Evolution & Outlook (Paragraphs 6-7): Timeline & Predictions**
-- How has this threat evolved over time? (timeline: first seen [date], widespread by [date])
-- Escalation patterns: increasing sophistication, new targets, cross-border coordination
-- Real-world impact: Who is affected? (sectors, organization types, cascade effects)
-- Future trajectory: "Expect to see [trend] accelerate in [timeframe] because [reason]"
-- Why this matters for cybersecurity professionals AND business decision-makers
-
-Tone: Investigative journalism with technical accountability. Deep technical expertise + real-world impact analysis. Be specific with product names, CVE IDs, threat actor TTPs, monetization details, and vendor accountability. Avoid generic security advice—focus on HOW and WHY attacks succeed against current defenses, not just THAT they succeed. Examine defense failures and gaps with nuance.
+Be specific. Name tools, logs, and configurations.
 """
         
         response_technical = GEMINI_CLIENT.models.generate_content(
