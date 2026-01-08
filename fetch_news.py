@@ -745,6 +745,162 @@ These thematic groupings highlight how similar security issues are emerging acro
     return str(filename)
 
 
+def create_narrative_briefing(highlights):
+    """
+    Create an 800-1000 word narrative news briefing from top stories.
+    Conversational, friendly tone with critical stories first, includes punchy quotes,
+    and forward-looking recommendations ("monitor these", "have a look at these").
+    
+    Args:
+        highlights: list of (entry, count) tuples (top 10 stories)
+    
+    Returns:
+        Narrative briefing text
+    """
+    if not highlights:
+        return ""
+    
+    # Separate stories by criticality
+    critical_stories = []  # Threats, CVEs, breaches
+    trend_stories = []     # Emerging trends, new techniques
+    tool_stories = []      # Tools, updates, releases
+    
+    for entry, count in highlights[:10]:
+        title = entry.get("title", "").lower()
+        category = entry.get('_article_category', '').lower()
+        summary = (entry.get("summary", "") or entry.get("description", "")).lower()
+        content_sample = (title + " " + category + " " + summary[:200]).lower()
+        
+        is_critical = any(keyword in content_sample for keyword in 
+                         ['breach', 'cve-', 'vulnerability', 'threat', 'ransomware', 
+                          'malware', 'attack', 'exploit', 'zero-day', 'critical'])
+        is_trend = any(keyword in content_sample for keyword in 
+                      ['trend', 'emerging', 'analysis', 'technique', 'pattern', 'report'])
+        
+        if is_critical:
+            critical_stories.append((entry, count))
+        elif is_trend:
+            trend_stories.append((entry, count))
+        else:
+            tool_stories.append((entry, count))
+    
+    # Build narrative
+    briefing = "## This Week in Security: Your News Briefing\n\n"
+    
+    # ⚡ QUICK HEADLINES - 10-second snapshot as a friendly story paragraph
+    briefing += "### ⚡ The Rundown (10-second read)\n\n"
+    
+    # Extract 3-5 most critical headlines and weave into a story
+    top_stories = []
+    for entry, count in highlights[:5]:
+        title = entry.get("title", "")
+        if title:
+            # Shorten long titles for readability
+            if len(title) > 70:
+                title = title[:67].rsplit(' ', 1)[0] + "..."
+            top_stories.append((title, count))
+    
+    if top_stories:
+        # Build a single flowing narrative paragraph
+        t1, c1 = top_stories[0]
+        story_text = f"Leading the news this week is **{t1}**, which has sparked conversation across {c1} sources. "
+        
+        if len(top_stories) > 1:
+            t2, c2 = top_stories[1]
+            story_text += f"Meanwhile, the industry is closely tracking **{t2}** with {c2} mentions, "
+            
+            remaining = top_stories[2:]
+            if remaining:
+                titles = [f"**{t}**" for t, c in remaining]
+                if len(titles) == 1:
+                    story_text += f"along with emerging details on {titles[0]}. "
+                else:
+                    last = titles.pop()
+                    joined = ", ".join(titles)
+                    story_text += f"along with emerging details on {joined}, and {last}. "
+            else:
+                story_text = story_text.rstrip(", ") + ". "
+        
+        story_text += "Here's the full breakdown of what you need to know."
+        briefing += story_text + "\n\n---\n\n"
+    
+    # Opening hook
+    total_stories = len(highlights[:10])
+    briefing += f"Welcome to your weekly security roundup. We've tracked down the **{total_stories} most important stories** this week—the ones everyone's talking about, from critical threats to emerging trends that could shape your security posture. Let's dive in.\n\n"
+    
+    # Critical stories section (if any)
+    if critical_stories:
+        briefing += "### 🚨 Critical Threats This Week\n\n"
+        briefing += "First, the stories that demand your immediate attention:\n\n"
+        
+        for idx, (entry, count) in enumerate(critical_stories[:3], 1):
+            title = entry.get("title", "No Title")
+            summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
+            link = sanitize_url(entry.get("link", ""))
+            
+            # Extract punchy quote or create one from summary
+            sentences = [s.strip() for s in summary.split('.') if len(s.strip()) > 20]
+            quote = sentences[0][:120] if sentences else summary[:120]
+            
+            briefing += f"**{idx}. {title}**\n"
+            briefing += f"   Mentioned across {count} industry sources this week. {quote.rstrip('.')}.\n"
+            if link:
+                briefing += f"   [Get the details →]({link})\n\n"
+            else:
+                briefing += f"\n"
+    
+    # Trend stories section
+    if trend_stories:
+        briefing += "### 📈 Emerging Trends & Analysis\n\n"
+        briefing += "Here's what the security community is exploring and learning:\n\n"
+        
+        for idx, (entry, count) in enumerate(trend_stories[:3], 1):
+            title = entry.get("title", "No Title")
+            summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
+            link = sanitize_url(entry.get("link", ""))
+            
+            sentences = [s.strip() for s in summary.split('.') if len(s.strip()) > 20]
+            quote = sentences[0][:120] if sentences else summary[:120]
+            
+            briefing += f"**{idx}. {title}**\n"
+            briefing += f"   {quote.rstrip('.')}. Catching attention from {count} news sources.\n"
+            if link:
+                briefing += f"   [Learn more →]({link})\n\n"
+            else:
+                briefing += f"\n"
+    
+    # Tools & updates section
+    if tool_stories:
+        briefing += "### 🛠️ Tools, Updates & Releases\n\n"
+        briefing += "New capabilities and releases worth knowing about:\n\n"
+        
+        for idx, (entry, count) in enumerate(tool_stories[:3], 1):
+            title = entry.get("title", "No Title")
+            summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
+            link = sanitize_url(entry.get("link", ""))
+            
+            sentences = [s.strip() for s in summary.split('.') if len(s.strip()) > 20]
+            quote = sentences[0][:100] if sentences else summary[:100]
+            
+            briefing += f"**{idx}. {title}**\n"
+            briefing += f"   {quote.rstrip('.')}. Referenced in {count} stories this week.\n"
+            if link:
+                briefing += f"   [Explore →]({link})\n\n"
+            else:
+                briefing += f"\n"
+    
+    # Closing with forward-looking recommendations
+    briefing += "### What You Should Do Next\n\n"
+    briefing += "**Monitor these** in your environment next week:\n"
+    briefing += "- Any new CVE announcements related to systems you operate\n"
+    briefing += "- Emerging attack techniques being discussed in the community\n"
+    briefing += "- Updates and patches for tools your team uses\n\n"
+    briefing += "**Have a look at** the full deep-dives in the trending stories below. Each one provides context that could inform your security decisions this week.\n\n"
+    
+    briefing += "---\n\n"
+    return briefing
+
+
 def create_weekly_scan_post(date_str, content_by_category, highlights):
     """
     Create the Weekly Scan post (aggregated news with trend metrics).
@@ -778,8 +934,17 @@ categories: [newsbrief, weekly-scan]
 ---
 """
 
-    # Highlights section with consolidated threat intel/vulnerability
-    highlights_section = "## Top Trending Stories\n\n"
+    # Highlights section with narrative briefing + consolidated threat intel/vulnerability
+    highlights_section = ""
+    
+    # Add narrative news briefing at the top
+    if highlights:
+        narrative = create_narrative_briefing(highlights)
+        if narrative:
+            highlights_section += narrative
+    
+    # Top Trending Stories - detailed list
+    highlights_section += "## Top Trending Stories\n\n"
     
     # Separate threat intel/vulnerability from other articles
     threat_intel_vuln = []
@@ -845,6 +1010,7 @@ categories: [newsbrief, weekly-scan]
         f.write(front_matter + body)
     
     logging.info("[WEEKLY SCAN] Created: %s", filename)
+    logging.info("[PHASE 2] Weekly Scan (with Narrative News Briefing) + Analyst Opinion posts generated successfully")
     return filename
 
 
@@ -1337,13 +1503,9 @@ def main():
     phase2_enabled = config.get("synthesis", {}).get("enable_opinion_post", False)
     
     if phase2_enabled:
-        # Create Weekly Scan post (with consolidated threat intel/vulnerability)
+        # Create Weekly Scan post (with Story Clusters briefing + consolidated threat intel/vulnerability)
         weekly_scan_file = create_weekly_scan_post(today, content_by_category, top_highlights)
         logging.info("%s [PHASE 2] Weekly Scan generated: %s", GREEN, weekly_scan_file)
-        
-        # Create Story Clusters narrative post (newsroom briefing style)
-        clusters_file = create_story_clusters_post(today, top_highlights)
-        logging.info("%s [PHASE 2] Story Clusters briefing generated: %s", GREEN, clusters_file)
         
         # Detect trending category for analyst opinion
         trend_threshold = config.get("synthesis", {}).get("trend_threshold", 2)
@@ -1356,7 +1518,7 @@ def main():
         else:
             logging.warning("[PHASE 2] Could not detect trending category; skipping opinion post")
         
-        logging.info("%s News aggregation complete: Weekly Scan + Story Clusters + Analyst Opinion posts generated", GREEN)
+        logging.info("%s News aggregation complete: Weekly Scan (with Story Clusters) + Analyst Opinion posts generated", GREEN)
     else:
         # Legacy Phase 1: Single post (news brief)
         create_news_brief(today, content_by_category, top_highlights)
