@@ -4,6 +4,7 @@ import re
 import requests
 import logging
 import os
+import textwrap
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
@@ -825,7 +826,8 @@ def create_narrative_briefing(highlights):
     else:
         paragraph += "Let's dive in."
         
-    briefing += paragraph + "\n\n"
+    # Wrap text to prevention horizontal scrolling / code block rendering issues
+    briefing += textwrap.fill(paragraph, width=100) + "\n\n"
     
     # Critical stories section (if any)
     if critical_stories:
