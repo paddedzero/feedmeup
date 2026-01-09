@@ -489,38 +489,99 @@ def get_cve_details(cve_id):
 
 def format_entries_for_category(entries):
     """Format entries as markdown for a category, newest first.
-    
-    Phase 1: Uses Gemini-enhanced excerpts if available, falls back to clean_summary.
+    Groups similar articles to reduce noise.
+    Uses clean RSS summary (Phase 1) instead of expensive AI summary for the long list.
     """
+    if not entries:
+        return ""
+
+    # Sort by date first
     def get_pub_date(entry):
         if "published_parsed" in entry and entry.published_parsed:
             return datetime(*entry.published_parsed[:6], tzinfo=LOCAL_TZ)
         return datetime.now(LOCAL_TZ)
 
     sorted_entries = sorted(entries, key=get_pub_date, reverse=True)
-    formatted = []
-    for entry in sorted_entries:
-        title = entry.get("title", "No Title")
-        link = entry.get("link", "")
+    
+    # Simple clustering logic
+    groups = []
+    used_indices = set()
+    
+    # Pre-calculate titles and titles_lower for speed
+    pre = []
+    for idx, e in enumerate(sorted_entries):
+        title = (e.get("title") or "").strip()
+        pre.append({"idx": idx, "entry": e, "title_l": title.lower()})
         
-        # Phase 1: Use Gemini excerpt if available, else fall back to raw summary
-        if entry.get('gemini_excerpt'):
-            summary = entry.get('gemini_excerpt')
+    for i, item in enumerate(pre):
+        if item["idx"] in used_indices:
+            continue
+            
+        current_group = [item["entry"]]
+        used_indices.add(item["idx"])
+        
+        for j in range(i + 1, len(pre)):
+            other = pre[j]
+            if other["idx"] in used_indices:
+                continue
+            
+            # Use strict fuzzy matching for this grouping
+            score = rf_ratio(item["title_l"], other["title_l"]) / 100.0
+            if score >= 0.8: # Threshold
+                current_group.append(other["entry"])
+                used_indices.add(other["idx"])
+        
+        groups.append(current_group)
+
+    # Format groups
+    formatted = []
+    for group in groups:
+        # Pick representative (newest/first in sorted list)
+        primary = group[0]
+        title = primary.get("title", "No Title")
+        link = primary.get("link", "")
+        
+        # Use JIT summary if available (from Highlights), otherwise clean RSS summary
+        if primary.get('gemini_excerpt'):
+            summary = primary.get('gemini_excerpt')
         else:
-            raw_summary = entry.get("summary", "") or entry.get("description", "")
+            raw_summary = primary.get("summary", "") or primary.get("description", "")
             summary = clean_summary(raw_summary)
         
-        # Truncate if too long (2-3 sentences ~ 200 chars)
-        if len(summary) > 200:
-            summary = summary[:197] + "..."
-        
-        # Use verified link (redirects CVEs to NVD, sanitizes others)
+        # Truncate if too long (standard listing doesn't need huge detail)
+        if len(summary) > 300:
+            summary = summary[:297] + "..."
+            
         safe_link = get_verified_link(title, link)
+        
+        md_block = ""
         if safe_link:
-            # use an explicit HTML anchor to avoid markdown processor mangling feed HTML
-            formatted.append(f"- **{title}** — {summary}\n  <a href=\"{safe_link}\">Read more</a>")
+             md_block = f"- **{title}** — {summary}\n  <a href=\"{safe_link}\">Read more</a>"
         else:
-            formatted.append(f"- **{title}** — {summary}")
+             md_block = f"- **{title}** — {summary}"
+             
+        # Add attribution for clustered stories
+        if len(group) > 1:
+            sources = set()
+            for g in group:
+                s_name = g.get('_source_name')
+                if s_name:
+                    sources.add(s_name)
+                    
+            source_list = sorted(list(sources))
+            if source_list:
+                # Limit source list length
+                extras = ""
+                if len(source_list) > 3:
+                     extras = f" + {len(source_list)-3} others"
+                     source_list = source_list[:3]
+                
+                md_block += f" *(Covered by: {', '.join(source_list)}{extras})*"
+            else:
+                 md_block += f" *(+ {len(group)-1} similar stories)*"
+            
+        formatted.append(md_block)
+        
     return "\n\n".join(formatted)
 
 
@@ -1625,13 +1686,12 @@ def main():
                     matched_count += 1
                     matched_entries += 1
                     
-                    # Phase 1: Summarize with Gemini if enabled
-                    if gemini_enabled and GEMINI_CLIENT and gemini_prompt_template:
-                        summary_data = summarize_with_gemini(entry, keywords, gemini_prompt_template, config)
-                        # Enhance entry with Gemini summary
-                        entry['gemini_excerpt'] = summary_data['excerpt']
-                        entry['gemini_title'] = summary_data['title']
-                        entry['keywords_hit'] = summary_data['keywords_hit']
+                    # Store source name for attribution
+                    entry['_source_name'] = feed_name
+                    
+                    # Phase 1: Gemini Summarization MOVED to post-deduplication (Cost Saver)
+                    # We no longer summarize every matching article here.
+                    # See "JIT Summarization" block below.
                     
                     reports.setdefault(category, []).append(entry)
                     # Store category in entry for later filtering
@@ -1662,6 +1722,24 @@ def main():
     max_results = config.get("max_results", DEFAULTS["max_results"])
 
     top_highlights = group_similar_entries(all_matched_entries, threshold=fuzz_threshold, max_per_domain=max_per_domain, max_results=max_results)
+
+    # Phase 1.5: Just-In-Time Gemini Summarization for Top Highlights
+    # Only summarize the stories that actually made it to the Top N list to save tokens.
+    if gemini_enabled and GEMINI_CLIENT and gemini_prompt_template and top_highlights:
+        logging.info("⚡ JIT Summarization: Generating AI summaries for %d top highlights...", len(top_highlights))
+        for i, (entry, count) in enumerate(top_highlights):
+            # Skip if already has summary
+            if entry.get('gemini_excerpt'):
+                continue
+                
+            logging.info("   Summarizing [%d/%d]: %s...", i+1, len(top_highlights), (entry.get("title") or "")[:40])
+            try:
+                summary_data = summarize_with_gemini(entry, keywords, gemini_prompt_template, config)
+                entry['gemini_excerpt'] = summary_data['excerpt']
+                entry['gemini_title'] = summary_data['title']
+                entry['keywords_hit'] = summary_data['keywords_hit']
+            except Exception as e:
+                logging.warning("   Failed to summarize: %s", str(e))
 
     now_local = datetime.now(LOCAL_TZ)
     yesterday = now_local - timedelta(days=1)
