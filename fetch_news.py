@@ -1689,7 +1689,19 @@ def main():
         matched_count = 0
 
         for entry in entries:
-            pub_date = datetime(*entry.published_parsed[:6], tzinfo=LOCAL_TZ) if "published_parsed" in entry and entry.published_parsed else datetime.now(LOCAL_TZ)
+            # Safely parse publication date with validation for invalid dates
+            try:
+                if "published_parsed" in entry and entry.published_parsed:
+                    # Validate year is in valid range (1-9999)
+                    if entry.published_parsed[0] > 0 and entry.published_parsed[0] < 10000:
+                        pub_date = datetime(*entry.published_parsed[:6], tzinfo=LOCAL_TZ)
+                    else:
+                        pub_date = datetime.now(LOCAL_TZ)
+                else:
+                    pub_date = datetime.now(LOCAL_TZ)
+            except (ValueError, TypeError, OverflowError):
+                # Handle any datetime construction errors
+                pub_date = datetime.now(LOCAL_TZ)
 
             if pub_date >= cutoff_date:
                 recent_count += 1
