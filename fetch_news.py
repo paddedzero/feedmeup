@@ -20,6 +20,9 @@ from rapidfuzz.fuzz import ratio as rf_ratio
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+# Web scraping module for non-RSS feeds
+from scraper import scrape_site, is_scraping_candidate
+
 # Gemini API for summarization (Phase 1) - using new google-genai SDK
 try:
     from google import genai
@@ -251,8 +254,18 @@ def summarize_with_gemini(entry, keywords, prompt_template, config):
         }
 
 
-def fetch_feed_entries(url, feed_name):
-    """Fetch feed content using the shared session (with retries)."""
+def fetch_feed_entries(url, feed_name, category="General"):
+    """
+    Fetch feed content using RSS or web scraping.
+    
+    For "Scraping Candidates" category, uses web scraping instead of RSS.
+    """
+    # Check if this is a scraping candidate
+    if is_scraping_candidate(category):
+        logging.info(f"  [SCRAPER] Using web scraping for {feed_name}")
+        return scrape_site(SESSION if SESSION else requests.Session(), feed_name, url)
+    
+    # Standard RSS fetching
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (compatible; RSS-Bot/1.0)'}
         timeout = DEFAULTS["request_timeout"]
@@ -1662,7 +1675,7 @@ def main():
         category = source.get("category", "General")
 
         logging.info("[%d/%d] %s", i, len(sources), feed_name)
-        entries, status = fetch_feed_entries(url, feed_name)
+        entries, status = fetch_feed_entries(url, feed_name, category)
 
         if status != "OK":
             errors += 1
