@@ -316,7 +316,10 @@ sources:
   - name: Singapore MAS
     url: https://www.mas.gov.sg/rss/news (dead)
     category: "Cyber Regulatory"
-  - name: Japan NISC
+  - name: Japan NISC (Japanese)
+    url: https://www.cyber.go.jp/
+    category: "Scraping Candidates"
+  - name: Japan NISC (English)
     url: https://www.cyber.go.jp/en/
     category: "Scraping Candidates"
   - name: India CERT-In
@@ -392,9 +395,6 @@ sources:
     category: "Scraping Candidates"
   - name: Singapore CSA
     url: https://www.csa.gov.sg/our-programmes/cybersecurity-public-awareness
-    category: "Scraping Candidates"
-  - name: Japan NISC (English)
-    url: https://www.cyber.go.jp/
     category: "Scraping Candidates"
   - name: CyberScoop
     url: https://www.cyberscoop.com/
