@@ -510,8 +510,14 @@ def format_entries_for_category(entries):
 
     # Sort by date first
     def get_pub_date(entry):
-        if "published_parsed" in entry and entry.published_parsed:
-            return datetime(*entry.published_parsed[:6], tzinfo=LOCAL_TZ)
+        try:
+            published_parsed = entry.get("published_parsed")
+            if published_parsed:
+                # Validate year is in valid range (1-9999)
+                if published_parsed[0] > 0 and published_parsed[0] < 10000:
+                    return datetime(*published_parsed[:6], tzinfo=LOCAL_TZ)
+        except (ValueError, TypeError, OverflowError, AttributeError):
+            pass
         return datetime.now(LOCAL_TZ)
 
     sorted_entries = sorted(entries, key=get_pub_date, reverse=True)
