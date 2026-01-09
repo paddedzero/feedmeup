@@ -1695,6 +1695,11 @@ def main():
         matched_count = 0
 
         for entry in entries:
+            # Translate non-English content if translation is enabled
+            translate_enabled = config.get("translation", {}).get("enabled", True)
+            if translate_enabled and gemini_enabled:
+                entry = translate_entry(entry, config)
+            
             # Safely parse publication date with validation for invalid dates
             try:
                 published_parsed = entry.get("published_parsed")

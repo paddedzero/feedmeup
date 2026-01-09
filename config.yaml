@@ -614,6 +614,13 @@ synthesis:
     weekly_scan_prefix: "weekly-scan"           # Filename: YYYY-MM-DD-HH-MM-weekly-scan.md
     analyst_opinion_prefix: "analyst-opinion"   # Filename: YYYY-MM-DD-HH-MM-analyst-opinion.md
 
+# === Translation Settings ===
+translation:
+  enabled: true                        # Auto-translate non-English content
+  # Automatically detects Japanese, Chinese, Korean and translates to English
+  # Uses Gemini API (requires enable_gemini_summarization: true)
+  # Preserves original title in _original_title field for reference
+
 # === Error Handling & Logging ===
 error_handling:
   # What to do if Gemini API fails
