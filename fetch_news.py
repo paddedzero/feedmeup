@@ -254,6 +254,78 @@ def summarize_with_gemini(entry, keywords, prompt_template, config):
         }
 
 
+def translate_entry(entry, config):
+    """Translate non-English entry content to English using Gemini.
+    Returns modified entry with translated title and summary.
+    Adds _translated flag and preserves original in _original_title.
+    """
+    if not GEMINI_CLIENT or not GEMINI_AVAILABLE:
+        return entry
+    
+    try:
+        title = entry.get("title", "")
+        summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))[:500]
+        
+        # Quick heuristic: check if content contains Japanese characters
+        has_japanese = any('\u3040' <= char <= '\u30ff' or '\u4e00' <= char <= '\u9faf' for char in (title + summary))
+        has_chinese = any('\u4e00' <= char <= '\u9faf' for char in (title + summary))
+        has_korean = any('\uac00' <= char <= '\ud7af' for char in (title + summary))
+        
+        # Skip if appears to be primarily English (no CJK characters)
+        if not (has_japanese or has_chinese or has_korean):
+            return entry
+        
+        logging.debug("[TRANSLATE] Detected non-English content in: %s", title[:50])
+        
+        # Use Gemini to translate
+        prompt = f"""Translate the following article title and summary to English. Preserve technical terms and proper nouns.
+
+Title: {title}
+
+Summary: {summary}
+
+Provide translation in this exact format:
+Title: [translated title]
+Summary: [translated summary]"""
+        
+        response = GEMINI_CLIENT.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt,
+            config={"max_output_tokens": 500, "temperature": 0.3}
+        )
+        
+        # Parse response
+        if hasattr(response, 'text'):
+            translated_text = response.text.strip()
+        elif hasattr(response, 'content'):
+            translated_text = response.content.strip()
+        else:
+            translated_text = str(response).strip()
+        
+        # Extract translated title and summary
+        import re
+        title_match = re.search(r'Title:\s*(.+?)(?=\n|Summary:|$)', translated_text, re.DOTALL)
+        summary_match = re.search(r'Summary:\s*(.+?)$', translated_text, re.DOTALL)
+        
+        if title_match and summary_match:
+            # Store original for reference
+            entry['_original_title'] = entry.get('title')
+            entry['_original_summary'] = entry.get('summary', '') or entry.get('description', '')
+            entry['_translated'] = True
+            
+            # Update with translations
+            entry['title'] = title_match.group(1).strip()
+            entry['summary'] = summary_match.group(1).strip()
+            entry['description'] = summary_match.group(1).strip()
+            
+            logging.info("[TRANSLATE] ✓ Translated: %s", entry['title'][:60])
+        
+    except Exception as e:
+        logging.warning("[TRANSLATE] Failed to translate entry: %s", str(e))
+    
+    return entry
+
+
 def fetch_feed_entries(url, feed_name, category="General"):
     """
     Fetch feed content using RSS or web scraping.
