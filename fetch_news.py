@@ -1691,15 +1691,16 @@ def main():
         for entry in entries:
             # Safely parse publication date with validation for invalid dates
             try:
-                if "published_parsed" in entry and entry.published_parsed:
+                published_parsed = entry.get("published_parsed")
+                if published_parsed:
                     # Validate year is in valid range (1-9999)
-                    if entry.published_parsed[0] > 0 and entry.published_parsed[0] < 10000:
-                        pub_date = datetime(*entry.published_parsed[:6], tzinfo=LOCAL_TZ)
+                    if published_parsed[0] > 0 and published_parsed[0] < 10000:
+                        pub_date = datetime(*published_parsed[:6], tzinfo=LOCAL_TZ)
                     else:
                         pub_date = datetime.now(LOCAL_TZ)
                 else:
                     pub_date = datetime.now(LOCAL_TZ)
-            except (ValueError, TypeError, OverflowError):
+            except (ValueError, TypeError, OverflowError, AttributeError):
                 # Handle any datetime construction errors
                 pub_date = datetime.now(LOCAL_TZ)
 
