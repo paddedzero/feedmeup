@@ -1,8 +1,8 @@
 # FeedMeUp News Aggregator - Project Specification
 
-**Version**: 1.0  
-**Last Updated**: January 4, 2026  
-**Status**: Active Development with Theme Integration
+**Version**: 3.0  
+**Last Updated**: January 5, 2026  
+**Status**: Investigative Journalism Enhancement (Phase 3 - In Progress)
 
 ---
 
@@ -17,6 +17,17 @@
 - **Publish professionally** with Jekyll/Chirpy theme for GitHub Pages audience
 - **Enable customization** through simple YAML configuration (no code changes needed)
 - **Maintain high reliability** with retry logic, error handling, and validation
+
+### Secondary Goals (Phase 2-3 - v2.0-3.0)
+- **Enhanced Analyst Opinion**: Article-of-the-week format with multi-layered Gemini analysis
+- **Smart article selection**: Surface pieces at the convergence of Cybersecurity + AI + Cloud
+- **Expanded executive brief**: 5-sentence, 150-200 word contextualized summary
+- **Historical context lookup**: Compare to past incidents, identify novel vs. recurring patterns
+- **Risk/opportunity assessment**: 3-timeframe matrix (immediate, medium-term, strategic)
+- **Investigative journalism depth** (Phase 3): Krebs-style technical deep-dives with paragraph-long analysis
+- **Technical breakdowns**: Attack chains, CVE details, defense failure analysis
+- **Threat intelligence**: Attribution, monetization, criminal ecosystem analysis
+- **Actionable intelligence**: Concrete detection rules, mitigations, strategic recommendations
 
 ---
 
@@ -216,20 +227,19 @@ TRIGGER: Schedule or Manual Dispatch
 **Step 5: Format for Jekyll**
 - Create two separate posts:
   1. **Weekly Scan**: categorized article lists with summaries
-  2. **Analyst Opinion**: AI-synthesized trends, insights, cross-source patterns
+  2. **Analyst Opinion (v2.0)**: **Single article-of-the-week** with deep Gemini analysis:
+     - Expanded Executive Brief (5 sentences, 150-200 words)
+     - Historical Context (comparison to past incidents, novelty assessment)
+     - Risk/Opportunity Matrix (3 timeframes: immediate, medium-term, strategic)
 - Use HTML anchors instead of Markdown links (prevents feed HTML mangling)
 - Truncate summaries: 250 chars for highlights, 200 for category articles
 - Include front matter:
   ```yaml
   layout: post
-  title: "Weekly News Brief - {date}"
+  title: "Article of the Week: {category} — {date}"
   date: {ISO 8601 with timezone offset, America/New_York}
-  categories: [newsbrief]
+  categories: [analysis, opinion, {category}]
   ```
-- Include metadata:
-  - Highlights section: top 10 deduplicated stories
-  - Summary table: article count by category
-  - Full article lists organized by category
 
 **Step 6: Write Posts**
 - Filenames: `_posts/YYYY-MM-DD-HH-MM-{type}.md`
@@ -238,7 +248,232 @@ TRIGGER: Schedule or Manual Dispatch
 
 ---
 
-## 4. Configuration Management
+## 4.1 Enhanced Analyst Opinion Post (Phase 2 - v2.0)
+
+### Design Goals
+- **Target audience**: Cybersecurity professionals
+- **Focus**: Single, high-impact article per week (article-of-the-week format)
+- **Depth**: Multi-layered Gemini analysis instead of template commentary
+- **Intelligence**: Historical context + forward-looking risk assessment
+
+### Article Selection
+- **Smart scoring**: Prioritize articles mentioning Cybersecurity + AI + Cloud convergence
+- **Convergence keywords**: cybersecurity, AI, machine learning, cloud, threat, vulnerability, ransomware, defense, etc.
+- **Selection**: Article with highest convergence_score (keyword_hits × recency × uniqueness)
+
+### Post Structure (Article of the Week)
+```
+├─ Headline (Featured article title + summary)
+├─ Executive Brief (5 sentences, 150-200 words)
+│  - What happened + immediate impact
+│  - Why it matters to organizations
+│  - Key risk or opportunity
+│  - Connection to broader trends
+│  - What organizations should monitor
+├─ Historical Context (Gemini-generated comparison)
+│  - Similar past incidents (search 12-week lookback)
+│  - What has changed or improved since then
+│  - Is this novel or recurring with new tactics?
+│  - What should we learn from history?
+├─ Risk/Opportunity Matrix (3 timeframes)
+│  - Immediate (0-30 days): What needs attention NOW
+│  - Medium-term (30-90 days): What to prepare for
+│  - Strategic (90+ days): How does this reshape landscape?
+│  - For each: Threat/Opportunity type, Impact severity, Recommended action
+└─ Analyst Note (Disclaimer + guidance)
+```
+
+### Implementation Details
+- **New function**: `find_historical_context(keywords, lookback_weeks=12)`
+  - Searches `_posts/` for similar topics from past 12 weeks
+  - Returns list of {title, date, summary, keywords} for matching posts
+  
+- **New function**: `generate_gemini_opinion_analysis(article, category, historical_posts, config)`
+  - Gemini Prompt 1: Expanded Executive Brief (150-200 words)
+  - Gemini Prompt 2: Historical Context & Novelty Assessment
+  - Gemini Prompt 3: Risk/Opportunity Matrix (3 timeframes)
+  - Returns: {executive_brief, historical_context, risk_assessment}
+
+- **Modified function**: `create_analyst_opinion_post()`
+  - Now selects **1 article** (most trending) instead of 3
+  - Calls `find_historical_context()` for past post lookup
+  - Calls `generate_gemini_opinion_analysis()` for 3x deep Gemini analysis
+  - Generates structured post with all 4 sections above
+
+### Hybrid Model Strategy (v2.0)
+**Philosophy**: Different tasks require different model capabilities. Optimize for speed vs. reasoning depth.
+
+#### Model Assignment
+| Task | Model | Why | Config |
+|------|-------|-----|--------|
+| **Weekly Scan Summaries** | `gemini-2.5-flash` | Fast, cost-effective for high-volume (40+ articles). Simple 2-3 sentence extraction. | `max_tokens=150`, `temp=0.7` |
+| **Analyst Opinion Analysis** | `gemini-2.0-pro` | Superior reasoning for technical analysis, threat actor context, defense gaps. Stronger factual grounding. | `max_tokens=300-400`, `temp=0.3-0.4` |
+
+**Rationale**:
+- **Flash** optimizes for speed/cost → ideal for repetitive summarization
+- **Pro** optimizes for reasoning depth → critical for investigative journalism quality
+- **Cost impact**: 3 Pro calls/week vs. 40+ Flash calls = <$0.10/week incremental cost
+- **Quality gain**: Krebs-style technical nuance, attribution patterns, defense failure analysis
+
+**Technical Details**:
+- Weekly Scan: Simple extraction, high volume → Flash's 2M token context sufficient
+- Analyst Opinion: Complex reasoning (article + 12 weeks history + threat context) → Pro's 32k context ideal
+- Lower temperature (0.3-0.4) for analyst opinion ensures factual consistency, avoids AI clichés
+
+---
+
+## 4.2 Investigative Journalism Enhancement (Phase 3 - v3.0)
+
+### Design Philosophy
+**Goal**: Transform analyst opinion from executive summaries into Krebs-style investigative articles with technical depth, threat intelligence, and actionable defense strategies.
+
+**Inspiration**: [KrebsOnSecurity.com](https://krebsonsecurity.com/) - investigative cybersecurity journalism that:
+- Explains technical vulnerabilities with specifics (CVE IDs, product versions, exploitation mechanics)
+- Traces threat actor attribution and criminal infrastructure
+- Connects incidents to broader patterns (historical evolution, monetization models)
+- Provides actionable intelligence for security professionals AND non-technical readers
+
+### Enhanced Post Structure (Investigative Format)
+```
+├─ Headline (Featured article title + trend context)
+├─ Introduction (Category overview + article-of-the-week selection)
+├─ Featured Article Summary (Original source excerpt)
+├─ Technical Deep-Dive: What's Really Happening (400-600 words)
+│  ├─ Paragraph 1: Incident/Vulnerability Technical Breakdown
+│  │  - Attack chain or exploitation mechanics
+│  │  - Specific technical details: CVEs, product versions, protocols
+│  ├─ Paragraph 2: Defense Failure Analysis
+│  │  - Why this succeeds (detection blind spots, config errors, vendor gaps)
+│  │  - Concrete examples of what security controls fail
+│  ├─ Paragraph 3: Historical Context & Evolution
+│  │  - Past similar incidents and what's changed
+│  │  - Success rates and attacker tactics evolution
+│  └─ Paragraph 4: Real-World Impact
+│     - Affected sectors, cascade effects, regulatory implications
+│     - Why this matters for technical AND non-technical audiences
+├─ Threat Intelligence: Follow the Money (300-400 words)
+│  ├─ Paragraph 1: Attribution & Actor Profile
+│  │  - Specific threat actors, APT groups, criminal forums
+│  │  - Attribution clues from infrastructure and TTPs
+│  ├─ Paragraph 2: Monetization & Infrastructure
+│  │  - How attackers profit (ransomware, data sales, fraud)
+│  │  - Criminal marketplace dynamics and supply chains
+│  └─ Paragraph 3: Historical Evolution & Predictions
+│     - Timeline of threat development
+│     - Trend predictions with specific reasoning
+├─ Defense Strategy: What Security Teams Should Do (600+ words)
+│  ├─ Immediate Actions (0-30 days) - Tactical Response
+│  │  - 3-5 specific, technical actions with concrete details
+│  │  - Detection rules, patch priorities, configuration hardening
+│  │  - Actual CVE IDs, product names, SIEM queries
+│  ├─ Medium-Term Planning (30-90 days) - Process & Architecture
+│  │  - 3-4 strategic improvements
+│  │  - Architecture changes, process improvements, capability gaps
+│  ├─ Long-Term Vision (90+ days) - Strategic Transformation
+│  │  - 2-3 strategic shifts
+│  │  - Philosophy changes, investment priorities, resilience building
+│  └─ Each action tied to the technical analysis (no generic advice)
+└─ Analyst Note (Disclaimer + validation guidance)
+```
+
+### Gemini Prompt Strategy (3 Investigative Prompts)
+
+#### Prompt 1: Technical Deep-Dive & Opinion Analysis
+- **Purpose**: Multi-paragraph technical breakdown with investigative depth
+- **Length**: 400-600 words (3-4 paragraphs)
+- **Content**:
+  - Attack chains or vulnerability exploitation mechanics
+  - Why security controls fail (specific detection gaps)
+  - Historical comparison and technique evolution
+  - Real-world impact for technical and non-technical readers
+- **Tone**: Investigative journalism (like Brian Krebs)
+- **Model**: `gemini-2.0-pro`, `max_tokens=800`, `temp=0.4`
+
+#### Prompt 2: Threat Intelligence & Ecosystem Context
+- **Purpose**: Attribution, monetization, criminal infrastructure analysis
+- **Length**: 300-400 words (2-3 paragraphs)
+- **Content**:
+  - Specific threat actors, APT groups, criminal forums
+  - Follow the money: ransomware payments, data sales, infrastructure
+  - Historical evolution timeline and trend predictions
+- **Specificity**: Name actors, tools, hosting providers, ransom amounts
+- **Model**: `gemini-2.0-pro`, `max_tokens=600`, `temp=0.4`
+
+#### Prompt 3: Defense Strategy & Actionable Intelligence
+- **Purpose**: Concrete detection rules, mitigations, strategic actions
+- **Length**: 600+ words (3 timeframes with multiple actions each)
+- **Content**:
+  - Immediate (0-30 days): 3-5 technical actions (CVEs, queries, configs)
+  - Medium-term (30-90 days): 3-4 strategic improvements (architecture, process)
+  - Long-term (90+ days): 2-3 strategic transformations (philosophy shifts)
+- **Specificity**: Actual CVE IDs, product names, SIEM query syntax, vendor names
+- **Model**: `gemini-2.0-pro`, `max_tokens=800`, `temp=0.3` (lowest for factual accuracy)
+
+### Implementation Functions
+
+**`generate_gemini_opinion_analysis()`** - Completely redesigned:
+- Input: article + category + historical_posts
+- Output: `{technical_analysis, threat_intelligence, defense_strategy}`
+- 3 sequential Gemini Pro calls (not parallel to preserve context flow)
+- Each prompt builds on investigative journalism principles
+- Graceful fallback if Gemini unavailable
+
+**`create_analyst_opinion_post()`** - Updated structure:
+- New section headings: "Technical Deep-Dive", "Threat Intelligence", "Defense Strategy"
+- Support for 1000+ word articles (vs. previous 500 word summaries)
+- Maintains single article-of-the-week focus
+
+### Key Differences: Phase 2 vs. Phase 3
+
+| Aspect | Phase 2 (Executive Summary) | Phase 3 (Investigative Journalism) |
+|--------|----------------------------|-----------------------------------|
+| **Length** | 500-600 words total | 1300-1600 words total |
+| **Executive Brief** | 5 sentences (150-200 words) | Technical Deep-Dive (400-600 words, 4 paragraphs) |
+| **Historical Context** | 3-4 sentences comparison | Integrated into Technical Deep-Dive + Threat Intel |
+| **Risk Assessment** | 3-timeframe matrix (generic) | Defense Strategy (specific, technical, actionable) |
+| **Technical Depth** | Surface-level explanation | Attack chains, CVE details, defense failure analysis |
+| **Attribution** | Not included | Threat actors, infrastructure, monetization |
+| **Actionability** | Generic recommendations | Concrete detection rules, patch priorities, SIEM queries |
+| **Tone** | Executive summary | Investigative journalism (Krebs-style) |
+| **Audience** | CISOs, security leaders | Security professionals + non-technical readers |
+| **Token Budget** | 300-400 per prompt | 600-800 per prompt |
+
+### Expected Output Quality
+
+**Before (Phase 2)**:
+> "The Acme Health ransomware breach exposes patient data. Organizations should improve security posture and conduct regular training. This represents an escalation of healthcare targeting. Immediate action: patch systems. Medium-term: conduct tabletop exercises. Long-term: adopt zero-trust."
+
+**After (Phase 3)**:
+> "The Acme Health ransomware breach isn't just another data leak—it's a case study in how attackers exploit VMware ESXi's authentication bypass (CVE-2024-XXXX) to encrypt entire virtual machine estates in under 90 minutes. While VMware issued patches in Q2 2024, Shodan reveals 12,000+ internet-exposed ESXi hosts still running vulnerable versions, with 40% in healthcare. 
+> 
+> This mirrors the 2022 Royal ransomware campaign, but today's attackers chain this with Mimikatz credential theft to pivot to backup systems—a tactic we first documented in our October 2023 analysis of the [related incident]. The strategic failure: healthcare CISOs continue treating virtualization platforms as infrastructure rather than crown jewels, leaving them unmonitored by EDR.
+>
+> [3 more paragraphs of technical analysis...]
+> 
+> **Threat Intelligence**: The Scattered Spider group has been attributed to this campaign based on infrastructure overlaps with their previous healthcare targeting. They monetize via double-extortion: encrypting systems while threatening to leak 2.3TB of patient records on their leak site (hosted on Tor via bulletproof hosting provider [redacted]). Ransom demands average $4.5M in Monero, with payments laundered through [specific mixer]..."
+
+**Configuration Extension (config.yaml)**
+```yaml
+synthesis:
+  enable_opinion_post: true
+  enable_historical_context: true         # NEW (v2.0)
+  opinion_lookback_weeks: 12              # NEW (v2.0)
+  convergence_keywords:                   # NEW (v2.0)
+    - cybersecurity
+    - ai
+    - cloud
+    - machine learning
+    - threat
+    - vulnerability
+    - ransomware
+    - data breach
+    - attack
+    - defense
+```
+
+---
+
+## 4 (original). Configuration Management
 
 ### 4.1 config.yaml Structure
 
@@ -754,10 +989,12 @@ cat _errors/2026-01-04-*.md
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.0 | 2026-01-05 | Phase 3: Investigative journalism transformation — Technical deep-dives (400-600 words), threat intelligence & attribution, actionable defense strategy with detection rules, Krebs-style investigative tone |
+| 2.0 | 2026-01-05 | Phase 2: Enhanced analyst opinion — article-of-the-week format, historical context lookup, risk/opportunity matrix, multi-prompt Gemini analysis, hybrid model strategy (Flash for summaries, Pro for opinions) |
 | 1.0 | 2026-01-04 | Initial project spec: full architecture, workflows, deployment, maintenance |
 
 ---
 
-**Document Status**: Complete, Approved for Implementation  
-**Last Reviewed**: January 4, 2026  
-**Next Review**: Q1 2026 (post-deployment validation)
+**Document Status**: Phase 3 Implementation Complete  
+**Last Reviewed**: January 5, 2026  
+**Next Review**: Q1 2026 (post-production validation)

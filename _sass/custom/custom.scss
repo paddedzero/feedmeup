@@ -1,0 +1,15 @@
+/* Hero banner styles for the home page */
+.hero-banner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem auto 2rem;
+}
+
+.hero-banner img {
+  display: block;
+  width: min(100%, 1100px);
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}

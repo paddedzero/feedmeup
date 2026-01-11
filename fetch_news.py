@@ -4,6 +4,8 @@ import re
 import requests
 import logging
 import os
+import textwrap
+import base64
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
@@ -17,6 +19,9 @@ from rapidfuzz.fuzz import ratio as rf_ratio
 # requests retry
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+# Web scraping module for non-RSS feeds
+from scraper import scrape_site, is_scraping_candidate
 
 # Gemini API for summarization (Phase 1) - using new google-genai SDK
 try:
@@ -249,8 +254,90 @@ def summarize_with_gemini(entry, keywords, prompt_template, config):
         }
 
 
-def fetch_feed_entries(url, feed_name):
-    """Fetch feed content using the shared session (with retries)."""
+def translate_entry(entry, config):
+    """Translate non-English entry content to English using Gemini.
+    Returns modified entry with translated title and summary.
+    Adds _translated flag and preserves original in _original_title.
+    """
+    if not GEMINI_CLIENT or not GEMINI_AVAILABLE:
+        return entry
+    
+    try:
+        title = entry.get("title", "")
+        summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))[:500]
+        
+        # Quick heuristic: check if content contains Japanese characters
+        has_japanese = any('\u3040' <= char <= '\u30ff' or '\u4e00' <= char <= '\u9faf' for char in (title + summary))
+        has_chinese = any('\u4e00' <= char <= '\u9faf' for char in (title + summary))
+        has_korean = any('\uac00' <= char <= '\ud7af' for char in (title + summary))
+        
+        # Skip if appears to be primarily English (no CJK characters)
+        if not (has_japanese or has_chinese or has_korean):
+            return entry
+        
+        logging.debug("[TRANSLATE] Detected non-English content in: %s", title[:50])
+        
+        # Use Gemini to translate
+        prompt = f"""Translate the following article title and summary to English. Preserve technical terms and proper nouns.
+
+Title: {title}
+
+Summary: {summary}
+
+Provide translation in this exact format:
+Title: [translated title]
+Summary: [translated summary]"""
+        
+        response = GEMINI_CLIENT.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt,
+            config={"max_output_tokens": 500, "temperature": 0.3}
+        )
+        
+        # Parse response
+        if hasattr(response, 'text'):
+            translated_text = response.text.strip()
+        elif hasattr(response, 'content'):
+            translated_text = response.content.strip()
+        else:
+            translated_text = str(response).strip()
+        
+        # Extract translated title and summary
+        import re
+        title_match = re.search(r'Title:\s*(.+?)(?=\n|Summary:|$)', translated_text, re.DOTALL)
+        summary_match = re.search(r'Summary:\s*(.+?)$', translated_text, re.DOTALL)
+        
+        if title_match and summary_match:
+            # Store original for reference
+            entry['_original_title'] = entry.get('title')
+            entry['_original_summary'] = entry.get('summary', '') or entry.get('description', '')
+            entry['_translated'] = True
+            
+            # Update with translations
+            entry['title'] = title_match.group(1).strip()
+            entry['summary'] = summary_match.group(1).strip()
+            entry['description'] = summary_match.group(1).strip()
+            
+            logging.info("[TRANSLATE] ✓ Translated: %s", entry['title'][:60])
+        
+    except Exception as e:
+        logging.warning("[TRANSLATE] Failed to translate entry: %s", str(e))
+    
+    return entry
+
+
+def fetch_feed_entries(url, feed_name, category="General"):
+    """
+    Fetch feed content using RSS or web scraping.
+    
+    For "Scraping Candidates" category, uses web scraping instead of RSS.
+    """
+    # Check if this is a scraping candidate
+    if is_scraping_candidate(category):
+        logging.info(f"  [SCRAPER] Using web scraping for {feed_name}")
+        return scrape_site(SESSION if SESSION else requests.Session(), feed_name, url)
+    
+    # Standard RSS fetching
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (compatible; RSS-Bot/1.0)'}
         timeout = DEFAULTS["request_timeout"]
@@ -306,12 +393,29 @@ def entry_matches(entry, pattern):
 
 
 def clean_summary(html):
-    """Return plaintext summary extracted from HTML; collapse whitespace."""
+    """
+    Return plaintext summary extracted from HTML; collapse whitespace.
+    Optimized to strip common boilerplate (ads, social links) to reduce token noise for LLM.
+    """
     if not html:
         return ""
     try:
         soup = BeautifulSoup(html, "html.parser")
+        
+        # Aggressively remove noise tags before text extraction
+        for tag in soup(["script", "style", "nav", "footer", "iframe", "form", "button"]):
+            tag.decompose()
+            
+        # Remove elements with "share", "social", "subscribe" in class/id
+        for noise_class in ["share", "social", "subscribe", "newsletter", "ads", "related"]:
+            for tag in soup.find_all(lambda t: t.get('class') and any(noise_class in c for c in t.get('class'))):
+                tag.decompose()
+                
         text = soup.get_text(separator=" ", strip=True)
+        
+        # Remove "Read more..." tails common in RSS
+        text = re.sub(r"(Read|Continue) reading.*$", "", text, flags=re.IGNORECASE)
+        
         # collapse repeated whitespace
         return " ".join(text.split())
     except Exception:
@@ -336,40 +440,239 @@ def sanitize_url(url):
     except Exception:
         return None
 
+def get_verified_link(title, url):
+    """
+    Return a verified link.
+    If the title contains a CVE ID, returns a link to NVD.
+    Otherwise, returns a sanitized URL.
+    """
+    if not title:
+        return sanitize_url(url)
+
+    # Check for CVE ID in title
+    cve_pattern = r"(CVE-\d{4}-\d+)"
+    match = re.search(cve_pattern, title, re.IGNORECASE)
+    if match:
+        cve_id = match.group(1).upper()
+        return f"https://nvd.nist.gov/vuln/detail/{cve_id}"
+        
+    return sanitize_url(url)
+
+
+def get_github_repo_details(url):
+    """
+    Fetches repository details and README from GitHub API to provide high-quality context for AI analysis.
+    This identifies a GitHub link, fetches metadata/README via API (simulating MCP server access),
+    and returns a token-efficient context string.
+    """
+    try:
+        if not url or "github.com" not in url:
+            return None
+            
+        parsed = urlparse(url)
+        path_parts = parsed.path.strip("/").split("/")
+        if len(path_parts) < 2:
+            return None
+            
+        owner, repo = path_parts[0], path_parts[1]
+        
+        # Requests session is available globally as SESSION? No, use requests directly or check main
+        # But for portability here, use requests with simple headers
+        headers = {"User-Agent": "feedmeup-news-brief-generator"}
+        if "GITHUB_TOKEN" in os.environ:
+            headers["Authorization"] = f"token {os.environ['GITHUB_TOKEN']}"
+            
+        api_base = f"https://api.github.com/repos/{owner}/{repo}"
+        
+        # 1. Fetch Metadata (Stars, Description, Topics)
+        resp = requests.get(api_base, headers=headers, timeout=5)
+        if resp.status_code != 200:
+            return None
+        data = resp.json()
+        
+        desc = data.get("description", "No description")
+        stars = data.get("stargazers_count", 0)
+        lang = data.get("language", "Unknown")
+        topics = ", ".join(data.get("topics", []))
+        
+        # 2. Fetch Latest Release (High signal for "what's new")
+        release_notes = ""
+        try:
+            resp_rel = requests.get(f"{api_base}/releases/latest", headers=headers, timeout=5)
+            if resp_rel.status_code == 200:
+                rel_data = resp_rel.json()
+                tag_name = rel_data.get("tag_name", "Unknown")
+                rel_body = rel_data.get("body", "")
+                release_notes = f"\nLatest Release ({tag_name}):\n{rel_body[:1000]}"
+        except Exception:
+            pass
+
+        # 3. Fetch README content
+        readme_resp = requests.get(f"{api_base}/readme", headers=headers, timeout=5)
+        readme_text = ""
+        if readme_resp.status_code == 200:
+            try:
+                content_b64 = readme_resp.json().get("content", "")
+                if content_b64:
+                    readme_text = base64.b64decode(content_b64).decode("utf-8", errors="replace")
+            except Exception:
+                pass
+                
+        # 4. Construct Context String
+        # We limit README to 1500 chars to "bring down use of tokens" while keeping high signal
+        context = f"GitHub Repository: {owner}/{repo}\n"
+        context += f"Metrics: {stars} Stars | Language: {lang}\n"
+        context += f"Description: {desc}\n"
+        context += f"Topics: {topics}\n"
+        
+        if release_notes:
+            context += release_notes + "\n"
+            
+        context += "README Summary:\n"
+        context += readme_text[:1500]
+        
+        return context
+
+    except Exception as e:
+        logging.warning(f"[GITHUB] Failed to enrich context for {url}: {e}")
+        return None
+
+def get_cve_details(cve_id):
+    """
+    Fetches structured CVE data from CIRCL.lu (Open API) to replace verbose news articles.
+    Returns a highly compressed, fact-dense JSON summary for the Analyst.
+    """
+    try:
+        # Using cve.circl.lu as it's a reliable, free, auth-less API for CVEs
+        api_url = f"https://cve.circl.lu/api/cve/{cve_id}"
+        resp = requests.get(api_url, timeout=5, headers={"User-Agent": "feedmeup-news"})
+        
+        if resp.status_code != 200:
+            return None
+            
+        data = resp.json()
+        if not data:
+            return None
+            
+        # Extract high-signal fields
+        summary = data.get("summary", "No summary available.")
+        cvss = data.get("cvss", "Unknown")
+        # specific technical cause often found in capec or cwe
+        cwe = data.get("cwe", "Unknown")
+        
+        references = "\n".join(data.get("references", [])[:3])
+        
+        context = f"Vulnerability: {cve_id}\n"
+        context += f"CVSS Score: {cvss} | CWE: {cwe}\n"
+        context += f"Official Summary: {summary}\n"
+        context += f"Key References:\n{references}"
+        
+        return context
+    except Exception as e:
+        logging.warning(f"[CVE] Failed to fetch details for {cve_id}: {e}")
+        return None
 
 def format_entries_for_category(entries):
     """Format entries as markdown for a category, newest first.
-    
-    Phase 1: Uses Gemini-enhanced excerpts if available, falls back to clean_summary.
+    Groups similar articles to reduce noise.
+    Uses clean RSS summary (Phase 1) instead of expensive AI summary for the long list.
     """
+    if not entries:
+        return ""
+
+    # Sort by date first
     def get_pub_date(entry):
-        if "published_parsed" in entry and entry.published_parsed:
-            return datetime(*entry.published_parsed[:6], tzinfo=LOCAL_TZ)
+        try:
+            published_parsed = entry.get("published_parsed")
+            if published_parsed:
+                # Validate year is in valid range (1-9999)
+                if published_parsed[0] > 0 and published_parsed[0] < 10000:
+                    return datetime(*published_parsed[:6], tzinfo=LOCAL_TZ)
+        except (ValueError, TypeError, OverflowError, AttributeError):
+            pass
         return datetime.now(LOCAL_TZ)
 
     sorted_entries = sorted(entries, key=get_pub_date, reverse=True)
-    formatted = []
-    for entry in sorted_entries:
-        title = entry.get("title", "No Title")
-        link = entry.get("link", "")
+    
+    # Simple clustering logic
+    groups = []
+    used_indices = set()
+    
+    # Pre-calculate titles and titles_lower for speed
+    pre = []
+    for idx, e in enumerate(sorted_entries):
+        title = (e.get("title") or "").strip()
+        pre.append({"idx": idx, "entry": e, "title_l": title.lower()})
         
-        # Phase 1: Use Gemini excerpt if available, else fall back to raw summary
-        if entry.get('gemini_excerpt'):
-            summary = entry.get('gemini_excerpt')
+    for i, item in enumerate(pre):
+        if item["idx"] in used_indices:
+            continue
+            
+        current_group = [item["entry"]]
+        used_indices.add(item["idx"])
+        
+        for j in range(i + 1, len(pre)):
+            other = pre[j]
+            if other["idx"] in used_indices:
+                continue
+            
+            # Use strict fuzzy matching for this grouping
+            score = rf_ratio(item["title_l"], other["title_l"]) / 100.0
+            if score >= 0.8: # Threshold
+                current_group.append(other["entry"])
+                used_indices.add(other["idx"])
+        
+        groups.append(current_group)
+
+    # Format groups
+    formatted = []
+    for group in groups:
+        # Pick representative (newest/first in sorted list)
+        primary = group[0]
+        title = primary.get("title", "No Title")
+        link = primary.get("link", "")
+        
+        # Use JIT summary if available (from Highlights), otherwise clean RSS summary
+        if primary.get('gemini_excerpt'):
+            summary = primary.get('gemini_excerpt')
         else:
-            raw_summary = entry.get("summary", "") or entry.get("description", "")
+            raw_summary = primary.get("summary", "") or primary.get("description", "")
             summary = clean_summary(raw_summary)
         
-        # Truncate if too long (2-3 sentences ~ 200 chars)
-        if len(summary) > 200:
-            summary = summary[:197] + "..."
+        # Truncate if too long (standard listing doesn't need huge detail)
+        if len(summary) > 300:
+            summary = summary[:297] + "..."
+            
+        safe_link = get_verified_link(title, link)
         
-        safe_link = sanitize_url(link)
+        md_block = ""
         if safe_link:
-            # use an explicit HTML anchor to avoid markdown processor mangling feed HTML
-            formatted.append(f"- **{title}** — {summary}\n  <a href=\"{safe_link}\">Read more</a>")
+             md_block = f"- **{title}** — {summary}\n  <a href=\"{safe_link}\">Read more</a>"
         else:
-            formatted.append(f"- **{title}** — {summary}")
+             md_block = f"- **{title}** — {summary}"
+             
+        # Add attribution for clustered stories
+        if len(group) > 1:
+            sources = set()
+            for g in group:
+                s_name = g.get('_source_name')
+                if s_name:
+                    sources.add(s_name)
+                    
+            source_list = sorted(list(sources))
+            if source_list:
+                # Limit source list length
+                extras = ""
+                if len(source_list) > 3:
+                     extras = f" + {len(source_list)-3} others"
+                     source_list = source_list[:3]
+                
+                md_block += f" *(Covered by: {', '.join(source_list)}{extras})*"
+            else:
+                 md_block += f" *(+ {len(group)-1} similar stories)*"
+            
+        formatted.append(md_block)
+        
     return "\n\n".join(formatted)
 
 
@@ -430,6 +733,78 @@ categories: [newsbrief]
     with open(filename, "w", encoding="utf-8") as f:
         f.write(front_matter + body)
     logging.info("[NEWS BRIEF] Created: %s", filename)
+
+
+def cluster_articles_by_theme(articles, num_clusters=3):
+    """
+    Cluster articles into thematic groups based on title and summary similarity.
+    Uses fuzzy matching to group related stories together.
+    
+    Args:
+        articles: list of (entry, count) tuples from highlights
+        num_clusters: target number of clusters (default 3-5 groups)
+    
+    Returns:
+        list of dicts: [{cluster_name, articles: [(entry, count), ...], article_count}, ...]
+    """
+    if not articles:
+        return []
+    
+    try:
+        from collections import Counter
+        
+        # Build clustering by grouping similar titles
+        clusters = {}
+        cluster_assignments = {}
+        
+        for idx, (entry, count) in enumerate(articles):
+            if idx in cluster_assignments:
+                continue
+            
+            title = (entry.get("title") or "").strip().lower()
+            cluster_id = len(clusters)
+            clusters[cluster_id] = {'articles': [(entry, count)], 'titles': [title]}
+            cluster_assignments[idx] = cluster_id
+            
+            # Find similar articles for this cluster
+            for other_idx in range(idx + 1, len(articles)):
+                if other_idx in cluster_assignments:
+                    continue
+                
+                other_entry, other_count = articles[other_idx]
+                other_title = (other_entry.get("title") or "").strip().lower()
+                similarity = rf_ratio(title.split(), other_title.split()) / 100.0
+                
+                if similarity >= 0.4:
+                    clusters[cluster_id]['articles'].append((other_entry, other_count))
+                    clusters[cluster_id]['titles'].append(other_title)
+                    cluster_assignments[other_idx] = cluster_id
+        
+        # Generate cluster names from common keywords
+        result = []
+        for cluster_id, cluster_data in clusters.items():
+            all_words = ' '.join(cluster_data['titles']).split()
+            stop_words = {'the', 'a', 'an', 'and', 'or', 'is', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'}
+            keywords = [w for w in all_words if w not in stop_words and len(w) > 3]
+            
+            if keywords:
+                top_keywords = Counter(keywords).most_common(2)
+                cluster_name = ' & '.join([k[0].title() for k in top_keywords])
+            else:
+                cluster_name = f"Topic {cluster_id + 1}"
+            
+            result.append({
+                'cluster_name': cluster_name,
+                'articles': cluster_data['articles'],
+                'article_count': len(cluster_data['articles'])
+            })
+        
+        result.sort(key=lambda c: c['article_count'], reverse=True)
+        return result[:num_clusters]
+    
+    except Exception as e:
+        logging.warning("[CLUSTERING] Failed to cluster articles: %s", str(e))
+        return []
 
 
 def group_similar_entries(entries, threshold=None, max_per_domain=None, max_results=None):
@@ -590,6 +965,245 @@ def detect_trending_category(reports, highlights, trend_threshold=2):
         return None
 
 
+def create_story_clusters_post(date_str, highlights):
+    """Create a standalone narrative-style blog post from story clusters."""
+    from datetime import datetime
+    
+    POSTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    now_local = datetime.now(LOCAL_TZ)
+    time_filename = now_local.strftime("%H-%M")
+    filename = POSTS_DIR / f"{date_str}-{time_filename}-weekly-brief.md"
+
+    date_object = datetime.strptime(date_str, "%Y-%m-%d")
+    formatted_title_date = date_object.strftime("%b %d, %Y")
+    time_front = now_local.strftime("%H:%M:%S %z")
+
+    front_matter = f"""---
+layout: post
+title: "This Week in Security: A Briefing — {formatted_title_date}"
+date: {date_str} {time_front}
+categories: [newsbrief, weekly-brief]
+---
+"""
+
+    # Generate clusters
+    clusters = cluster_articles_by_theme(highlights, num_clusters=5) if highlights else []
+    
+    intro = f"""## This Week in Security: What's Trending
+
+Here's your briefing on the week's most important security stories, organized by theme. We've identified **{len(clusters)}** key topics capturing industry attention from across **{sum(c['article_count'] for c in clusters)}** trending stories.
+
+"""
+    
+    body = intro
+    
+    # Generate narrative sections for each cluster
+    for idx, cluster in enumerate(clusters, start=1):
+        cluster_name = cluster['cluster_name']
+        articles = cluster['articles']
+        
+        # Cluster header
+        body += f"### {idx}. {cluster_name} ({len(articles)} stories)\n\n"
+        
+        # Narrative paragraph with top articles
+        body += f"The **{cluster_name}** theme captured {len(articles)} trending stories this week. "
+        
+        if len(articles) >= 2:
+            top_articles = articles[:2]
+            body += f"Key developments include:\n\n"
+            for rank, (entry, count) in enumerate(top_articles, start=1):
+                title = entry.get("title", "No Title")
+                summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
+                if len(summary) > 200:
+                    summary = summary[:197] + "..."
+                safe_link = sanitize_url(entry.get("link", ""))
+                
+                body += f"**{rank}. {title}** ({count} mentions)\n"
+                body += f"   {summary}\n"
+                if safe_link:
+                    body += f"   [Read more]({safe_link})\n\n"
+                else:
+                    body += f"\n"
+        
+        if len(articles) > 2:
+            remaining = articles[2:]
+            body += f"\nOther notable stories: "
+            titles = [e.get("title", "Untitled") for e, c in remaining[:3]]
+            body += ", ".join(titles)
+            body += "\n"
+        
+        body += f"\n---\n\n"
+    
+    closing = """## Stay Informed
+
+These thematic groupings highlight how similar security issues are emerging across multiple vendors and technologies this week. For each topic, consider how your organization's security strategy aligns with the trends.
+"""
+    
+    body += closing
+    
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(front_matter + body)
+    
+    return str(filename)
+
+
+def create_narrative_briefing(highlights):
+    """
+    Create an 800-1000 word narrative news briefing from top stories.
+    Conversational, friendly tone with critical stories first, includes punchy quotes,
+    and forward-looking recommendations ("monitor these", "have a look at these").
+    
+    Args:
+        highlights: list of (entry, count) tuples (top 10 stories)
+    
+    Returns:
+        Narrative briefing text
+    """
+    if not highlights:
+        return ""
+    
+    # Separate stories by criticality
+    critical_stories = []  # Threats, CVEs, breaches
+    trend_stories = []     # Emerging trends, new techniques
+    tool_stories = []      # Tools, updates, releases
+    
+    for entry, count in highlights[:10]:
+        title = entry.get("title", "").lower()
+        category = entry.get('_article_category', '').lower()
+        summary = (entry.get("summary", "") or entry.get("description", "")).lower()
+        content_sample = (title + " " + category + " " + summary[:200]).lower()
+        
+        is_critical = any(keyword in content_sample for keyword in 
+                         ['breach', 'cve-', 'vulnerability', 'threat', 'ransomware', 
+                          'malware', 'attack', 'exploit', 'zero-day', 'critical'])
+        is_trend = any(keyword in content_sample for keyword in 
+                      ['trend', 'emerging', 'analysis', 'technique', 'pattern', 'report'])
+        
+        if is_critical:
+            critical_stories.append((entry, count))
+        elif is_trend:
+            trend_stories.append((entry, count))
+        else:
+            tool_stories.append((entry, count))
+    
+    # Build narrative
+    briefing = "## This Week in Security: Your News Briefing\n\n"
+    
+    # Extract 3-5 most critical headlines
+    top_stories = []
+    for entry, count in highlights[:5]:
+        title = entry.get("title", "")
+        if title:
+            # Shorten long titles for readability
+            if len(title) > 70:
+                title = title[:67].rsplit(' ', 1)[0] + "..."
+            top_stories.append((title, count))
+            
+    # Combine Intro + Rundown into a single paragraph
+    total_stories = len(highlights[:10])
+    paragraph = f"Welcome to your weekly security roundup. We've tracked down the **{total_stories} most important stories** this week—the ones everyone's talking about, from critical threats to emerging trends that could shape your security posture. "
+    
+    if top_stories:
+        t1, c1 = top_stories[0]
+        paragraph += f"Leading the news this week is **{t1}**, which has sparked conversation across {c1} sources. "
+        
+        if len(top_stories) > 1:
+            t2, c2 = top_stories[1]
+            paragraph += f"Meanwhile, the industry is closely tracking **{t2}** with {c2} mentions, "
+            
+            remaining = top_stories[2:]
+            if remaining:
+                titles = [f"**{t}**" for t, c in remaining]
+                if len(titles) == 1:
+                    paragraph += f"along with emerging details on {titles[0]}. "
+                else:
+                    last = titles.pop()
+                    joined = ", ".join(titles)
+                    paragraph += f"along with emerging details on {joined}, and {last}. "
+            else:
+                paragraph = paragraph.rstrip(", ") + ". "
+        
+        paragraph += "Here's the full breakdown of what you need to know."
+    else:
+        paragraph += "Let's dive in."
+        
+    # Wrap text to prevention horizontal scrolling / code block rendering issues
+    briefing += textwrap.fill(paragraph, width=100) + "\n\n"
+    
+    # Critical stories section (if any)
+    if critical_stories:
+        briefing += "### 🚨 Critical Threats This Week\n\n"
+        briefing += "First, the stories that demand your immediate attention:\n\n"
+        
+        for idx, (entry, count) in enumerate(critical_stories[:3], 1):
+            title = entry.get("title", "No Title")
+            summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
+            link = get_verified_link(title, entry.get("link", ""))
+            
+            # Extract punchy quote or create one from summary
+            sentences = [s.strip() for s in summary.split('.') if len(s.strip()) > 20]
+            quote = sentences[0][:120] if sentences else summary[:120]
+            
+            briefing += f"**{idx}. {title}**\n"
+            briefing += f"   Mentioned across {count} industry sources this week. {quote.rstrip('.')}.\n"
+            if link:
+                briefing += f"   [Get the details →]({link})\n\n"
+            else:
+                briefing += f"\n"
+    
+    # Trend stories section
+    if trend_stories:
+        briefing += "### 📈 Emerging Trends & Analysis\n\n"
+        briefing += "Here's what the security community is exploring and learning:\n\n"
+        
+        for idx, (entry, count) in enumerate(trend_stories[:3], 1):
+            title = entry.get("title", "No Title")
+            summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
+            link = get_verified_link(title, entry.get("link", ""))
+            
+            sentences = [s.strip() for s in summary.split('.') if len(s.strip()) > 20]
+            quote = sentences[0][:120] if sentences else summary[:120]
+            
+            briefing += f"**{idx}. {title}**\n"
+            briefing += f"   {quote.rstrip('.')}. Catching attention from {count} news sources.\n"
+            if link:
+                briefing += f"   [Learn more →]({link})\n\n"
+            else:
+                briefing += f"\n"
+    
+    # Tools & updates section
+    if tool_stories:
+        briefing += "### 🛠️ Tools, Updates & Releases\n\n"
+        briefing += "New capabilities and releases worth knowing about:\n\n"
+        
+        for idx, (entry, count) in enumerate(tool_stories[:3], 1):
+            title = entry.get("title", "No Title")
+            summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
+            link = get_verified_link(title, entry.get("link", ""))
+            
+            sentences = [s.strip() for s in summary.split('.') if len(s.strip()) > 20]
+            quote = sentences[0][:100] if sentences else summary[:100]
+            
+            briefing += f"**{idx}. {title}**\n"
+            briefing += f"   {quote.rstrip('.')}. Referenced in {count} stories this week.\n"
+            if link:
+                briefing += f"   [Explore →]({link})\n\n"
+            else:
+                briefing += f"\n"
+    
+    # Closing with forward-looking recommendations
+    briefing += "### What You Should Do Next\n\n"
+    briefing += "**Monitor these** in your environment next week:\n"
+    briefing += "- Any new CVE announcements related to systems you operate\n"
+    briefing += "- Emerging attack techniques being discussed in the community\n"
+    briefing += "- Updates and patches for tools your team uses\n\n"
+    briefing += "**Have a look at** the full deep-dives in the trending stories below. Each one provides context that could inform your security decisions this week.\n\n"
+    
+    briefing += "---\n\n"
+    return briefing
+
+
 def create_weekly_scan_post(date_str, content_by_category, highlights):
     """
     Create the Weekly Scan post (aggregated news with trend metrics).
@@ -623,21 +1237,64 @@ categories: [newsbrief, weekly-scan]
 ---
 """
 
-    # Highlights section
-    highlights_section = "## Top Trending Stories\n\n"
-    for i, (entry, count) in enumerate(highlights, start=1):
+    # Highlights section with narrative briefing + consolidated threat intel/vulnerability
+    highlights_section = ""
+    
+    # Add narrative news briefing at the top
+    if highlights:
+        narrative = create_narrative_briefing(highlights)
+        if narrative:
+            highlights_section += narrative
+    
+    # Top Trending Stories - detailed list
+    highlights_section += "## Top Trending Stories\n\n"
+    
+    # Separate threat intel/vulnerability from other articles
+    threat_intel_vuln = []
+    other_highlights = []
+    
+    for entry, count in highlights:
+        category = entry.get('_article_category', '')
+        # Check for threat intel or vulnerability categories (handle various formats)
+        if 'threat' in category.lower() or 'vulnerability' in category.lower() or 'cve' in category.lower():
+            threat_intel_vuln.append((entry, count))
+        else:
+            other_highlights.append((entry, count))
+    
+    # Build top trending with consolidated threat intel/vulnerability entry
+    item_num = 1
+    
+    # First add consolidated threat intel & vulnerability if they exist
+    if threat_intel_vuln:
+        top_threats = sorted(threat_intel_vuln, key=lambda x: x[1], reverse=True)[:3]
+        
+        highlights_section += f"{item_num}. **Key Threat Intel & Vulnerability Stories** ({sum(c for e, c in threat_intel_vuln)} mentions)\n"
+        highlights_section += "   > This week's critical security updates and vulnerability disclosures:\n"
+        for entry, count in top_threats:
+            title = entry.get("title", "No Title")
+            link = get_verified_link(title, entry.get("link", ""))
+            if link:
+                highlights_section += f"   > • [{title}]({link}) ({count} mentions)\n"
+            else:
+                highlights_section += f"   > • {title} ({count} mentions)\n"
+        highlights_section += "\n"
+        item_num += 1
+    
+    # Then add other trending stories
+    for entry, count in other_highlights:
         title = entry.get("title", "No Title")
         summary = clean_summary(entry.get("summary", "") or entry.get("description", ""))
         if len(summary) > 250:
             summary = summary[:247] + "..."
         
-        safe_link = sanitize_url(entry.get("link", ""))
-        highlights_section += f"{i}. **{title}** ({count} mentions)\n"
+        safe_link = get_verified_link(title, entry.get("link", ""))
+        highlights_section += f"{item_num}. **{title}** ({count} mentions)\n"
         highlights_section += f"   > {summary}\n"
         if safe_link:
             highlights_section += f"   > <a href=\"{safe_link}\">Read more</a>\n\n"
         else:
             highlights_section += f"   > Read more (link unavailable)\n\n"
+        item_num += 1
 
     # Summary table
     table = "| Category | Article Count |\n|---|---|\n"
@@ -660,15 +1317,297 @@ categories: [newsbrief, weekly-scan]
         f.write(front_matter + body)
     
     logging.info("[WEEKLY SCAN] Created: %s", filename)
+    logging.info("[PHASE 2] Weekly Scan (with Narrative News Briefing) + Analyst Opinion posts generated successfully")
     return filename
+
+
+def find_historical_context(keyword_topics, lookback_weeks=12):
+    """
+    Search past posts for similar topics to provide historical context.
+    
+    Args:
+        keyword_topics: List of keywords/topics to search for (e.g., ['cybersecurity', 'ransomware'])
+        lookback_weeks: How many weeks back to search
+    
+    Returns:
+        list of dicts with {title, date, summary} from past posts
+    """
+    historical_posts = []
+    cutoff_date = datetime.now(LOCAL_TZ) - timedelta(weeks=lookback_weeks)
+    
+    try:
+        for post_file in sorted(POSTS_DIR.glob("*.md"), reverse=True):
+            # Skip analyst opinion posts to avoid self-reference
+            if "analyst-opinion" in post_file.name:
+                continue
+                
+            file_mtime = datetime.fromtimestamp(post_file.stat().st_mtime, tz=LOCAL_TZ)
+            if file_mtime < cutoff_date:
+                break
+            
+            with open(post_file, "r", encoding="utf-8") as f:
+                content = f.read()
+            
+            # Check if any keywords appear in the post
+            content_lower = content.lower()
+            matching_keywords = [kw for kw in keyword_topics if kw.lower() in content_lower]
+            
+            if matching_keywords:
+                # Extract title from front matter
+                title_match = re.search(r'title:\s*["\']?([^"\'\n]+)["\']?', content)
+                title = title_match.group(1) if title_match else post_file.stem
+                
+                # Extract date from front matter
+                date_match = re.search(r'date:\s*(\d{4}-\d{2}-\d{2})', content)
+                post_date = date_match.group(1) if date_match else "Unknown"
+                
+                # Extract first 200 chars of body (after front matter)
+                body_start = content.find("---", content.find("---") + 3) + 3
+                body = content[body_start:].strip()[:200]
+                
+                historical_posts.append({
+                    'title': title,
+                    'date': post_date,
+                    'summary': body,
+                    'keywords': matching_keywords
+                })
+    
+    except Exception as e:
+        logging.warning("[HISTORY] Failed to search historical context: %s", str(e))
+    
+    return historical_posts[:3]  # Return top 3 similar posts
+
+
+def generate_gemini_opinion_analysis(article, category, historical_posts, config):
+    """
+    Generate investigative journalism analysis for analyst opinion post.
+    
+    Uses gemini-3-flash-preview for cost-effective reasoning depth.
+    Hybrid Strategy: Flash for investigative analysis, Flash for weekly summaries.
+    
+    Transforms article into deep investigative journalism with technical accountability:
+    - Technical Analysis & Threat Intelligence (900-1100 words): Technical breakdown, defense failures, threat ecosystem, attribution, monetization
+    - Defense Strategy (600+ words): Immediate actions, medium-term planning, strategic vision
+    
+    Args:
+        article: The article of the week
+        category: Trend category
+        historical_posts: List of similar past posts for comparison
+        config: Config dict with synthesis settings
+    
+    Returns:
+        dict with {technical_analysis, defense_strategy}
+    """
+    if not GEMINI_CLIENT or not GEMINI_AVAILABLE:
+        return {
+            'technical_analysis': article.get('gemini_excerpt', clean_summary(article.get("summary", "") or article.get("description", ""))),
+            'defense_strategy': ""
+        }
+    
+    try:
+        # Optimization: Use "Internal MCP Agents" to fetch high-signal context (GitHub/CVE) 
+        # This reduces token usage by avoiding raw HTML scrapes and providing structured technical data.
+        link = article.get("link", "")
+        article_title = article.get("title", "Unknown")
+        article_text = ""
+        
+        # 1. GitHub Agent
+        repo_details = get_github_repo_details(link)
+        
+        # 2. CVE Agent
+        cve_pattern = r"(CVE-\d{4}-\d+)"
+        cve_match = re.search(cve_pattern, article_title, re.IGNORECASE)
+        cve_details = None
+        if cve_match:
+            cve_details = get_cve_details(cve_match.group(1).upper())
+
+        # Select best context source
+        if repo_details:
+            article_text = repo_details
+            logging.info(f"[ANALYST] Enriched context with GitHub data for {article.get('title')}")
+        elif cve_details:
+            article_text = cve_details
+            logging.info(f"[ANALYST] Enriched context with CVE data for {article.get('title')}")
+        else:
+            # Fallback to standard summary
+            article_text = clean_summary(article.get("summary", "") or article.get("description", ""))[:1500]
+
+        
+        # Build historical context string
+        
+        # Build historical context string
+        history_context = ""
+        if historical_posts:
+            history_context = "\n\nRelated past articles:\n"
+            for hp in historical_posts:
+                history_context += f"- {hp['date']}: {hp['title']}\n"
+        
+        # Prompt 1: Combined Technical Analysis & Threat Intelligence (Investigative Journalism)
+        # Optimized for token efficiency: Uses dense technical context instead of narrative fluff
+        technical_prompt = f"""
+ROLE: Senior Cybersecurity Analyst.
+TASK: Write investigative technical analysis (900-1100 words).
+FOCUS: Technical mechanics, attack chain, threat ecosystem.
+
+SOURCE DATA:
+Title: {article_title}
+Context: {article_text}
+{history_context if history_context else ""}
+
+OUTPUT STRUCTURE:
+1. Technical Breakdown (The Mechanics)
+2. Threat Actor / Attribution (If applicable)
+3. Impact Assessment
+
+STYLE: Dense, technical, authoritative. No fluff.
+"""
+
+        # Prompt 2: Defense Strategy (Operational & Strategic) (600+ words)
+        defense_prompt = f"""
+ROLE: CISO / Security Architect.
+TASK: Write actionable defense strategy (600+ words).
+CONTEXT: {article_title}
+
+OUTPUT STRUCTURE:
+1. Immediate Mitigation (Tactical) - "Do this NOW"
+2. Detection Engineering (SIEM/EDR) - "Hunt for this"
+3. Strategic Defense (Long term) - "Fix the root cause"
+
+Be specific. Name tools, logs, and configurations.
+"""
+        
+        response_technical = GEMINI_CLIENT.models.generate_content(
+            model="gemini-3-flash",
+            contents=technical_prompt,
+            config={"max_output_tokens": 1200, "temperature": 0.4}
+        )
+        
+        # Handle response - might be in different format
+        if hasattr(response_technical, 'text'):
+            technical_analysis = response_technical.text.strip()
+        elif hasattr(response_technical, 'content'):
+            technical_analysis = response_technical.content.strip()
+        else:
+            technical_analysis = str(response_technical).strip()
+        
+        logging.debug("[OPINION] Technical analysis response type: %s, length: %d", type(response_technical), len(technical_analysis) if technical_analysis else 0)
+        
+        # Prompt 2: Defense Strategy & Actionable Intelligence (Detection, Mitigation, Strategic Actions)
+        defense_prompt = f"""
+Provide DEFENSE STRATEGY & ACTIONABLE INTELLIGENCE for security teams.
+
+Article: {article_title}
+{article_text}
+
+Create a comprehensive defense guide with three timeframes:
+
+**IMMEDIATE ACTIONS (0-30 days) - Tactical Response**
+Provide 3-5 SPECIFIC, TECHNICAL actions:
+- Concrete detection rules: "Deploy SIEM query for [specific behavior/IOC]"
+- Patch urgency: "Patch CVE-XXXX in [affected systems] - exploited in wild"
+- Configuration hardening: "Enable [specific setting] in [security tool]"
+- Hunting queries: "Search logs for [specific indicator/pattern]"
+- Isolation/containment: "Segment [critical assets] from [network zone]"
+
+Be SPECIFIC: name CVEs, products, log sources, actual query syntax if possible.
+
+**MEDIUM-TERM PLANNING (30-90 days) - Process & Architecture**
+Provide 3-4 strategic improvements:
+- Architecture changes: "Implement network segmentation for [critical assets]"
+- Process improvements: "Conduct tabletop exercise simulating [attack scenario]"
+- Vendor assessment: "Review [vendor] SLAs for [incident response capability]"
+- Capability gaps: "Invest in [technology/tool] to address [detection gap]"
+- Training: "Train SOC analysts on [specific technique/tool]"
+
+**LONG-TERM VISION (90+ days) - Strategic Transformation**
+Provide 2-3 strategic shifts:
+- Philosophy: "Shift from perimeter defense to assume-breach model"
+- Investment: "Prioritize [technology category] over [legacy approach] because [reason]"
+- Collaboration: "Join [industry group] for [threat intelligence sharing]"
+- Resilience: "Build [capability] to recover from [specific scenario]"
+
+For each timeframe, explain WHY (tied to the technical analysis). Avoid generic advice.
+"""
+        
+        response_defense = GEMINI_CLIENT.models.generate_content(
+            model="gemini-3-flash",
+            contents=defense_prompt,
+            config={"max_output_tokens": 800, "temperature": 0.3}
+        )
+        
+        # Handle response - might be in different format
+        if hasattr(response_defense, 'text'):
+            defense_strategy = response_defense.text.strip()
+        elif hasattr(response_defense, 'content'):
+            defense_strategy = response_defense.content.strip()
+        else:
+            defense_strategy = str(response_defense).strip()
+        
+        logging.debug("[OPINION] Defense strategy response type: %s, length: %d", type(response_defense), len(defense_strategy) if defense_strategy else 0)
+        
+        logging.info("[OPINION] Generated investigative journalism analysis for: %s", article_title)
+        
+        return {
+            'technical_analysis': technical_analysis,
+            'defense_strategy': defense_strategy
+        }
+    
+    except Exception as e:
+        logging.warning("[OPINION] Gemini analysis failed: %s; using fallback", str(e))
+        
+        # Provide structured fallback content when Gemini is unavailable
+        article_summary = article.get('gemini_excerpt', clean_summary(article.get("summary", "") or article.get("description", "")))
+        
+        # Create a basic technical analysis from the article summary and category
+        fallback_technical = f"""
+**Technical Overview**
+
+{article_summary}
+
+**Key Points**
+
+This article relates to the {category.upper()} security category. The content addresses important developments in this area that security teams should be aware of.
+
+*Note: Full technical analysis requires Gemini API access for deep investigative journalism synthesis.*
+"""
+        
+        # Create structured fallback defense strategy with action items
+        fallback_defense = f"""
+**Immediate Actions (0-30 days)**
+
+1. Review this article for relevant context to your organization's security posture
+2. Share findings with your security team for discussion
+3. Assess applicability to your systems and infrastructure
+
+**Medium-Term Planning (30-90 days)**
+
+1. Incorporate findings into your security strategy review
+2. Update relevant security policies if needed
+3. Schedule team training if new threats are identified
+
+**Long-Term Vision (90+ days)**
+
+1. Track evolution of this threat/trend over time
+2. Integrate learnings into future security architecture decisions
+3. Build defense capabilities to address identified gaps
+
+*Full defense strategy recommendations require Gemini API access for comprehensive threat analysis.*
+"""
+        
+        return {
+            'technical_analysis': fallback_technical,
+            'defense_strategy': fallback_defense
+        }
 
 
 def create_analyst_opinion_post(date_str, trending_data, config):
     """
-    Create the Analyst Opinion post (strategic commentary on trending topic).
+    Create the Analyst Opinion post with Top 3 Articles of the Week.
     
-    Phase 2: Second post providing expert perspective on the week's top trend.
-    Uses Gemini to generate contextual analysis if enabled.
+    Phase 3 Enhanced: Deep investigative analysis for top 3 trending stories:
+    - Full technical analysis for each article (900-1100 words per story)
+    - Defense strategy for each article (600+ words per story)
+    - Maintains complete analytical depth across all 3 articles
     
     Args:
         date_str: YYYY-MM-DD date string
@@ -697,56 +1636,68 @@ def create_analyst_opinion_post(date_str, trending_data, config):
     highlight_count = trending_data['highlight_count']
     top_articles = trending_data.get('top_articles', [])
 
+    if not top_articles:
+        logging.warning("[OPINION] No articles in trending data; skipping opinion post")
+        return None
+    
+    # Get top 3 articles (or fewer if not available)
+    top_3_articles = top_articles[:3]
+
     front_matter = f"""---
 layout: post
-title: "Analyst Opinion: This Week in {category} — {formatted_title_date}"
+title: "Analyst Top 3: {category} — {formatted_title_date}"
 date: {date_str} {time_front}
 categories: [analysis, opinion, {category.lower().replace(' ', '-')}]
 ---
 """
 
-    # Introduction with trend metrics
-    intro_section = f"""## Weekly Trend: {category}
+    # Introduction
+    intro_section = f"""## This Week's Top 3: {category}
 
-This week, the **{category}** category dominated our news feeds with **{article_count}** articles and **{highlight_count}** trending highlights.
-Here's what you need to know from a strategic perspective.
+The **{category}** category captured significant attention this week with **{article_count}** articles and **{highlight_count}** trending stories.
+
+Here are the **Top 3 Articles of the Week**—comprehensive analysis of the most impactful stories:
 
 """
 
-    # Key articles with expert framing
-    key_articles_section = "## Key Developments\n\n"
-    for i, article in enumerate(top_articles[:3], start=1):
-        title = article.get("title", "No Title")
-        summary = article.get('gemini_excerpt', clean_summary(article.get("summary", "") or article.get("description", "")))
-        if len(summary) > 300:
-            summary = summary[:297] + "..."
+    # Build full analysis for each of the top 3 articles
+    articles_body = ""
+    for rank, article in enumerate(top_3_articles, start=1):
+        article_title = article.get("title", "No Title")
+        article_link = sanitize_url(article.get("link", ""))
+        article_summary = article.get('gemini_excerpt', clean_summary(article.get("summary", "") or article.get("description", "")))
         
-        safe_link = sanitize_url(article.get("link", ""))
-        key_articles_section += f"### {i}. {title}\n\n"
-        key_articles_section += f"{summary}\n\n"
-        if safe_link:
-            key_articles_section += f"<a href=\"{safe_link}\">Full story</a>\n\n"
+        # Article header
+        articles_body += f"## Article {rank}: {article_title}\n\n"
+        articles_body += f"{article_summary}\n\n"
+        if article_link:
+            articles_body += f"<a href=\"{article_link}\">Read the full article</a>\n\n"
+        
+        # Get historical context and Gemini analysis for this article
+        keywords_for_history = [category.lower()] + (article.get('keywords_hit', []) if isinstance(article.get('keywords_hit'), list) else [])
+        historical_posts = find_historical_context(keywords_for_history, lookback_weeks=12)
+        gemini_analysis = generate_gemini_opinion_analysis(article, category, historical_posts, config)
+        
+        # Technical Analysis section with full depth
+        articles_body += f"### Technical Analysis: What's Really Happening\n\n"
+        articles_body += f"{gemini_analysis['technical_analysis']}\n\n"
+        
+        # Defense Strategy section with full depth
+        if gemini_analysis['defense_strategy']:
+            articles_body += f"### Defense Strategy: What Security Teams Should Do\n\n"
+            articles_body += f"{gemini_analysis['defense_strategy']}\n\n"
+        
+        articles_body += "---\n\n"
+    
+    # Closing
+    closing_section = """**Analyst Note:** These top 3 articles this week synthesize industry trends with expert assessment. For strategic decisions, conduct thorough validation with your security, compliance, and risk teams."""
 
-    # Strategic takeaway
-    takeaway_section = """## Strategic Takeaway
-
-The convergence of these stories points to a critical shift in the industry. Organizations should focus on the following:
-
-1. **Immediate Actions**: Review current practices against emerging threats and innovations mentioned above.
-2. **Medium-term Planning**: Allocate resources to areas highlighted by this week's trends.
-3. **Long-term Vision**: Consider how these developments align with your organization's strategic roadmap.
-
----
-
-*This analyst opinion reflects trends observed from RSS feeds covering industry news. Always conduct due diligence before making strategic decisions.*
-"""
-
-    body = intro_section + key_articles_section + takeaway_section
+    body = intro_section + articles_body + closing_section
 
     with open(filename, "w", encoding="utf-8") as f:
         f.write(front_matter + body)
     
-    logging.info("[ANALYST OPINION] Created: %s", filename)
+    logging.info("[ANALYST OPINION] Created with Top 3 deep analysis: %s", filename)
     return filename
 
 
@@ -802,7 +1753,7 @@ def main():
         category = source.get("category", "General")
 
         logging.info("[%d/%d] %s", i, len(sources), feed_name)
-        entries, status = fetch_feed_entries(url, feed_name)
+        entries, status = fetch_feed_entries(url, feed_name, category)
 
         if status != "OK":
             errors += 1
@@ -816,7 +1767,25 @@ def main():
         matched_count = 0
 
         for entry in entries:
-            pub_date = datetime(*entry.published_parsed[:6], tzinfo=LOCAL_TZ) if "published_parsed" in entry and entry.published_parsed else datetime.now(LOCAL_TZ)
+            # Translate non-English content if translation is enabled
+            translate_enabled = config.get("translation", {}).get("enabled", True)
+            if translate_enabled and gemini_enabled:
+                entry = translate_entry(entry, config)
+            
+            # Safely parse publication date with validation for invalid dates
+            try:
+                published_parsed = entry.get("published_parsed")
+                if published_parsed:
+                    # Validate year is in valid range (1-9999)
+                    if published_parsed[0] > 0 and published_parsed[0] < 10000:
+                        pub_date = datetime(*published_parsed[:6], tzinfo=LOCAL_TZ)
+                    else:
+                        pub_date = datetime.now(LOCAL_TZ)
+                else:
+                    pub_date = datetime.now(LOCAL_TZ)
+            except (ValueError, TypeError, OverflowError, AttributeError):
+                # Handle any datetime construction errors
+                pub_date = datetime.now(LOCAL_TZ)
 
             if pub_date >= cutoff_date:
                 recent_count += 1
@@ -826,15 +1795,16 @@ def main():
                     matched_count += 1
                     matched_entries += 1
                     
-                    # Phase 1: Summarize with Gemini if enabled
-                    if gemini_enabled and GEMINI_CLIENT and gemini_prompt_template:
-                        summary_data = summarize_with_gemini(entry, keywords, gemini_prompt_template, config)
-                        # Enhance entry with Gemini summary
-                        entry['gemini_excerpt'] = summary_data['excerpt']
-                        entry['gemini_title'] = summary_data['title']
-                        entry['keywords_hit'] = summary_data['keywords_hit']
+                    # Store source name for attribution
+                    entry['_source_name'] = feed_name
+                    
+                    # Phase 1: Gemini Summarization MOVED to post-deduplication (Cost Saver)
+                    # We no longer summarize every matching article here.
+                    # See "JIT Summarization" block below.
                     
                     reports.setdefault(category, []).append(entry)
+                    # Store category in entry for later filtering
+                    entry['_article_category'] = category
                     all_matched_entries.append(entry)
 
         logging.debug("    Recent: %d, Matched: %d", recent_count, matched_count)
@@ -862,6 +1832,24 @@ def main():
 
     top_highlights = group_similar_entries(all_matched_entries, threshold=fuzz_threshold, max_per_domain=max_per_domain, max_results=max_results)
 
+    # Phase 1.5: Just-In-Time Gemini Summarization for Top Highlights
+    # Only summarize the stories that actually made it to the Top N list to save tokens.
+    if gemini_enabled and GEMINI_CLIENT and gemini_prompt_template and top_highlights:
+        logging.info("⚡ JIT Summarization: Generating AI summaries for %d top highlights...", len(top_highlights))
+        for i, (entry, count) in enumerate(top_highlights):
+            # Skip if already has summary
+            if entry.get('gemini_excerpt'):
+                continue
+                
+            logging.info("   Summarizing [%d/%d]: %s...", i+1, len(top_highlights), (entry.get("title") or "")[:40])
+            try:
+                summary_data = summarize_with_gemini(entry, keywords, gemini_prompt_template, config)
+                entry['gemini_excerpt'] = summary_data['excerpt']
+                entry['gemini_title'] = summary_data['title']
+                entry['keywords_hit'] = summary_data['keywords_hit']
+            except Exception as e:
+                logging.warning("   Failed to summarize: %s", str(e))
+
     now_local = datetime.now(LOCAL_TZ)
     yesterday = now_local - timedelta(days=1)
     today = yesterday.strftime("%Y-%m-%d")
@@ -870,11 +1858,11 @@ def main():
     for cat, entries in reports.items():
         content_by_category[cat] = format_entries_for_category(entries)
 
-    # Phase 2: Dual-post output (Weekly Scan + Analyst Opinion)
+    # Phase 2: Dual-post output (Weekly Scan + Analyst Opinion + Story Clusters)
     phase2_enabled = config.get("synthesis", {}).get("enable_opinion_post", False)
     
     if phase2_enabled:
-        # Create Weekly Scan post
+        # Create Weekly Scan post (with Story Clusters briefing + consolidated threat intel/vulnerability)
         weekly_scan_file = create_weekly_scan_post(today, content_by_category, top_highlights)
         logging.info("%s [PHASE 2] Weekly Scan generated: %s", GREEN, weekly_scan_file)
         
@@ -889,7 +1877,7 @@ def main():
         else:
             logging.warning("[PHASE 2] Could not detect trending category; skipping opinion post")
         
-        logging.info("%s News aggregation complete: Weekly Scan + Analyst Opinion posts generated", GREEN)
+        logging.info("%s News aggregation complete: Weekly Scan (with Story Clusters) + Analyst Opinion posts generated", GREEN)
     else:
         # Legacy Phase 1: Single post (news brief)
         create_news_brief(today, content_by_category, top_highlights)

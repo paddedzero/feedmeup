@@ -3,9 +3,9 @@ layout: default
 title: Home
 ---
 
-Welcome to the Weekly News Brief!  
-
-Here I attempt to distill news on Cybersecurity, Cloud, AI and Regulatory News.
+<div class="hero-banner" role="img" aria-label="FeedMeUp News Brief">
+  <img src="{{ '/assets/img/banner.svg' | relative_url }}" alt="FeedMeUp News Brief banner" />
+</div>
 
 
 {% assign latest_brief = site.posts | where_exp:"post","post.categories contains 'newsbrief'" | sort: "date" | last %}

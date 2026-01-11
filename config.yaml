@@ -4,22 +4,30 @@ sources:
     url: https://openai.com/news/rss.xml
     category: "AI & LLM"
   - name: Google AI Blog
-    url: https://blog.google/technology/ai/rss/
+    url: https://blog.research.google/feeds/posts/default
     category: "AI & LLM"
   - name: Microsoft AI Blog
     url: https://blogs.microsoft.com/ai/feed/
     category: "AI & LLM"
-  # Note: Anthropic doesn't have an official RSS feed - removed for now
+  - name: Hugging Face AI Security
+    url: https://huggingface.co/blog/feed.xml
+    category: "AI & LLM"
 
   # === Cloud Provider Updates ===
   - name: AWS News
     url: https://aws.amazon.com/about-aws/whats-new/recent/feed/
     category: Cloud
   - name: Azure Updates
-    url: https://azurecomcdn.azureedge.net/en-us/updates/feed/
+    url: https://www.microsoft.com/releasecommunications/api/v2/azure/rss
     category: Cloud
   - name: Google Cloud Blog
-    url: https://cloud.google.com/feeds/blog.xml
+    url: https://blog.google/products/google-cloud/rss/
+    category: Cloud
+  - name: Snyk Security Blog
+    url: https://snyk.io/blog/feed.xml
+    category: Cloud
+  - name: Aqua Security
+    url: https://blog.aquasec.com/rss.xml
     category: Cloud
 
   # === Security News Websites ===
@@ -27,7 +35,7 @@ sources:
     url: https://www.techradar.com/feeds/tag/security
     category: "Cybersecurity"
   - name: Dark Reading
-    url: https://www.darkreading.com/rss_simple.asp
+    url: https://www.darkreading.com/rss.xml
     category: "Cybersecurity"
   - name: Krebs on Security
     url: https://krebsonsecurity.com/feed/
@@ -39,7 +47,7 @@ sources:
     url: https://www.bleepingcomputer.com/feed/
     category: "Cybersecurity"
   - name: SC Magazine
-    url: https://www.scmagazine.com/home/feed/
+    url: https://www.scmagazine.com/feed
     category: "Cybersecurity"
   - name: SecurityWeek
     url: https://feeds.feedburner.com/securityweek
@@ -47,34 +55,187 @@ sources:
   - name: Help Net Security
     url: https://www.helpnetsecurity.com/feed/
     category: "Cybersecurity"
+  - name: Security Affairs
+    url: https://securityaffairs.co/wordpress/feed
+    category: "Cybersecurity"
+  - name: Security Online
+    url: https://securityonline.info/feed/
+    category: "Cybersecurity"
+  - name: LetsDefend Blog
+    url: https://letsdefend.io/blog
+    category: "Scraping Candidates"
+  - name: We Live Security (ESET)
+    url: https://www.welivesecurity.com/feed/
+    category: "Cybersecurity"
+  - name: Fox-IT Security Blog
+    url: https://blog.fox-it.com/feed/
+    category: "Cybersecurity"
+  - name: Veracode Blog
+    url: https://www.veracode.com/blog/feed/
+    category: "Cybersecurity"
+  - name: ASPI Cyber Tech Security Digest
+    url: https://aspicts.substack.com/feed
+    category: "Cybersecurity"
+  - name: Security Affairs
+    url: https://securityaffairs.co/wordpress/feed
+    category: "Cybersecurity"
   - name: Bruce Schneier Blog
     url: https://www.schneier.com/blog/atom.xml
     category: "Cybersecurity"
+  - name: NIST Cybersecurity Blog
+    url: https://www.nist.gov/blogs/cybersecurity-insights/rss.xml
+    category: "Cybersecurity"
+  - name: Risky Business
+    url: https://risky.biz/rss.xml
+    category: "Cybersecurity"
+  - name: The Record Cybersecurity News
+    url: https://therecord.media/feed/
+    category: "Cybersecurity"
+  - name: Darknet
+    url: https://www.darknet.org.uk/feed/
+    category: "Cybersecurity"
+  - name: CyberScoop
+    url: https://www.cyberscoop.com/feed/
+    category: "Cybersecurity"
+  - name: Graham Cluley
+    url: https://www.grahamcluley.com/feed/
+    category: "Cybersecurity"
+  - name: Google Online Security Blog
+    url: https://feeds.feedburner.com/GoogleOnlineSecurityBlog
+    category: "Cybersecurity"
+  - name: Infosecurity Magazine
+    url: https://www.infosecurity-magazine.com/rss/news/
+    category: "Cybersecurity"
+  - name: IT Security Guru
+    url: https://www.itsecurityguru.org/category/editor-news/feed/
+    category: "Cybersecurity"
+  - name: TaoSecurity Blog
+    url: https://taosecurity.blogspot.com/feeds/posts/default
+    category: "Cybersecurity"
+  - name: Hackread
+    url: https://www.hackread.com/feed/
+    category: "Cybersecurity"
+  - name: Troy Hunt Blog
+    url: https://www.troyhunt.com/feeds/posts/default
+    category: "Cybersecurity"
+  - name: Daniel Miessler (Unsupervised Learning)
+    url: https://danielmiessler.com/feed.rss
+    category: "Cybersecurity"
+  - name: TechCrunch Security
+    url: https://techcrunch.com/category/security/feed/
+    category: "Cybersecurity"
+  - name: CSO Online
+    url: https://www.csoonline.com/feed
+    category: "Cybersecurity"
+  - name: The Last Watchdog
+    url: https://www.lastwatchdog.com/feed/
+    category: "Cybersecurity"
+  - name: 0day Fans
+    url: https://0dayfans.com/feed.rss
+    category: "Cybersecurity"
+  - name: Citation Needed
+    url: https://www.citationneeded.news/rss/
+    category: "Cybersecurity"
+  - name: DoublePulsar (Kevin Beaumont)
+    url: https://doublepulsar.com/feed
+    category: "Cybersecurity"
+  - name: UpGuard Blog
+    url: https://www.upguard.com/blog/rss.xml
+    category: "Cybersecurity"
+  - name: Shostack + Friends Blog
+    url: https://shostack.org/feed.xml
+    category: "Cybersecurity"
+  - name: Errata Security
+    url: https://blog.erratasec.com/feeds/posts/default
+    category: "Cybersecurity"
+  - name: Cybersecurity Insiders
+    url: https://www.cybersecurity-insiders.com/
+    category: "Scraping Candidates"
+  - name: ReversingLabs
+    url: https://www.reversinglabs.com/blog/rss.xml
+    category: "Cybersecurity"
+  - name: Detectify Blog
+    url: https://blog.detectify.com/feed/
+    category: "Cybersecurity"
+  - name: HackerNoon Security
+    url: https://hackernoon.com/tagged/security/feed
+    category: "Cybersecurity"
+  - name: SecurityFocus
+    url: https://www.securityfocus.com/
+    category: "Cybersecurity"
+  - name: Packet Storm Security
+    url: https://packetstorm.news/news/main/
+    category: "Scraping Candidates"
+  - name: Sectools
+    url: https://sectools.org/
+    category: "Scraping Candidates"
+  - name: HackerOne Blog
+    url: https://www.hackerone.com/blog
+    category: "Scraping Candidates"
   - name: TheRegister
     url: https://www.theregister.com/headlines.atom
+    category: Tech
+  - name: Ars Technica Security
+    url: https://feeds.arstechnica.com/arstechnica/index
+    category: Tech
+  - name: PC World Security
+    url: https://www.pcworld.com/security/feed
+    category: Tech
+  - name: CIO Magazine
+    url: https://www.cio.com/feed
+    category: Tech
+  - name: SIGNAL Magazine
+    url: https://www.afcea.org/signal-articles-feed.xml
+    category: Tech
+  - name: Computerworld
+    url: https://www.computerworld.com/feed
+    category: Tech
+  - name: Hackaday
+    url: https://hackaday.com/blog/feed/
+    category: Tech
+  - name: It's FOSS
+    url: https://itsfoss.com/rss/
+    category: Tech
+  - name: ZDNet Security
+    url: https://www.zdnet.com/news/rss.xml
+    category: Tech
+  - name: Gizmodo Security
+    url: https://gizmodo.com/feed
     category: Tech
 
   # === Vulnerability & CVE Feeds ===
   - name: CVE Feed (High/Critical)
-    url: https://cvefeed.io/rssfeed/
-    category: "Threat Intel & Vulnerability"
+    url: https://cvefeed.io/
+    category: "Scraping Candidates"
   - name: CVE Details Recent
-    url: https://www.cvedetails.com/vulnerability-feeds-form.php?type=rss&orderby=3&cvssscoremin=7
+    url: https://www.cvedetails.com/documentation/rss-feeds
     category: "Threat Intel & Vulnerability"
   - name: Rapid7 Vulnerability Research
-    url: https://blog.rapid7.com/tag/vulnerability-research/rss/
+    url: https://www.rapid7.com/blog/tag/research/rss/
     category: "Threat Intel & Vulnerability"
   - name: Tenable Research
-    url: https://www.tenable.com/blog/rss.xml
+    url: https://www.tenable.com/blog/feed
     category: "Threat Intel & Vulnerability"
   - name: VulnDB
-    url: https://vuldb.com/rss.xml
+    url: https://vuldb.com/?rss.recent
     category: "Threat Intel & Vulnerability"
   - name: ExploitDB
     url: https://www.exploit-db.com/rss.xml
     category: "Threat Intel & Vulnerability"
+  - name: No More Ransom Project
+    url: https://www.nomoreransom.org/
+    category: "Scraping Candidates"
+  - name: Intruder Intel CVE Feed
+    url: https://cvemon.intruder.io/rss/cvetrends/latest
+    category: "Threat Intel & Vulnerability"
   - name: Qualys VMDR Blog
     url: https://blog.qualys.com/feed
+    category: "Threat Intel & Vulnerability"
+  - name: Cybercrime Magazine
+    url: https://cybersecurityventures.com/feed/
+    category: "Threat Intel & Vulnerability"
+  - name: Bitdefender Hot For Security
+    url: https://www.bitdefender.com/nuxt/api/en-us/rss/hotforsecurity/
     category: "Threat Intel & Vulnerability"
 
   # === Threat Intelligence & Research ===
@@ -82,55 +243,183 @@ sources:
     url: https://www.recordedfuture.com/feed/
     category: "Threat Intel & Vulnerability"
   - name: CrowdStrike Blog
-    url: https://www.crowdstrike.com/blog/feed/
+    url: https://www.crowdstrike.com/en-us/blog/feed
     category: "Threat Intel & Vulnerability"
   - name: Cisco Talos Intelligence
-    url: https://blog.talosintelligence.com/feeds/posts/default
+    url: https://blog.talosintelligence.com/rss/
     category: "Threat Intel & Vulnerability"
   - name: Malwarebytes Labs
     url: https://blog.malwarebytes.com/feed/
     category: "Threat Intel & Vulnerability"
-  - name: Palo Alto Networks Unit 42
-    url: https://unit42.paloaltonetworks.com/feed/
+  - name: Palo Alto Networks Unit 42 (All Articles)
+    url: https://unit42.paloaltonetworks.com/unit-42-all-articles/feed/
     category: "Threat Intel & Vulnerability"
   - name: SANS Internet Storm Center
     url: https://isc.sans.edu/rssfeed.xml
     category: "Threat Intel & Vulnerability"
-  - name: Microsoft Security Blog
-    url: https://www.microsoft.com/en-us/security/blog/feed/
-    category: "Cybersecurity"
   - name: US-CERT National Cyber Awareness System
     url: https://us-cert.cisa.gov/ncas/alerts.xml
     category: "Threat Intel & Vulnerability"
-  - name: Fortinet Blog
-    url: https://blog.fortinet.com/rss.xml
+  - name: Mandiant Threat Intelligence
+    url: https://feeds.feedburner.com/threatintelligence/pvexyqv7v0v
     category: "Threat Intel & Vulnerability"
+  - name: CERT Vulnerability Notes
+    url: https://kb.cert.org/vuls/atomfeed/
+    category: "Threat Intel & Vulnerability"
+  - name: Have I Been Pwned Breaches
+    url: https://feeds.feedburner.com/HaveIBeenPwnedLatestBreaches
+    category: "Threat Intel & Vulnerability"
+  - name: LevelBlue Labs
+    url: https://levelblue.com/blogs/levelblue-blog/rss.xml
+    category: "Threat Intel & Vulnerability"
+  - name: Tripwire Blog
+    url: https://www.tripwire.com/state-of-security/feed
+    category: "Scraping Candidates"
+  - name: CXSecurity Exploit Database
+    url: https://www.exploit-db.com/rss.xml
+    category: "Threat Intel & Vulnerability"
+  - name: Google Project Zero
+    url: https://googleprojectzero.blogspot.com/feeds/posts/default
+    category: "Threat Intel & Vulnerability"
+  - name: ANY.RUN Cybersecurity Blog
+    url: https://any.run/cybersecurity-blog/feed/
+    category: "Threat Intel & Vulnerability"
+  - name: DataBreaches.net
+    url: https://databreaches.net/feed/
+    category: "Threat Intel & Vulnerability"
+  - name: The DFIR Report
+    url: https://thedfirreport.com/feed/
+    category: "Threat Intel & Vulnerability"
+  - name: Security Ledger
+    url: https://securityledger.com/feed/
+    category: "Threat Intel & Vulnerability"
+  - name: Graham Cluley
+    url: https://www.grahamcluley.com/feed/
+    category: "Threat Intel & Vulnerability"
+  - name: Microsoft MSRC
+    url: https://msrc.microsoft.com/blog
+    category: "Scraping Candidates"
+  - name: Microsoft Security Blog
+    url: https://www.microsoft.com/en-us/security/blog/feed/
+    category: "Security Vendor Blog"
+  - name: Akamai Blog
+    url: https://feeds.feedburner.com/akamai/blog
+    category: "Security Vendor Blog"
+  - name: Sophos News
+    url: https://www.sophos.com/en-us/blog/feed
+    category: "Security Vendor Blog"
+  - name: Huntress Blog
+    url: https://www.huntress.com/blog/rss.xml
+    category: "Security Vendor Blog"
 
   # === Asia-Pacific Regulatory & Security Feeds ===
   - name: Singapore MAS
-    url: https://www.mas.gov.sg/rss/news
+    url: https://www.mas.gov.sg/rss/news (dead)
     category: "Cyber Regulatory"
-  - name: Singapore CSA
-    url: https://www.csa.gov.sg/rss/news
-    category: "Cyber Regulatory"
-  - name: Japan NISC
-    url: https://www.nisc.go.jp/rss/eng-news.xml
-    category: "Cyber Regulatory"
+  - name: Japan NISC (Japanese)
+    url: https://www.cyber.go.jp/
+    category: "Scraping Candidates"
+  - name: Japan NISC (English)
+    url: https://www.cyber.go.jp/en/
+    category: "Scraping Candidates"
   - name: India CERT-In
-    url: https://www.cert-in.org.in/rss
-    category: "Cyber Regulatory"
+    url: https://www.cert-in.org.in/
+    category: "Scraping Candidates"
   - name: Hong Kong PCPD
-    url: https://www.pcpd.org.hk/rss/press.xml
+    url: http://www.pcpd.org.hk/english/rss/rss_news_en.xml
     category: "Cyber Regulatory"
   - name: Philippines NPC
-    url: https://www.privacy.gov.ph/rss/feed.xml
+    url: https://privacy.gov.ph/category/press-releases/feed/
     category: "Cyber Regulatory"
   - name: Korea KISA
     url: https://www.kisa.or.kr/rss/eng.xml
     category: "Cyber Regulatory"
   - name: Malaysia MyCERT
-    url: https://www.mycert.org.my/rss
+    url: https://www.mycert.org.my/portal/rss
     category: "Cyber Regulatory"
+  - name: JVN Vulnerability Notes
+    url: https://jvndb.jvn.jp/ja/rss/jvndb.rdf
+    category: "Cyber Regulatory"
+
+  # === Security Vendor Blogs ===
+  - name: Securelist (Kaspersky)
+    url: https://securelist.com/rss/
+    category: "Security Vendor Blog"
+  - name: Kaspersky Official Blog
+    url: https://www.kaspersky.com/blog/feed/
+    category: "Security Vendor Blog"
+  - name: WeLiveSecurity (ESET)
+    url: https://www.welivesecurity.com/feed/
+    category: "Security Vendor Blog"
+  - name: Cisco Talos Intelligence
+    url: https://blog.talosintelligence.com/rss/
+    category: "Security Vendor Blog"
+  - name: Tenable Research
+    url: https://www.tenable.com/blog/feed
+    category: "Security Vendor Blog"
+  - name: Palo Alto Networks Unit 42
+    url: https://unit42.paloaltonetworks.com/feed/
+    category: "Security Vendor Blog"
+  - name: Rapid7 Vulnerability Research
+    url: https://www.rapid7.com/blog/tag/research/rss/
+    category: "Security Vendor Blog"
+  - name: Snyk Security Blog
+    url: https://snyk.io/blog/feed.xml
+    category: "Security Vendor Blog"
+  - name: Aqua Security
+    url: https://blog.aquasec.com/rss.xml
+    category: "Security Vendor Blog"
+
+  # === Scraping Candidates (Non-RSS Sources) ===
+  # These sources require web scraping or API integration (Phase 2+)
+  - name: Kim Zetter's Zero Day Blog
+    url: https://www.zetter-zeroday.com/rss/
+    category: "Cybersecurity"
+  - name: CISA Alerts & Advisories
+    url: https://cisa.gov/
+    category: "Scraping Candidates"
+  - name: NIST Cybersecurity Framework
+    url: https://www.nist.gov/cyberframework
+    category: "Scraping Candidates"
+  - name: MITRE ATT&CK Framework
+    url: https://attack.mitre.org/
+    category: "Scraping Candidates"
+  - name: Dragos ICS Security
+    url: https://www.dragos.com/blog/
+    category: "Scraping Candidates"
+  - name: NETSCOUT ASERT Blog
+    url: https://www.netscout.com/blog/asert/
+    category: "Scraping Candidates"
+  - name: Fortinet Threat Research
+    url: https://www.fortinet.com/blog/threat-research
+    category: "Scraping Candidates"
+  - name: Singapore CSA
+    url: https://www.csa.gov.sg/our-programmes/cybersecurity-public-awareness
+    category: "Scraping Candidates"
+  - name: CyberScoop
+    url: https://www.cyberscoop.com/
+    category: "Scraping Candidates"
+  - name: Wired Security
+    url: https://www.wired.com/category/security/
+    category: "Scraping Candidates"
+  - name: ASPI Cyber and Technology Digest
+    url: https://aspicts.substack.com/feed
+    category: "Scraping Candidates"
+  - name: SecurityBoulevard
+    url: https://securityboulevard.com/feed/
+    category: "Cybersecurity"
+  - name: ThreatPost
+    url: https://threatpost.com/
+    category: "Scraping Candidates"
+  - name: Security Weekly
+    url: https://securityweekly.com/
+    category: "Scraping Candidates"
+  - name: Qualys Blog (Scraping Source)
+    url: https://blog.qualys.com/
+    category: "Scraping Candidates"
+  - name: SecurityScorecard Research Center
+    url: https://securityscorecard.com/research
+    category: "Scraping Candidates"
 
 filters:
   keywords:
@@ -324,6 +613,13 @@ synthesis:
   post_output:
     weekly_scan_prefix: "weekly-scan"           # Filename: YYYY-MM-DD-HH-MM-weekly-scan.md
     analyst_opinion_prefix: "analyst-opinion"   # Filename: YYYY-MM-DD-HH-MM-analyst-opinion.md
+
+# === Translation Settings ===
+translation:
+  enabled: true                        # Auto-translate non-English content
+  # Automatically detects Japanese, Chinese, Korean and translates to English
+  # Uses Gemini API (requires enable_gemini_summarization: true)
+  # Preserves original title in _original_title field for reference
 
 # === Error Handling & Logging ===
 error_handling:
