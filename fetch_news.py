@@ -1430,10 +1430,8 @@ def generate_gemini_opinion_analysis(article, category, historical_posts, config
             logging.info(f"[ANALYST] Enriched context with CVE data for {article.get('title')}")
         else:
             # Fallback to standard summary
-            article_text = clean_summary(article.get("summary", "") or article.get("description", ""))[:1500]
+            article_text = clean_summary(article.get("summary", "") or article.get("description", ""))[:2000]
 
-        
-        # Build historical context string
         
         # Build historical context string
         history_context = ""
@@ -1442,114 +1440,75 @@ def generate_gemini_opinion_analysis(article, category, historical_posts, config
             for hp in historical_posts:
                 history_context += f"- {hp['date']}: {hp['title']}\n"
         
-        # Prompt 1: Combined Technical Analysis & Threat Intelligence (Investigative Journalism)
-        # Optimized for token efficiency: Uses dense technical context instead of narrative fluff
-        technical_prompt = f"""
-ROLE: Senior Cybersecurity Analyst.
-TASK: Write investigative technical analysis (900-1100 words).
-FOCUS: Technical mechanics, attack chain, threat ecosystem.
+        # Unified Prompt: Analyst Opinion (Investigative Journalism style)
+        prompt = f"""
+ROLE: Senior Threat Intelligence Analyst & Investigative Journalist.
+AUDIENCE: CISOs, Security Architects, and Executive Leadership.
+TONE: Authoritative, narrative-driven, skeptical of hype, executive-ready. (Example style: Krebs, Schneier, Troy Hunt).
+
+TASK: Write a cohesive "Analyst Opinion" deep-dive on the provided article.
+DO NOT output a generic list of bullet points. Write a COMPELLING NARRATIVE.
 
 SOURCE DATA:
 Title: {article_title}
 Context: {article_text}
 {history_context if history_context else ""}
 
-OUTPUT STRUCTURE:
-1. Technical Breakdown (The Mechanics)
-2. Threat Actor / Attribution (If applicable)
-3. Impact Assessment
+---
 
-STYLE: Dense, technical, authoritative. No fluff.
+OUTPUT FORMAT (Markdown):
+
+### The Mechanic: What's Actually Happening
+(Write 2-4 paragraphs explaining the technical reality. Cut through marketing fluff. Explain the attack chain, the vulnerability mechanics, or the architectural shift. Use "we" or "I" to sound personal and expert.)
+
+### The "So What?": Why This Matters
+(Analyze the broader impact. Does this break a unified security model? Does it lower the barrier to entry for attackers? Cite specific examples or metrics if available in the context.)
+
+### Strategic Defense: What To Do About It
+(Provide a bifurcated strategy. Be specific—name tools, logs, and configurations by name.)
+
+**1. Immediate Actions (Tactical Response)**
+*   Actionable step 1
+*   Actionable step 2
+*   Actionable step 3
+
+**2. Long-Term Strategy (The Pivot)**
+*   Strategic shift 1
+*   Strategic shift 2
+
+---
+
+CONSTRAINTS:
+- Total length: ~1000-1500 words.
+- Use bolding for emphasis.
+- AVOID: "In the rapidly evolving landscape," "It is crucial to," or generic ChatGPT filler.
+- If the text is about a specific CVE, include the CVSS score and vector if known.
 """
 
-        # Prompt 2: Defense Strategy (Operational & Strategic) (600+ words)
-        defense_prompt = f"""
-ROLE: CISO / Security Architect.
-TASK: Write actionable defense strategy (600+ words).
-CONTEXT: {article_title}
-
-OUTPUT STRUCTURE:
-1. Immediate Mitigation (Tactical) - "Do this NOW"
-2. Detection Engineering (SIEM/EDR) - "Hunt for this"
-3. Strategic Defense (Long term) - "Fix the root cause"
-
-Be specific. Name tools, logs, and configurations.
-"""
-        
-        response_technical = GEMINI_CLIENT.models.generate_content(
+        response = GEMINI_CLIENT.models.generate_content(
             model="gemini-3-flash-preview",
-            contents=technical_prompt,
-            config={"max_output_tokens": 1200, "temperature": 0.4}
+            contents=prompt,
+            config={"max_output_tokens": 3000, "temperature": 0.5}
         )
         
-        # Handle response - might be in different format
-        if hasattr(response_technical, 'text'):
-            technical_analysis = response_technical.text.strip()
-        elif hasattr(response_technical, 'content'):
-            technical_analysis = response_technical.content.strip()
+        # Handle response
+        if hasattr(response, 'text'):
+            full_analysis = response.text.strip()
+        elif hasattr(response, 'content'):
+            full_analysis = response.content.strip()
         else:
-            technical_analysis = str(response_technical).strip()
+            full_analysis = str(response).strip()
+            
+        logging.info("[OPINION] Generated full narrative analysis for: %s", article_title)
         
-        logging.debug("[OPINION] Technical analysis response type: %s, length: %d", type(response_technical), len(technical_analysis) if technical_analysis else 0)
-        
-        # Prompt 2: Defense Strategy & Actionable Intelligence (Detection, Mitigation, Strategic Actions)
-        defense_prompt = f"""
-Provide DEFENSE STRATEGY & ACTIONABLE INTELLIGENCE for security teams.
-
-Article: {article_title}
-{article_text}
-
-Create a comprehensive defense guide with three timeframes:
-
-**IMMEDIATE ACTIONS (0-30 days) - Tactical Response**
-Provide 3-5 SPECIFIC, TECHNICAL actions:
-- Concrete detection rules: "Deploy SIEM query for [specific behavior/IOC]"
-- Patch urgency: "Patch CVE-XXXX in [affected systems] - exploited in wild"
-- Configuration hardening: "Enable [specific setting] in [security tool]"
-- Hunting queries: "Search logs for [specific indicator/pattern]"
-- Isolation/containment: "Segment [critical assets] from [network zone]"
-
-Be SPECIFIC: name CVEs, products, log sources, actual query syntax if possible.
-
-**MEDIUM-TERM PLANNING (30-90 days) - Process & Architecture**
-Provide 3-4 strategic improvements:
-- Architecture changes: "Implement network segmentation for [critical assets]"
-- Process improvements: "Conduct tabletop exercise simulating [attack scenario]"
-- Vendor assessment: "Review [vendor] SLAs for [incident response capability]"
-- Capability gaps: "Invest in [technology/tool] to address [detection gap]"
-- Training: "Train SOC analysts on [specific technique/tool]"
-
-**LONG-TERM VISION (90+ days) - Strategic Transformation**
-Provide 2-3 strategic shifts:
-- Philosophy: "Shift from perimeter defense to assume-breach model"
-- Investment: "Prioritize [technology category] over [legacy approach] because [reason]"
-- Collaboration: "Join [industry group] for [threat intelligence sharing]"
-- Resilience: "Build [capability] to recover from [specific scenario]"
-
-For each timeframe, explain WHY (tied to the technical analysis). Avoid generic advice.
-"""
-        
-        response_defense = GEMINI_CLIENT.models.generate_content(
-            model="gemini-3-flash-preview",
-            contents=defense_prompt,
-            config={"max_output_tokens": 800, "temperature": 0.3}
-        )
-        
-        # Handle response - might be in different format
-        if hasattr(response_defense, 'text'):
-            defense_strategy = response_defense.text.strip()
-        elif hasattr(response_defense, 'content'):
-            defense_strategy = response_defense.content.strip()
-        else:
-            defense_strategy = str(response_defense).strip()
-        
-        logging.debug("[OPINION] Defense strategy response type: %s, length: %d", type(response_defense), len(defense_strategy) if defense_strategy else 0)
-        
-        logging.info("[OPINION] Generated investigative journalism analysis for: %s", article_title)
+        # Return as a single block since we merged the prompts.
+        # The caller expects specific keys, so we will split or just return the full block in 'technical_analysis'
+        # and leave 'defense_strategy' empty (or split logically if needed).
+        # For simplicity/cohesion, we put the whole thing in technical_analysis and the caller renders it.
         
         return {
-            'technical_analysis': technical_analysis,
-            'defense_strategy': defense_strategy
+            'technical_analysis': full_analysis,
+            'defense_strategy': "" # Included in the cohesive narrative above
         }
     
     except Exception as e:
@@ -1558,9 +1517,8 @@ For each timeframe, explain WHY (tied to the technical analysis). Avoid generic 
         # Provide structured fallback content when Gemini is unavailable
         article_summary = article.get('gemini_excerpt', clean_summary(article.get("summary", "") or article.get("description", "")))
         
-        # Create a basic technical analysis from the article summary and category
         fallback_technical = f"""
-**Technical Overview**
+### The Mechanic: What's Actually Happening
 
 {article_summary}
 
@@ -1571,25 +1529,17 @@ This article relates to the {category.upper()} security category. The content ad
 *Note: Summary analysis provided instead.*
 """
         
-        # Create structured fallback defense strategy with action items
         fallback_defense = f"""
-**Immediate Actions (0-30 days)**
+### Strategic Defense: What To Do About It
 
-1. Review this article for relevant context to your organization's security posture
-2. Share findings with your security team for discussion
-3. Assess applicability to your systems and infrastructure
+**1. Immediate Actions (Tactical Response)**
+*   Review this article for relevant context to your organization's security posture
+*   Share findings with your security team for discussion
+*   Assess applicability to your systems and infrastructure
 
-**Medium-Term Planning (30-90 days)**
-
-1. Incorporate findings into your security strategy review
-2. Update relevant security policies if needed
-3. Schedule team training if new threats are identified
-
-**Long-Term Vision (90+ days)**
-
-1. Track evolution of this threat/trend over time
-2. Integrate learnings into future security architecture decisions
-3. Build defense capabilities to address identified gaps
+**2. Long-Term Strategy (The Pivot)**
+*   Track evolution of this threat/trend over time
+*   Integrate learnings into future security architecture decisions
 
 *Note: Summary analysis provided instead.*
 """
