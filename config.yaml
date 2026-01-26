@@ -337,9 +337,6 @@ sources:
   - name: Malaysia MyCERT
     url: https://www.mycert.org.my/portal/rss
     category: "Cyber Regulatory"
-  - name: JVN Vulnerability Notes
-    url: https://jvndb.jvn.jp/ja/rss/jvndb.rdf
-    category: "Cyber Regulatory"
 
   # === Security Vendor Blogs ===
   - name: Securelist (Kaspersky)
