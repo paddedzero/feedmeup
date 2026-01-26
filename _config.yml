@@ -1,4 +1,5 @@
 # Site settings (Last Rebuild: 2026-01-25)
+future: true
 title: FeedMeUp News Brief
 tagline: Curated weekly AI, Cybersecurity & Cloud news
 description: Curated weekly news on AI, Cybersecurity, Cloud, and APAC Regulatory topics.
