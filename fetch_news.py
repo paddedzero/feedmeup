@@ -1597,7 +1597,7 @@ def create_analyst_opinion_post(date_str, trending_data, config):
 layout: post
 title: "Analyst Top 3: {category} — {formatted_title_date}"
 date: {date_str} {time_front}
-categories: [Analyst Opinion, {category}]
+categories: ["Analyst Opinion", "{category}"]
 ---
 """
 
