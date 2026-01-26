@@ -1233,7 +1233,7 @@ def create_weekly_scan_post(date_str, content_by_category, highlights):
 layout: post
 title: "Weekly Scan: Cloud, Cybersecurity, AI News — {formatted_title_date}"
 date: {date_str} {time_front}
-categories: [newsbrief, weekly-brief]
+categories: ["News Brief", "weekly-brief"]
 ---
 """
 
