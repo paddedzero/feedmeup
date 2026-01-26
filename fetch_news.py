@@ -1233,7 +1233,7 @@ def create_weekly_scan_post(date_str, content_by_category, highlights):
 layout: post
 title: "Weekly Scan: Cloud, Cybersecurity, AI News — {formatted_title_date}"
 date: {date_str} {time_front}
-categories: [newsbrief, weekly-scan]
+categories: [newsbrief, weekly-brief]
 ---
 """
 
@@ -1597,7 +1597,7 @@ def create_analyst_opinion_post(date_str, trending_data, config):
 layout: post
 title: "Analyst Top 3: {category} — {formatted_title_date}"
 date: {date_str} {time_front}
-categories: [analysis, opinion, {category.lower().replace(' ', '-')}]
+categories: [Analyst Opinion, {category}]
 ---
 """
 
