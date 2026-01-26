@@ -110,4 +110,3 @@ fi
 echo "✅ ALL CRITICAL CHECKS PASSED"
 echo "Safe to proceed with git operations."
 exit 0
-

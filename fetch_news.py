@@ -1568,7 +1568,7 @@ For each timeframe, explain WHY (tied to the technical analysis). Avoid generic 
 
 This article relates to the {category.upper()} security category. The content addresses important developments in this area that security teams should be aware of.
 
-*Note: Full technical analysis requires Gemini API access for deep investigative journalism synthesis.*
+*Note: Summary analysis provided instead.*
 """
         
         # Create structured fallback defense strategy with action items
@@ -1591,7 +1591,7 @@ This article relates to the {category.upper()} security category. The content ad
 2. Integrate learnings into future security architecture decisions
 3. Build defense capabilities to address identified gaps
 
-*Full defense strategy recommendations require Gemini API access for comprehensive threat analysis.*
+*Note: Summary analysis provided instead.*
 """
         
         return {
