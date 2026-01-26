@@ -2,7 +2,7 @@
 layout: post
 title: "Analyst Top 3: Cybersecurity — Jan 24, 2026"
 date: 2026-01-24 20:19:13 -0500
-categories: [analysis, opinion, cybersecurity]
+categories: ["Analyst Opinion", "cybersecurity"]
 ---
 ## This Week's Top 3: Cybersecurity
 
