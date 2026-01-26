@@ -1,4 +1,4 @@
-name: 'Weekly News Brief - Phase 1-2 (Gemini Synthesis + Dual-Post Output)'
+name: 'Feedmeup Action Generator'
 
 on:
   schedule:
