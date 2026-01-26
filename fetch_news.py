@@ -1582,7 +1582,7 @@ def create_analyst_opinion_post(date_str, trending_data, config):
     formatted_title_date = date_object.strftime("%b %d, %Y")
     time_front = now_local.strftime("%H:%M:%S %z")
 
-    category = trending_data['category']
+    category = trending_data['category'].title()
     article_count = trending_data['article_count']
     highlight_count = trending_data['highlight_count']
     top_articles = trending_data.get('top_articles', [])
