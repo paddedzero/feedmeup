@@ -1477,7 +1477,7 @@ Be specific. Name tools, logs, and configurations.
 """
         
         response_technical = GEMINI_CLIENT.models.generate_content(
-            model="gemini-3-flash",
+            model="gemini-3-flash-preview",
             contents=technical_prompt,
             config={"max_output_tokens": 1200, "temperature": 0.4}
         )
@@ -1530,7 +1530,7 @@ For each timeframe, explain WHY (tied to the technical analysis). Avoid generic 
 """
         
         response_defense = GEMINI_CLIENT.models.generate_content(
-            model="gemini-3-flash",
+            model="gemini-3-flash-preview",
             contents=defense_prompt,
             config={"max_output_tokens": 800, "temperature": 0.3}
         )
