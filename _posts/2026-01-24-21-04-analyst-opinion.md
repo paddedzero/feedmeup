@@ -3,6 +3,7 @@ layout: post
 title: "Analyst Top 3: Cybersecurity — Jan 24, 2026"
 date: 2026-01-24 21:04:49 -0500
 categories: ["Analyst Opinion", "Cybersecurity"]
+tags: ["Analyst Opinion", "Cybersecurity", "deep-dive"]
 ---
 ## This Week's Top 3: Cybersecurity
 

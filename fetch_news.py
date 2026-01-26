@@ -1234,6 +1234,7 @@ layout: post
 title: "Weekly Scan: Cloud, Cybersecurity, AI News — {formatted_title_date}"
 date: {date_str} {time_front}
 categories: ["News Brief", "weekly-brief"]
+tags: ["News Brief", "weekly-brief"]
 ---
 """
 
@@ -1598,6 +1599,7 @@ layout: post
 title: "Analyst Top 3: {category} — {formatted_title_date}"
 date: {date_str} {time_front}
 categories: ["Analyst Opinion", "{category}"]
+tags: ["Analyst Opinion", "{category}", "deep-dive"]
 ---
 """
 
