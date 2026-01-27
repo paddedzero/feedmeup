@@ -1,9 +1,23 @@
 <!-- Original banner - no shimmer -->
 <style>
-    .hero-banner img {
+    .hero-banner img,
+    .hero-banner img.preview-img,
+    .hero-banner img.shimmer,
+    .preview-img.shimmer {
         animation: none !important;
         filter: none !important;
         opacity: 1 !important;
+        background: none !important;
+        background-image: none !important;
+    }
+
+    /* Disable shimmer keyframes */
+    @keyframes shimmer {
+
+        0%,
+        100% {
+            opacity: 1 !important;
+        }
     }
 </style>
 <div class="hero-banner" role="img" aria-label="FeedMeUp News Brief"
