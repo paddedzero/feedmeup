@@ -2,7 +2,8 @@
 layout: post
 title: "Analyst Opinion: This Week in Cybersecurity — Jan 01, 2026"
 date: 2026-01-01 22:43:09 -0500
-categories: [analysis, opinion, cybersecurity]
+categories: ["Analyst Opinion", "Cybersecurity"]
+tags: ["Analyst Opinion", "Cybersecurity", "deep-dive"]
 ---
 ## Weekly Trend: Cybersecurity
 

@@ -1233,7 +1233,8 @@ def create_weekly_scan_post(date_str, content_by_category, highlights):
 layout: post
 title: "Weekly Scan: Cloud, Cybersecurity, AI News — {formatted_title_date}"
 date: {date_str} {time_front}
-categories: [newsbrief, weekly-brief]
+categories: ["News Brief", "weekly-brief"]
+tags: ["News Brief", "weekly-brief"]
 ---
 """
 
@@ -1581,7 +1582,7 @@ def create_analyst_opinion_post(date_str, trending_data, config):
     formatted_title_date = date_object.strftime("%b %d, %Y")
     time_front = now_local.strftime("%H:%M:%S %z")
 
-    category = trending_data['category']
+    category = trending_data['category'].title()
     article_count = trending_data['article_count']
     highlight_count = trending_data['highlight_count']
     top_articles = trending_data.get('top_articles', [])
@@ -1598,6 +1599,7 @@ layout: post
 title: "Analyst Top 3: {category} — {formatted_title_date}"
 date: {date_str} {time_front}
 categories: ["Analyst Opinion", "{category}"]
+tags: ["Analyst Opinion", "{category}", "deep-dive"]
 ---
 """
 
