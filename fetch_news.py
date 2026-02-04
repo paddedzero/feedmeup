@@ -1676,10 +1676,18 @@ def main():
     gemini_model = gemini_config.get("model", "gemini-1.5-flash")
     gemini_prompt_template = gemini_config.get("summarization_prompt", "")
     
+    # Load translation configuration
+    translation_enabled = config.get("translation", {}).get("enabled", False)
+    
     if gemini_enabled:
         init_gemini_client(gemini_api_key, gemini_model)
+        if translation_enabled:
+            logging.info("[TRANSLATE] Auto-translation enabled for Korean/Japanese/Chinese content")
     else:
         logging.info("[GEMINI] Summarization disabled in config")
+        if translation_enabled:
+            logging.warning("[TRANSLATE] Translation requires Gemini API; forcing translation_enabled=False")
+            translation_enabled = False
 
     logging.info("%s Starting news aggregation... %s", YELLOW, RESET)
 
@@ -1749,6 +1757,10 @@ def main():
                     
                     # Store source name for attribution
                     entry['_source_name'] = feed_name
+                    
+                    # Translate non-English content if enabled
+                    if translation_enabled and GEMINI_CLIENT:
+                        entry = translate_entry(entry, config)
                     
                     # Phase 1: Gemini Summarization MOVED to post-deduplication (Cost Saver)
                     # We no longer summarize every matching article here.
