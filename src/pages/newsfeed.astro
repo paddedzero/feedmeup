@@ -1,0 +1,167 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import PostCard from '@/components/PostCard.svelte';
+import Breadcrumbs from '@/components/Breadcrumbs.svelte';
+import { getReadTime } from '@/lib/utils/readTime';
+import { getPublishedNewsfeed, getNewsfeedSlug } from '@/lib/utils/posts';
+import { SITE } from '@/config';
+
+const posts = (await getPublishedNewsfeed()).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+// Group posts by year
+const groupedPosts = posts.reduce(
+  (acc, post) => {
+    const year = post.data.pubDate.getFullYear().toString();
+    if (!acc[year]) acc[year] = [];
+    acc[year].push(post);
+    return acc;
+  },
+  {} as Record<string, typeof posts>
+);
+
+const years = Object.keys(groupedPosts).sort((a, b) => b.localeCompare(a));
+
+const base = SITE.base;
+const toPath = (path: string) => `${base}${path.replace(/^\/+/, '')}`;
+
+// Get all tags with counts
+const tagCounts = posts.reduce(
+  (acc, post) => {
+    post.data.tags?.forEach((tag) => {
+      acc[tag] = (acc[tag] || 0) + 1;
+    });
+    return acc;
+  },
+  {} as Record<string, number>
+);
+
+// Sort tags by count (descending)
+const sortedTags = Object.entries(tagCounts)
+  .sort(([, a], [, b]) => b - a)
+  .slice(0, 20); // Top 20 tags
+---
+
+<Layout title="Newsfeed" description={SITE.blogDescription}>
+  <Breadcrumbs items={[{ name: 'Newsfeed', href: '/newsfeed' }]} />
+
+  <div class="mb-10 sm:mb-12">
+    <h1
+      class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-[1.1]"
+    >
+      Newsfeed
+    </h1>
+    <p class="mt-3 text-base sm:text-lg text-muted-foreground max-w-2xl leading-relaxed">
+      {SITE.blogDescription}
+    </p>
+    <div class="mt-6 flex flex-wrap gap-2">
+      <button class="filter-btn px-4 py-2 rounded-lg text-sm font-bold tracking-widest uppercase transition-colors bg-primary text-primary-foreground border border-transparent" data-filter="all">All</button>
+      <button class="filter-btn px-4 py-2 rounded-lg text-sm font-bold tracking-widest uppercase transition-colors bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border/50" data-filter="tech-news">Weekly Scans</button>
+      <button class="filter-btn px-4 py-2 rounded-lg text-sm font-bold tracking-widest uppercase transition-colors bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border/50" data-filter="analysis">Analyst Opinions</button>
+    </div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row gap-10 lg:gap-12">
+    <!-- Main Content: Posts -->
+    <div class="flex-1 min-w-0">
+      <div class="flex flex-col gap-12 lg:gap-14">
+        {
+          years.map((year) => (
+            <section class="year-section flex flex-col gap-6">
+              <div class="flex items-center gap-6">
+                <h2 class="text-xs font-black uppercase tracking-[0.25em] text-muted-foreground opacity-80 shrink-0">
+                  {year}
+                </h2>
+                <div class="h-px flex-1 bg-border opacity-60" />
+              </div>
+              <div class="flex flex-col gap-3 sm:gap-4">
+                {groupedPosts[year].map((post) => (
+                  <div class="newsfeed-item" data-tags={post.data.tags?.join(',') || ''}>
+                    <PostCard
+                      {post}
+                      slug={getNewsfeedSlug(post)}
+                      readTime={getReadTime(post.body || '')}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))
+        }
+      </div>
+    </div>
+
+    <!-- Sidebar: Tags -->
+    <aside class="lg:w-64 flex-shrink-0">
+      <div class="lg:sticky lg:top-24">
+        <!-- Tags Cloud -->
+        <div class="p-5 rounded-xl bg-secondary/30 border border-border/50">
+          <h3 class="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
+            Popular Topics
+          </h3>
+          <div class="flex flex-wrap gap-2">
+            {
+              sortedTags.map(([tag, count]) => (
+                <a
+                  href={toPath(`/posts/tag/${tag}`)}
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-background border border-border hover:bg-accent hover:border-primary/50 transition-all no-underline group"
+                >
+                  <span class="text-foreground group-hover:text-primary transition-colors">
+                    {tag}
+                  </span>
+                  <span class="text-muted-foreground text-xs">({count})</span>
+                </a>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</Layout>
+
+<script is:inline>
+  document.addEventListener('astro:page-load', () => {
+    const buttons = document.querySelectorAll('.filter-btn');
+    const items = document.querySelectorAll('.newsfeed-item');
+    const sections = document.querySelectorAll('.year-section');
+
+    if (buttons.length === 0) return;
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => {
+          b.classList.remove('bg-primary', 'text-primary-foreground', 'border-transparent');
+          b.classList.add('bg-secondary', 'text-secondary-foreground', 'hover:bg-secondary/80', 'border-border/50');
+        });
+        btn.classList.add('bg-primary', 'text-primary-foreground', 'border-transparent');
+        btn.classList.remove('bg-secondary', 'text-secondary-foreground', 'hover:bg-secondary/80', 'border-border/50');
+
+        const filter = btn.getAttribute('data-filter');
+
+        items.forEach(item => {
+          const tags = item.getAttribute('data-tags') || '';
+          if (filter === 'all' || tags.includes(filter)) {
+            item.style.display = 'block';
+            item.setAttribute('data-visible', 'true');
+          } else {
+            item.style.display = 'none';
+            item.setAttribute('data-visible', 'false');
+          }
+        });
+
+        sections.forEach(section => {
+          const visibleItems = section.querySelectorAll('.newsfeed-item[data-visible="true"]');
+          if (visibleItems.length === 0) {
+            section.style.display = 'none';
+          } else {
+            section.style.display = 'flex';
+          }
+        });
+      });
+    });
+
+    items.forEach(item => item.setAttribute('data-visible', 'true'));
+  });
+</script>
