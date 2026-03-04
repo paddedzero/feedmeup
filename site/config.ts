@@ -43,11 +43,11 @@ export interface SiteConfig {
 export const SITE: SiteConfig = {
   author: 'paddedzero',
   desc: 'Automated news aggregation for Cloud, Cybersecurity, AI, and ML technologies.',
-  title: 'pub-blog',
+  title: 'feedmeup',
   ogImage: 'og.png',
   lang: 'en-US',
-  base: '/pub-blog/',
-  website: 'https://paddedzero.github.io/pub-blog',
+  base: '/feedmeup/',
+  website: 'https://paddedzero.github.io/feedmeup',
   social: {
     github: 'https://github.com/paddedzero',
   },
@@ -77,7 +77,7 @@ export const SITE: SiteConfig = {
 
   comments: {
     enabled: false,
-    repo: 'paddedzero/pub-blog',
+    repo: 'paddedzero/feedmeup',
     repoId: '',
     category: 'General',
     categoryId: '',
