@@ -17,7 +17,7 @@ import {
   transformerNotationWordHighlight,
 } from '@shikijs/transformers';
 
-import { SITE } from './site/config';
+import { SITE } from './site/config.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
