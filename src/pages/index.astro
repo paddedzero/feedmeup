@@ -25,7 +25,7 @@ const projects = (await getCollection('projects'))
 
 const newsfeedItems = (await getPublishedNewsfeed()).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-).slice(0, 5);
+).slice(0, 2);
 
 const base = SITE.base;
 const toPath = (path: string) => `${base}${path.replace(/^\/+/, '')}`;
@@ -104,7 +104,32 @@ const toPath = (path: string) => `${base}${path.replace(/^\/+/, '')}`;
       )
     }
 
-    <!-- 3. Latest Posts -->
+    <!-- 3. News Feed -->
+    {
+      newsfeedItems.length > 0 && (
+        <section>
+          <div class="flex items-baseline justify-between mb-8 sm:mb-12">
+            <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              News Feed
+            </h2>
+            <div class="h-px flex-1 mx-4 sm:mx-8 bg-border opacity-70" />
+            <a
+              href={toPath('newsfeed')}
+              class="px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-widest hover:bg-accent hover:text-primary transition-all no-underline"
+            >
+              View all feeds
+            </a>
+          </div>
+          <div class="grid gap-3 sm:gap-4">
+            {newsfeedItems.map((post) => (
+              <PostCard {post} slug={getNewsfeedSlug(post)} readTime={getReadTime(post.body || '')} />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <!-- 4. Latest Posts -->
     <section>
       <div class="flex items-baseline justify-between mb-8 sm:mb-12">
         <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
@@ -126,7 +151,7 @@ const toPath = (path: string) => `${base}${path.replace(/^\/+/, '')}`;
       </div>
     </section>
 
-    <!-- 4. Projects -->
+    <!-- 5. Projects -->
     {
       SITE.homeProjects.enabled && projects.length > 0 && (
         <section>
@@ -248,31 +273,6 @@ const toPath = (path: string) => `${base}${path.replace(/^\/+/, '')}`;
                 </article>
               );
             })}
-          </div>
-        </section>
-      )
-    }
-
-    <!-- 5. News Feed -->
-    {
-      newsfeedItems.length > 0 && (
-        <section>
-          <div class="flex items-baseline justify-between mb-8 sm:mb-12">
-            <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
-              News Feed
-            </h2>
-            <div class="h-px flex-1 mx-4 sm:mx-8 bg-border opacity-70" />
-            <a
-              href={toPath('newsfeed')}
-              class="px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-widest hover:bg-accent hover:text-primary transition-all no-underline"
-            >
-              View all feeds
-            </a>
-          </div>
-          <div class="grid gap-3 sm:gap-4">
-            {newsfeedItems.map((post) => (
-              <PostCard {post} slug={getNewsfeedSlug(post)} readTime={getReadTime(post.body || '')} />
-            ))}
           </div>
         </section>
       )
