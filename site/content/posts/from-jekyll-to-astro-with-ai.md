@@ -1,7 +1,7 @@
 ---
 title: "From Jekyll to Astro — How I Rebuilt My Site with AI in Days, Not Months"
 description: "A practical walkthrough of migrating a GitHub Pages site from Jekyll to Astro, using GitHub Copilot and Gemini to build a fully automated news aggregation engine along the way."
-pubDate: 2026-03-07
+pubDate: 2026-02-07
 tags: ["astro", "jekyll", "github-pages", "ai", "copilot", "gemini", "migration", "tutorial"]
 featured: true
 ---
