@@ -4,8 +4,6 @@
 ![Astro](https://img.shields.io/badge/Astro-Latest-purple)
 ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-Automated-success)
 
-☕ [Buy me a coffee if you like this project](https://ko-fi.com/paddedzero)
-
 An intelligent news aggregator that automatically curates, deduplicates, summarizes, and publishes technology news from 40+ sources covering AI/LLM, Cloud, Cybersecurity, Vulnerabilities, Threat Intelligence, and Asia-Pacific regulatory updates.
 
 ---

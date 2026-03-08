@@ -33,8 +33,16 @@ jobs:
       - name: Build site
         id: build
         run: |
-          set -eo pipefail
+          set +e
           npm run build -- --verbose 2>&1 | tee build_output.txt
+          BUILD_EXIT=$?
+          if [ $BUILD_EXIT -ne 0 ]; then
+            echo "## Build Failed" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -100 build_output.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit $BUILD_EXIT
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
