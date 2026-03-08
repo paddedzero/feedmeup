@@ -19,7 +19,7 @@
     mermaid.initialize({
       startOnLoad: false,
       theme: isDark ? 'base' : 'default',
-      securityLevel: 'loose',
+      securityLevel: 'strict',
       fontFamily: 'Outfit, sans-serif',
       themeVariables: isDark
         ? {

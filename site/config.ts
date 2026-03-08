@@ -57,7 +57,7 @@ export const SITE: SiteConfig = {
   blogDescription: 'Weekly news briefs and analyst opinions on Cloud, Cybersecurity, AI, and ML.',
   projectsDescription: '',
 
-  featuredPostsCount: 1,
+  featuredPostsCount: 2,
   latestPostsCount: 5,
 
   homeProjects: {

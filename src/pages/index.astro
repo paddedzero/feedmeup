@@ -17,7 +17,7 @@ const posts = (await getPublishedPosts()).sort(
 );
 
 const featuredPosts = posts.filter((post) => post.data.featured).slice(0, SITE.featuredPostsCount);
-const latestPosts = posts.filter((post) => !post.data.featured).slice(0, SITE.latestPostsCount);
+const latestPosts = posts.slice(0, SITE.latestPostsCount);
 
 const projects = (await getCollection('projects'))
   .sort((a, b) => a.data.order - b.data.order)
