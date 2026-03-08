@@ -136,6 +136,11 @@ const gaScript = `
     <meta name="twitter:image" content={pageOgImage} />
 
     {
+      analyticsId && !isGTM && (
+        <script type="text/partytown" src={`https://www.googletagmanager.com/gtag/js?id=${analyticsId}`}></script>
+      )
+    }
+    {
       analyticsId && (
         <script type="text/partytown" is:inline set:html={isGTM ? gtmScript : gaScript} />
       )
