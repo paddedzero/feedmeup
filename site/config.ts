@@ -51,7 +51,7 @@ export const SITE: SiteConfig = {
   social: {
     github: 'https://github.com/paddedzero',
   },
-  googleAnalyticsId: 'G-B492Y3RLPH',
+  googleAnalyticsId: 'G-81GGN05E3C',
   homeHeroDescription:
     'Weekly automated news aggregation covering Cloud computing, Cybersecurity, AI, and Machine Learning. Powered by RSS feeds and AI summarization.',
   blogDescription: 'Weekly news briefs and analyst opinions on Cloud, Cybersecurity, AI, and ML.',
