@@ -41,15 +41,16 @@ export interface SiteConfig {
 }
 
 export const SITE: SiteConfig = {
-  author: 'paddedzero',
+  author: 'alwyn',
   desc: 'Automated news aggregation for Cloud, Cybersecurity, AI, and ML technologies.',
-  title: 'feedmeup',
+  title: 'themissingsunday',
   ogImage: 'og.png',
   lang: 'en-US',
   base: '/',
   website: 'https://paddedzero.github.io/feedmeup',
   social: {
     github: 'https://github.com/paddedzero',
+    kofi: 'https://ko-fi.com/paddedzero',
   },
   googleAnalyticsId: 'G-81GGN05E3C',
   homeHeroDescription:
