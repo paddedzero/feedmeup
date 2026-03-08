@@ -6,7 +6,7 @@ tags: ["astro", "jekyll", "github-pages", "ai", "copilot", "gemini", "migration"
 featured: true
 ---
 
-> *Back in 2020, I wrote about [setting up a Jekyll site on GitHub Pages](/feedmeup/posts/welcome-to-unlocked-today). That post covered forking a theme, editing `_config.yaml`, and writing your first Markdown post. It took me a few weekends to get comfortable. Fast forward to 2026 — I rebuilt the entire site on Astro, added a 140+ source news aggregation engine with AI summarization, and deployed it in a fraction of the time. The difference? AI pair programming.*
+> *Back in 2020, I wrote about [setting up a Jekyll site on GitHub Pages](/posts/welcome-to-unlocked-today). That post covered forking a theme, editing `_config.yaml`, and writing your first Markdown post. It took me a few weekends to get comfortable. Fast forward to 2026 — I rebuilt the entire site on Astro, added a 140+ source news aggregation engine with AI summarization, and deployed it in a fraction of the time. The difference? AI pair programming.*
 
 ----
 
@@ -64,7 +64,7 @@ Migrating posts from Jekyll to Astro was straightforward. The frontmatter format
 
 The images were the tedious part. Jekyll stores images relative to the site root. Astro with its `<Image>` component wants them imported as modules for optimization. I moved everything to `site/assets/` and set up a path alias (`@/site-assets`) in the Astro config so imports stay clean.
 
-The old Jekyll post referenced images like `/feedmeup/images/2020-07-26/signup-github.png`. These still work because Astro serves the `public/` directory as-is. No broken links.
+The old Jekyll post referenced images like `/images/2020-07-26/signup-github.png`. These still work because Astro serves the `public/` directory as-is. No broken links.
 
 ## Step 3 — Build the news aggregation engine
 

@@ -46,7 +46,7 @@ export const SITE: SiteConfig = {
   title: 'feedmeup',
   ogImage: 'og.png',
   lang: 'en-US',
-  base: '/feedmeup/',
+  base: '/',
   website: 'https://paddedzero.github.io/feedmeup',
   social: {
     github: 'https://github.com/paddedzero',

@@ -10,7 +10,7 @@ featured: true
 
 ----
 
-Over the past few months I built a news aggregation platform — 140+ sources, web scrapers, AI summarization, automated deployment — using GitHub Copilot and Google Gemini as my primary development partners. The [previous post](/feedmeup/posts/from-jekyll-to-astro-with-ai) covered the technical migration. This post is about the human side. The mistakes, the recovery, and the workflow I wish I had from day one.
+Over the past few months I built a news aggregation platform — 140+ sources, web scrapers, AI summarization, automated deployment — using GitHub Copilot and Google Gemini as my primary development partners. The [previous post](/posts/from-jekyll-to-astro-with-ai) covered the technical migration. This post is about the human side. The mistakes, the recovery, and the workflow I wish I had from day one.
 
 ## The Temptation: Let AI Write Everything
 
