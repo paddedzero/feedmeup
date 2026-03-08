@@ -13,6 +13,10 @@ I'm a cybersecurity specialist who genuinely enjoys connecting the dots between 
 
 My sweet spot? Taking complex security challenges and breaking them down into actionable, pragmatic solutions that your boardroom and your security teams actually understand and can execute on.
 
+### Why "themissingsunday"
+
+As tech profesionals, being in the cyber industry means continous learning and keeping up to changes in the industry. This coupled with working results in weekends or late nights taken up - that's where the feeling comes in... It feels like when Monday comes - where is "the Missing Sunday", it got taken up by the fun project or learning or you did something so interesting that you didnt notice the weekend was gone.
+
 ### What I Do
 
 My expertise spans the full spectrum of modern cybersecurity:
