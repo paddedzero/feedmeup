@@ -47,5 +47,5 @@ When I'm not architecting security strategies or connecting with data to uncover
 
 ---
 
-**Let's talk security, risk, regulation, and how technology can make things better.** Reach out through the links below—coffee's on me (at least virtually, from NYC 🗽).
+**Let's talk security, risk, regulation, and how technology can make things better.** Reach out through the links above —coffee's on me (at least virtually, from NYC 🗽).
 
