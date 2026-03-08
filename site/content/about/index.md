@@ -5,7 +5,7 @@ description: 'Cybersecurity specialist bridging technical expertise with busines
 
 ## About Me
 My name is Alwyn Y. - based out of NYC.
-https://www.linkedin.com/in/alwyny/
+[LinkedIn](https://www.linkedin.com/in/alwyny/)
 
 Terbaik! (That's "best" in Malay, and I do mean it with every fibre of my being when it comes to cybersecurity.) Based in the bustling NYC, I bring a global perspective to cybersecurity strategy, having lived and worked across Malaysia 🇲🇾, Hong Kong, and various regions spanning APAC, EMEA, UK, and the US.
 
