@@ -55,14 +55,14 @@ export const SITE: SiteConfig = {
   homeHeroDescription:
     'Weekly automated news aggregation covering Cloud computing, Cybersecurity, AI, and Machine Learning. Powered by RSS feeds and AI summarization.',
   blogDescription: 'Weekly news briefs and analyst opinions on Cloud, Cybersecurity, AI, and ML.',
-  projectsDescription: '',
+  projectsDescription: 'Open-source tools and resources I build and maintain.',
 
   featuredPostsCount: 2,
   latestPostsCount: 5,
 
   homeProjects: {
-    enabled: false,
-    count: 0,
+    enabled: true,
+    count: 4,
   },
 
   cta: {
