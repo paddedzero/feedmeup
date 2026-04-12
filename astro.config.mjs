@@ -92,7 +92,6 @@ export default defineConfig({
     resolve: {
       alias: {
         '@/config': path.resolve(__dirname, './site/config.ts'),
-        '@/site-assets': path.resolve(__dirname, './site/assets'),
         '@': path.resolve(__dirname, './src'),
       },
     },
