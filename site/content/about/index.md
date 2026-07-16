@@ -11,15 +11,15 @@ My name is Alwyn Y. - based out of NYC.
   LinkedIn — Alwyn Y.
 </a>
 
-Terbaik! (That's "best" in Malay, and I do mean it with every fibre of my being when it comes to cybersecurity.) Based in the bustling NYC, I bring a global perspective to cybersecurity strategy, having lived and worked across Malaysia 🇲🇾, Hong Kong, and various regions spanning APAC, EMEA, UK, and the US.
+Terbaik! (That's "best" in Malay, and I do mean it with every fibre of my being when it comes to cybersecurity.) Based in the bustling NYC, I bring a global perspective to cybersecurity strategy, having lived and worked across Malaysia 🇲🇾, Hong Kong 🇭🇰, and various regions spanning APAC, EMEA, UK 🇬🇧, and the US 🇺🇸.
 
-I'm a cybersecurity specialist who genuinely enjoys connecting the dots between technical intricacies and business objectives. Whether it's architecting cloud security initiatives in financial services or crafting robust defense strategies for enterprises across telco, transportation, logistics, and beyond, I've always believed that ***great security doesn't exist in a vacuum***—it's gotta make business sense, lah!
+I'm a cybersecurity specialist who genuinely enjoys connecting the dots between technical intricacies and business objectives. Whether it's architecting cloud security initiatives in financial services or crafting robust defense strategies for enterprises across telco, transportation, logistics, and beyond, I've always believed that ***great security doesn't exist in a vacuum*** , it's gotta make business sense bah!
 
 My sweet spot? Taking complex security challenges and breaking them down into actionable, pragmatic solutions that your boardroom and your security teams actually understand and can execute on.
 
 ### Why "themissingsunday"
 
-As tech profesionals, being in the cyber industry means continous learning and keeping up to changes in the industry. This coupled with working results in weekends or late nights taken up - that's where the feeling comes in... It feels like when Monday comes - where is "the Missing Sunday", it got taken up by the fun project or learning or you did something so interesting that you didnt notice the weekend was gone.
+As tech profesionals, being in the cyber industry means continous learning and keeping up to changes in the industry. This coupled with working results in weekends or late nights taken up and that's where the feeling comes in... It feels like when Monday comes, where is "the Missing Sunday", it got taken up by the fun project or learning or you did something so interesting that you didnt notice the weekend was gone.
 
 ### What I Do
 

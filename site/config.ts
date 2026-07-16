@@ -50,6 +50,8 @@ export const SITE: SiteConfig = {
   website: 'https://paddedzero.github.io/feedmeup',
   social: {
     github: 'https://github.com/paddedzero',
+    linkedin: 'https://www.linkedin.com/in/alwyny/',
+    instagram: 'https://www.instagram.com/gratefulbytes/',
     kofi: 'https://ko-fi.com/paddedzero',
   },
   googleAnalyticsId: 'G-81GGN05E3C',
