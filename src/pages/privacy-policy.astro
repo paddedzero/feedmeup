@@ -1,0 +1,107 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { SITE } from '@/config';
+import Breadcrumbs from '@/components/Breadcrumbs.svelte';
+import { getBreadcrumbSchema } from '@/lib/schemas';
+
+const schema = getBreadcrumbSchema([
+  { name: 'Privacy Policy', url: new URL('/privacy-policy', Astro.site).toString() },
+]);
+
+const lastUpdated = 'July 18, 2026';
+---
+
+<Layout
+  title="Privacy Policy"
+  description={`Privacy policy for ${SITE.website.replace('https://', '')} — what data is collected, how Google Analytics and ads are used, and how to reach ${SITE.author}.`}
+  schema={schema}
+>
+  <Breadcrumbs items={[{ name: 'Privacy Policy', href: '/privacy-policy' }]} />
+
+  <div class="max-w-3xl">
+    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-[1.1] mb-2">
+      Privacy Policy
+    </h1>
+    <p class="text-sm text-muted-foreground mb-10">Last updated: {lastUpdated}</p>
+
+    <article class="prose max-w-none text-muted-foreground">
+      <p>
+        This site, themissingsunday.com, is run by me, Alwyn Y. — you can find out more about who I am
+        on the <a href="/about">About page</a>. This policy explains what data gets collected when you
+        visit, why, and what your options are. I've tried to write it in plain English rather than
+        legal boilerplate.
+      </p>
+
+      <h2>What gets collected</h2>
+      <p>Like most websites, this one collects a few kinds of data automatically:</p>
+      <ul>
+        <li>
+          <strong>Server logs</strong> — standard web server logs (IP address, browser type, pages
+          requested, timestamps) generated as part of serving the site. This is infrastructure-level
+          logging, not something I actively review per-visitor.
+        </li>
+        <li>
+          <strong>Cookies</strong> — small files stored in your browser, used for things like
+          remembering your dark/light theme preference and for analytics (below).
+        </li>
+        <li>
+          <strong>Google Analytics</strong> — I use Google Analytics to understand traffic patterns
+          (which posts get read, roughly where visitors come from, that kind of thing). It sets its own
+          cookies and collects the usual analytics data points (pages visited, session duration, device/
+          browser type, approximate location). I don't use this to identify individual visitors.
+        </li>
+      </ul>
+
+      <h2>Advertising (Google AdSense)</h2>
+      <p>
+        This site uses, or intends to use, <strong>Google AdSense</strong> to serve ads. Google, as a
+        third-party vendor, uses cookies to serve ads based on your prior visits to this site and
+        others. Google's use of advertising cookies enables it and its partners to serve ads based on
+        your visit to this site and/or other sites on the Internet. You can read more about how Google
+        uses this data on Google's own page,{' '}
+        <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">
+          "How Google uses information from sites or apps that use our services."
+        </a>
+      </p>
+      <p>
+        Third-party vendors, including Google, may also use cookies to serve ads based on your past
+        visits to this site for ad personalization. You can opt out of personalized advertising by
+        visiting{' '}
+        <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer">
+          Google's Ads Settings
+        </a>{' '}
+        or, for a broader opt-out across participating ad networks, the{' '}
+        <a href="https://optout.aboutads.info" target="_blank" rel="noopener noreferrer">
+          Digital Advertising Alliance's opt-out page
+        </a>.
+      </p>
+
+      <h2>TransitPulse (a related project)</h2>
+      <p>
+        <a href="https://transitpulse.themissingsunday.com" target="_blank" rel="noopener noreferrer">
+          TransitPulse
+        </a> is a separate side project of mine hosted on a subdomain of this site. It does not use any
+        analytics or send data to a server — it only uses your browser's Geolocation API (with your
+        permission, to center the map on your location) and browser <code>localStorage</code> (to
+        remember things like your saved home location and display preferences locally on your own
+        device). None of that data leaves your browser or reaches me.
+      </p>
+
+      <h2>Your rights</h2>
+      <p>
+        If you're in a region covered by GDPR, CCPA, or similar privacy laws, you have the right to
+        ask what data (if any) is held about you, request it be deleted, or just ask questions about
+        any of the above. Since this is a personal site rather than a service you sign up for, there's
+        no account data to speak of — but if you have concerns, reach out via{' '}
+        <a href={SITE.social.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a> and I'll
+        get back to you.
+      </p>
+
+      <h2>Changes to this policy</h2>
+      <p>
+        If anything material changes — a new analytics tool, a new ad network, a new subdomain project
+        that collects data — I'll update this page and the "last updated" date above.
+      </p>
+    </article>
+  </div>
+</Layout>
