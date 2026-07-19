@@ -8,6 +8,7 @@ export interface SiteConfig {
   website: string;
   social: Record<string, string>;
   googleAnalyticsId?: string;
+  googleAdsenseClientId?: string;
   homeHeroDescription: string;
   blogDescription: string;
   projectsDescription: string;
@@ -55,6 +56,7 @@ export const SITE: SiteConfig = {
     kofi: 'https://ko-fi.com/paddedzero',
   },
   googleAnalyticsId: 'G-81GGN05E3C',
+  googleAdsenseClientId: 'ca-pub-6866301842478349',
   homeHeroDescription:
     'Weekly automated news aggregation covering Cloud computing, Cybersecurity, AI, and Machine Learning. Powered by RSS feeds and AI summarization.',
   blogDescription: 'Weekly news briefs and analyst opinions on Cloud, Cybersecurity, AI, and ML.',

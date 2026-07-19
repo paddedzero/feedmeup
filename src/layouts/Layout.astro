@@ -73,6 +73,16 @@ const gaScript = `
     {analyticsId && <link rel="preconnect" href="https://www.googletagmanager.com" />}
     <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
 
+    {
+      SITE.googleAdsenseClientId && (
+        <script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${SITE.googleAdsenseClientId}`}
+          crossorigin="anonymous"
+        />
+      )
+    }
+
     <title>{pageTitle}</title>
     <meta name="description" content={pageDescription} />
 
